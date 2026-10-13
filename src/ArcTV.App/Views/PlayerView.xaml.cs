@@ -62,7 +62,11 @@ public partial class PlayerView : UserControl
         _overlay = new PlayerOverlay(model, _item, _back, ToggleFullscreen, () => IsFullscreen, HandleKey) { Owner = _window };
         _overlay.Show();
         PlaceOverlay();
-        if (_window is not null) _window.PreviewKeyDown += OnWindowKey;
+        if (_window is not null)
+        {
+            _window.PreviewKeyDown += OnWindowKey;
+            _window.Closed += OnWindowClosed; // the page is not always told it is unloaded when its whole window closes, and the overlay is a window of its own
+        }
 
         // the video window is made when this page is first laid out; start as soon as it exists
         _waitForVideoWindow = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(40) };
@@ -77,10 +81,17 @@ public partial class PlayerView : UserControl
         _waitForVideoWindow.Start();
     }
 
+    private void OnWindowClosed(object? sender, EventArgs e) => OnUnloaded(this, new RoutedEventArgs());
+
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         _waitForVideoWindow?.Stop();
-        if (_window is not null) _window.PreviewKeyDown -= OnWindowKey;
+        if (_window is not null)
+        {
+            _window.PreviewKeyDown -= OnWindowKey;
+            _window.Closed -= OnWindowClosed;
+        }
+
         if (IsFullscreen) ToggleFullscreen();
         _overlay?.Close();
         _overlay = null;

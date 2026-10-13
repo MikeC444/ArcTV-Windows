@@ -58,6 +58,7 @@ public class ScreenTests
                 task.ContinueWith(_ => frame.Continue = false, TaskScheduler.Default);
                 Dispatcher.PushFrame(frame);
                 task.GetAwaiter().GetResult();
+                Dispatcher.CurrentDispatcher.InvokeShutdown(); // closes any window left open, so none gets a message after this thread has gone
             }
             catch (Exception ex)
             {
@@ -273,6 +274,7 @@ public class ScreenTests
         Assert.NotNull(view.Model);
         Assert.False(view.Model!.Loading);
         window.Close();
+        await Settle();
     });
 
     [Fact]
