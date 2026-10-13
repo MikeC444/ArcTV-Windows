@@ -527,3 +527,21 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: the arrows on Settings > Home Rows were empty squares).** The move up / move down buttons used the ghost button style, whose own padding leaves no room in a 32-pixel square, so the arrows were cut away. They are now the round 40-pixel button the season numbers use, with a chevron from the Windows icon font (up and down), a tooltip, and dimmed when the row cannot move that way. Not seen on screen.
 
+## 18 -- Home polish: saved rows, top bar that hides, card menu
+
+**Status:** Built and tested by the Windows build server (the xUnit tests and the screen tests); not seen on a screen from this sandbox. Ported from the Mac app's `HomeCache`, the loading in `AppModel.loadHome` and `CardMenu.swift`.
+
+**Context:** What was left of Home's polish: it started empty every time, the top bar always sat over the page, and a poster had no menu.
+
+**Changes:**
+- `HomeCache` (Core): the last rows, up to 30 titles each, in `home-<account>[-<profile>].json` in the app data folder, thrown away after a week. `HomeModel` shows them at once as the first thing it does (state Loaded, banner picked) and replaces them with the first fresh batch that arrives, then saves the fresh rows when loading is done; if nothing fresh arrives the saved rows stay on screen and in the file.
+- The top bar (`ShellView`) slides up and fades out while a page is scrolled down (a vertical scroll of more than 4 pixels, past the top 40) and comes back on scrolling up, near the top of the page, on moving to another page, coming back from a video, or putting the pointer in the top 24 pixels of the window. Rows that scroll sideways do not count.
+- The card menu (`CardMenuView`): right-click a poster, a Continue Watching card, a Picked for you card, the banner's buttons or a card in You May Also Like. The title's picture and logo (looked up when missing), a big Play (or Resume from the time reached), My List / Watched / Like / Not for me (the last two with Plus) that stay open and show their state, then Remove from Picked for you (on that row), View details, Remove from Continue Watching and Choose source. Resume and Choose source open the source list (as Continue Watching does), Escape or a click outside closes it. Cards made in code are marked with the attached property `CardMenu.Item`.
+- The banner's Play, Trailer, More info and My List buttons were already in place from earlier.
+
+**Tests performed:** xUnit: the cache keeps rows per account, trims them, forgets them after a week and survives a bad file or nothing to save; `HomeModel` shows the saved rows before any addon has answered, replaces them with the fresh ones and saves those, and keeps the saved rows when nothing fresh arrives. The menu and the bar's sliding are screen features: they compile and the shell opens in the screen test, but nobody has seen them.
+
+**Issues discovered:** None yet.
+
+**Issues fixed:** None yet.
+

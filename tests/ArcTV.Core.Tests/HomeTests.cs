@@ -266,6 +266,44 @@ public class HomeModelTests
         Assert.Equal("Popular", model.Sections.Single().Title);
     }
 
+    private static string TempFolder() => Path.Combine(Path.GetTempPath(), "arctv-home-" + Guid.NewGuid().ToString("N"));
+
+    [Fact]
+    public async Task TheLastRowsShowAtOnceAndAreReplacedByTheFreshOnes()
+    {
+        var folder = TempFolder();
+        var cache = new HomeCache(folder);
+        cache.Save([new HomeSection("old", "Old row", [new MetaPreview("o1", "movie", "Old one")])], "u");
+        var release = new TaskCompletionSource<IReadOnlyList<SyncedAddon>>();
+        var model = new HomeModel(_ => release.Task, "u", Client(_ => Metas("n1", "n2")), new Random(1), cache);
+
+        var load = model.LoadAsync();
+        Assert.Equal(HomeState.Loaded, model.State); // before any addon has answered
+        Assert.Equal("Old row", model.Sections.Single().Title);
+        Assert.NotEmpty(model.Hero);
+
+        release.SetResult([Addon(Cool)]);
+        await load;
+        Assert.DoesNotContain(model.Sections, s => s.Title == "Old row");
+        Assert.Contains(model.Sections.SelectMany(s => s.Items), i => i.Id == "n1");
+        Assert.DoesNotContain(new HomeCache(folder).Load("u")!, s => s.Id == "old"); // the fresh rows are what is saved now
+        Directory.Delete(folder, true);
+    }
+
+    [Fact]
+    public async Task WhenNothingFreshArrivesTheSavedRowsStayAndAreKept()
+    {
+        var folder = TempFolder();
+        var cache = new HomeCache(folder);
+        cache.Save([new HomeSection("old", "Old row", [new MetaPreview("o1", "movie", "Old one")])], "u");
+        var model = new HomeModel(_ => Task.FromResult<IReadOnlyList<SyncedAddon>>([]), "u", Client(_ => null), new Random(1), cache);
+        await model.LoadAsync();
+        Assert.Equal(HomeState.Loaded, model.State);
+        Assert.Equal("Old row", model.Sections.Single().Title);
+        Assert.Equal("Old row", new HomeCache(folder).Load("u")!.Single().Title);
+        Directory.Delete(folder, true);
+    }
+
     [Fact]
     public async Task NothingAtAllIsEmpty()
     {
@@ -285,3 +323,46 @@ public class TextTests
         Assert.Equal("", Text.HtmlDecoded(null));
     }
 }
+
+public class HomeCacheTests
+{
+    private static readonly DateTime Start = new(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    private static HomeSection Row(string id, int items) => new(id, "Row " + id, Enumerable.Range(0, items).Select(i => new MetaPreview($"{id}{i}", "movie", $"Title {i}", "p", "b")).ToList());
+
+    [Fact]
+    public void RowsAreKeptPerAccountTrimmedAndForgottenAfterAWeek()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "arctv-cache-" + Guid.NewGuid().ToString("N"));
+        var clock = Start;
+        var cache = new HomeCache(folder, () => clock);
+        Assert.Null(cache.Load("u1"));
+        cache.Save([Row("a", 40), Row("b", 3)], "u1");
+        var back = cache.Load("u1")!;
+        Assert.Equal(["Row a", "Row b"], back.Select(s => s.Title));
+        Assert.Equal(HomeCache.ItemsPerRow, back[0].Items.Count);
+        Assert.Equal("Title 0", back[0].Items[0].Name);
+        Assert.Equal("b", back[0].Items[0].Background);
+        Assert.Null(cache.Load("u2")); // another account or profile has its own
+
+        clock = Start.AddDays(6);
+        Assert.NotNull(cache.Load("u1"));
+        clock = Start.AddDays(8);
+        Assert.Null(cache.Load("u1")); // too old to show
+        Directory.Delete(folder, true);
+    }
+
+    [Fact]
+    public void ABadFileOrNothingToSaveIsHarmless()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "arctv-cache-" + Guid.NewGuid().ToString("N"));
+        var cache = new HomeCache(folder);
+        cache.Save([], "u");
+        Assert.False(Directory.Exists(folder)); // nothing was written
+        Directory.CreateDirectory(folder);
+        File.WriteAllText(Path.Combine(folder, "home-u.json"), "not json");
+        Assert.Null(cache.Load("u"));
+        Directory.Delete(folder, true);
+    }
+}
+

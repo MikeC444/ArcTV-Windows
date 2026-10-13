@@ -9,7 +9,7 @@ public enum HomeState { Idle, Loading, Loaded, Empty }
 /// What Home shows: rows built from the account's addons (every enabled one that offers catalogues; Cinemeta when there is none), the titles the banner rotates
 /// through, and the state of loading. Rows appear as each batch arrives.
 /// </summary>
-public sealed class HomeModel(Func<CancellationToken, Task<IReadOnlyList<SyncedAddon>>> addons, string userId, AddonClient? client = null, Random? random = null) : ObservableObject
+public sealed class HomeModel(Func<CancellationToken, Task<IReadOnlyList<SyncedAddon>>> addons, string userId, AddonClient? client = null, Random? random = null, HomeCache? cache = null) : ObservableObject
 {
     public const int HeroSize = 10;
 
@@ -24,6 +24,7 @@ public sealed class HomeModel(Func<CancellationToken, Task<IReadOnlyList<SyncedA
     private HomeRowPreferences _preferences = new();
     private IReadOnlySet<string> _blocked = new HashSet<string>();
     private SynchronizationContext? _context;
+    private bool _fromCache;
 
     public HomeState State { get => _state; private set => Set(ref _state, value); }
 
@@ -73,11 +74,16 @@ public sealed class HomeModel(Func<CancellationToken, Task<IReadOnlyList<SyncedA
         _context = SynchronizationContext.Current;
         lock (_lock) _raw.Clear();
         Complete = false;
+        // the rows of the last time are on screen at once; the fresh ones replace them as soon as the first arrive
+        var saved = cache?.Load(userId);
+        _fromCache = saved is not null;
+        if (saved is not null) lock (_lock) _raw.AddRange(saved);
         Post(() =>
         {
             Sections = [];
             Hero = [];
             State = HomeState.Loading;
+            if (saved is not null) Rebuild();
         });
 
         try
@@ -88,7 +94,17 @@ public sealed class HomeModel(Func<CancellationToken, Task<IReadOnlyList<SyncedA
             await Task.WhenAll(sources.Select(source => HomeSections.LoadAsync(source, seed, batch =>
             {
                 if (cancel.IsCancellationRequested) return Task.CompletedTask;
-                lock (_lock) _raw.AddRange(batch);
+                lock (_lock)
+                {
+                    if (_fromCache)
+                    {
+                        _fromCache = false;
+                        _raw.Clear();
+                    }
+
+                    _raw.AddRange(batch);
+                }
+
                 Post(() => { if (!cancel.IsCancellationRequested) Rebuild(); });
                 return Task.CompletedTask;
             }, client: _client, cancel: cancel))).ConfigureAwait(false);
@@ -100,6 +116,7 @@ public sealed class HomeModel(Func<CancellationToken, Task<IReadOnlyList<SyncedA
 
         if (cancel.IsCancellationRequested) return;
         Complete = true;
+        if (!_fromCache) cache?.Save(AllRows, userId); // (when nothing fresh arrived, what was saved stays)
         await PostAsync(() =>
         {
             if (cancel.IsCancellationRequested) return;

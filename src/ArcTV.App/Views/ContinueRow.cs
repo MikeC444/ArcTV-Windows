@@ -94,6 +94,7 @@ public sealed class ContinueRow : StackPanel
         };
 
         var cell = new Grid { Width = CardWidth + 16 };
+        CardMenu.SetItem(cell, item.AsPreview()); // right-click opens the card menu
         cell.Children.Add(play);
         cell.Children.Add(remove);
         return cell;

@@ -30,5 +30,8 @@
         </Button>
       </Grid>
     </Grid>
+
+    <!-- the card menu (right-click on a poster) opens over everything -->
+    <ContentControl x:Name="MenuLayer" />
   </Grid>
 </UserControl>

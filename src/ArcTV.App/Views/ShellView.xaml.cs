@@ -67,7 +67,7 @@ public partial class ShellView : UserControl
         var user = account.Session!.User;
         _user = user;
         var scope = account.Scope ?? user.Id; // what this PC's local copies are filed under: the account, and the profile when it is not the account's own
-        _home = new HomeModel(AccountAddonsAsync, scope);
+        _home = new HomeModel(AccountAddonsAsync, scope, cache: new HomeCache(AppPaths.DataFolder())); // the last rows show at once while the fresh ones load
         _settingsModel = new SettingsModel(new AccountSettingsStore(account)) { AlsoBlocked = profile is { IsKids: true } ? Profile.KidsBlockedGenres : [] };
         _settingsModel.Changed += ApplySettings;
         _plus = plus;
@@ -97,15 +97,27 @@ public partial class ShellView : UserControl
         BuildAccountButton(user, profile);
         SizeChanged += (_, _) => FitBar();
 
-        // a click on any poster (or suggestion) that stands for a title opens that title; the mouse's Back button and Escape come back
+        // a click on any poster (or suggestion) that stands for a title opens that title; right-clicking one opens its menu; the mouse's Back button and Escape come back
         AddHandler(Button.ClickEvent, new RoutedEventHandler(OnTitleClick));
+        AddHandler(MouseRightButtonUpEvent, new MouseButtonEventHandler(OnCardRightClick));
+        AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler(OnPageScrolled));
+        Bar.RenderTransform = new TranslateTransform();
+        MouseMove += (_, e) =>
+        {
+            if (!_barShown && e.GetPosition(this).Y < 24) ShowBar(true); // the pointer at the top edge brings the bar back
+        };
         MouseDown += (_, e) =>
         {
             if (e.ChangedButton == MouseButton.XButton1) GoBack();
         };
         PreviewKeyDown += (_, e) =>
         {
-            if (e.Key == Key.Escape && _history.Count > 0 && Keyboard.FocusedElement is not TextBox && Page.Content is not PlayerView) GoBack(); // the player has its own Esc (it leaves full screen first)
+            if (e.Key == Key.Escape && MenuLayer.Content is not null)
+            {
+                CloseCardMenu();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape && _history.Count > 0 && Keyboard.FocusedElement is not TextBox && Page.Content is not PlayerView) GoBack(); // the player has its own Esc (it leaves full screen first)
         };
         Open("Home");
         Loaded += async (_, _) =>
@@ -325,6 +337,52 @@ public partial class ShellView : UserControl
         return _addonsModel;
     }
 
+    // ---- the top bar steps out of the way while a page is scrolled down ----
+
+    private bool _barShown = true;
+
+    /// <summary>Scrolling a page down takes the top bar away, scrolling up (or being near the top of the page, or putting the pointer at the window's top edge) brings it back.</summary>
+    private void OnPageScrolled(object sender, ScrollChangedEventArgs e)
+    {
+        if (e.OriginalSource is not ScrollViewer scroller || e.VerticalChange == 0 || scroller.VerticalScrollBarVisibility == ScrollBarVisibility.Disabled) return;
+        if (scroller.VerticalOffset < 40 || e.VerticalChange < -4) ShowBar(true);
+        else if (e.VerticalChange > 4) ShowBar(false);
+    }
+
+    private void ShowBar(bool shown)
+    {
+        if (_barShown == shown || Bar.Visibility != Visibility.Visible || Bar.RenderTransform is not TranslateTransform move) return;
+        _barShown = shown;
+        Bar.IsHitTestVisible = shown;
+        var ease = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut };
+        move.BeginAnimation(TranslateTransform.YProperty, new System.Windows.Media.Animation.DoubleAnimation(shown ? 0 : -Bar.ActualHeight, TimeSpan.FromMilliseconds(220)) { EasingFunction = ease });
+        Bar.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(shown ? 1 : 0, TimeSpan.FromMilliseconds(220)));
+    }
+
+    // ---- the card menu ----
+
+    private async void OnCardRightClick(object sender, MouseButtonEventArgs e)
+    {
+        if (MenuLayer.Content is not null || Page.Content is PlayerView || e.OriginalSource is not DependencyObject source || CardMenu.Find(source) is not { } card) return;
+        e.Handled = true;
+        try
+        {
+            var list = MyListFor();
+            if (list.Items is null) await list.LoadAsync();
+            if (!_plus.StatusKnown) await _plus.LoadStatusAsync();
+            if (_plus.Active && !_plus.RatingsLoaded) await _plus.LoadRatingsAsync();
+        }
+        catch (Exception)
+        {
+            // the menu opens with what is known
+        }
+
+        if (MenuLayer.Content is not null) return;
+        MenuLayer.Content = new CardMenuView(card.Item, card.FromPicked, MyListFor(), _plus, _continue, _picked, CloseCardMenu, OpenSources, OpenTitle, LogoOfAsync);
+    }
+
+    private void CloseCardMenu() => MenuLayer.Content = null;
+
     private void OnTitleClick(object sender, RoutedEventArgs e)
     {
         if (e.OriginalSource is Button { DataContext: MetaPreview item }) OpenTitle(item);
@@ -333,6 +391,7 @@ public partial class ShellView : UserControl
     /// <summary>Shows a title's page over the one that is open; Back puts that page back exactly as it was (where it was scrolled to, what was typed).</summary>
     private void OpenTitle(MetaPreview item)
     {
+        ShowBar(true);
         if (Page.Content is UIElement current) _history.Push((current, _place));
         Page.Content = new DetailView(new DetailModel(item, _addonClient, _extras), MyListFor(), GoBack, () => _home.AllRows.SelectMany(row => row.Items).ToList(), OpenSources, _plus, _continue);
     }
@@ -340,6 +399,7 @@ public partial class ShellView : UserControl
     /// <summary>The source list for a movie or an episode, over the page that asked for it; Back returns to that page.</summary>
     private void OpenSources(PlayTarget target)
     {
+        ShowBar(true);
         target = _continue.Resume(target); // a title in Continue Watching starts from where it was left
         if (Page.Content is UIElement current) _history.Push((current, _place));
         Page.Content = SourcesPage(target);
@@ -370,6 +430,7 @@ public partial class ShellView : UserControl
     {
         if (_history.Count > 0 && _history.Peek().Item1 is SourcesView) _history.Pop();
         Bar.Visibility = Visibility.Visible;
+        ShowBar(true); // (it may have been put away by scrolling before the video)
         Page.Content = SourcesPage(target);
     }
 
@@ -383,7 +444,9 @@ public partial class ShellView : UserControl
     private void GoBack()
     {
         if (_history.Count == 0) return;
+        ShowBar(true);
         Bar.Visibility = Visibility.Visible;
+        ShowBar(true); // (it may have been put away by scrolling before the video)
         var (page, place) = _history.Pop();
         _place = place;
         foreach (var (name, pill) in _pills) pill.Tag = name == place ? "selected" : name;
@@ -392,9 +455,11 @@ public partial class ShellView : UserControl
 
     private void Open(string place)
     {
+        ShowBar(true);
         if (place == _place && _history.Count == 0) return;
         _history.Clear();
         Bar.Visibility = Visibility.Visible;
+        ShowBar(true); // (it may have been put away by scrolling before the video)
         _place = place;
         foreach (var (name, pill) in _pills) pill.Tag = name == place ? "selected" : name;
         Page.Content = place switch

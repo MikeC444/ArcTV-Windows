@@ -5,6 +5,9 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Right-click a poster for its menu: play or resume, add to My List, mark watched, like or not for me, view details, choose a source, and take it off Continue Watching or Picked for you.
+- The top bar slides away as you scroll down and comes back when you scroll up, or when you move the pointer to the top of the window.
+- Home opens straight away with the rows from last time while the fresh ones load.
 - The up and down arrows in Settings > Home Rows show again.
 - The top bar now stays inside the window: in a narrow window it shrinks to fit instead of pushing the profile button out of sight.
 - The Continue Watching pictures are bigger.

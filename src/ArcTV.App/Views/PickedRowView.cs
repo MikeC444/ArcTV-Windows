@@ -67,6 +67,8 @@ public sealed class PickedRowView : StackPanel
         };
 
         var cell = new Grid { Width = CardWidth + 16 };
+        CardMenu.SetItem(cell, entry.Item); // right-click opens the card menu
+        CardMenu.SetFromPicked(cell, true);
         cell.Children.Add(open);
         cell.Children.Add(remove);
         return cell;
