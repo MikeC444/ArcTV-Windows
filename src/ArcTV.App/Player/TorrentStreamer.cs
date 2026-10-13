@@ -41,7 +41,19 @@ public sealed class TorrentStreamer : ITorrentStarter
 
     private static string Root => Path.Combine(AppPaths.DataFolder(), "torrents");
 
-    private ClientEngine Engine => _engine ??= new ClientEngine(new EngineSettingsBuilder { CacheDirectory = Path.Combine(Root, "cache") }.ToSettings());
+    /// <summary>
+    /// The engine's defaults are careful (150 connections, 8 being opened at a time, a 5 MB disk cache) and found fewer people, more slowly, than the Mac app's engine does: this opens many more
+    /// connections at once, caches more on the way to the disk, and tries to open the router's port so people can connect back.
+    /// </summary>
+    private ClientEngine Engine => _engine ??= new ClientEngine(new EngineSettingsBuilder
+    {
+        CacheDirectory = Path.Combine(Root, "cache"),
+        MaximumConnections = 600,
+        MaximumHalfOpenConnections = 100,
+        DiskCacheBytes = 128 * 1024 * 1024,
+        AllowPortForwarding = true,
+        AllowLocalPeerDiscovery = true,
+    }.ToSettings());
 
     public async Task<TorrentStart> StartAsync(SourceItem item, PlayTarget target, Action<TorrentProgress> progress, CancellationToken cancel)
     {
@@ -54,7 +66,8 @@ public sealed class TorrentStreamer : ITorrentStarter
             _folder = Path.Combine(Root, "data", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_folder);
             progress(new TorrentProgress("Finding people who share this…"));
-            var manager = _manager = await Engine.AddStreamingAsync(magnet, _folder).ConfigureAwait(false);
+            var settings = new TorrentSettingsBuilder { MaximumConnections = 250 }.ToSettings(); // (60 by default)
+            var manager = _manager = await Engine.AddStreamingAsync(magnet, _folder, settings).ConfigureAwait(false);
             await manager.StartAsync().ConfigureAwait(false);
 
             // 1. the file list

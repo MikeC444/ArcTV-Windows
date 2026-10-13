@@ -8,7 +8,7 @@ public sealed record TorrentFile(int Index, string Name, long Size);
 
 public static class TorrentLink
 {
-    /// <summary>Trackers tried when the addon names none (the torrent is also looked for through the distributed hash table).</summary>
+    /// <summary>Trackers added to the ones the addon names (the torrent is also looked for through the distributed hash table).</summary>
     public static readonly string[] FallbackTrackers =
     [
         "udp://tracker.opentrackr.org:1337/announce", "udp://open.tracker.cl:1337/announce", "udp://tracker.torrent.eu.org:451/announce", "udp://exodus.desync.com:6969/announce",
@@ -30,8 +30,9 @@ public static class TorrentLink
             if (tracker.Length > 0 && seen.Add(tracker)) text.Append("&tr=").Append(Uri.EscapeDataString(tracker));
         }
 
-        if (seen.Count == 0)
-            foreach (var tracker in FallbackTrackers) text.Append("&tr=").Append(Uri.EscapeDataString(tracker));
+        // a few well known trackers alongside the addon's own: more places to ask for people, and a torrent whose own trackers are dead can still be found
+        foreach (var tracker in FallbackTrackers)
+            if (seen.Add(tracker)) text.Append("&tr=").Append(Uri.EscapeDataString(tracker));
         return text.ToString();
     }
 }

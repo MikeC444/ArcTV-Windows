@@ -215,6 +215,7 @@ public class SourcesTests
         Assert.Contains("&tr=udp%3A%2F%2Ft2.example%3A1%2Fa%20b", magnet);
         Assert.DoesNotContain("dht", magnet);
         Assert.Contains("opentrackr", TorrentLink.Magnet(new AddonStream(InfoHash: "abc"))!); // no trackers named: the usual ones
+        Assert.Contains("opentrackr", magnet); // and the usual ones are added to the addon's own
         Assert.Null(TorrentLink.Magnet(new AddonStream(Title: "no hash")));
         Assert.Null(TorrentLink.Magnet(new AddonStream(InfoHash: "  ")));
     }
