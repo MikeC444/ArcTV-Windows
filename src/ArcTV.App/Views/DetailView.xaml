@@ -18,6 +18,16 @@
               <Grid>
                 <TextBlock Text="{Binding Name}" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" Margin="12" Foreground="{StaticResource Text3Brush}" FontSize="13" />
                 <c:RemoteImage Url="{Binding WidePicture}" DecodeWidth="640" Stretch="UniformToFill" />
+                <!-- the title's logo over the picture's bottom-left corner, on a soft shade so it reads on any picture -->
+                <Rectangle Height="80" VerticalAlignment="Bottom" IsHitTestVisible="False">
+                  <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                      <GradientStop Color="#00000000" Offset="0" />
+                      <GradientStop Color="#B3000000" Offset="1" />
+                    </LinearGradientBrush>
+                  </Rectangle.Fill>
+                </Rectangle>
+                <c:RemoteImage Url="{Binding Logo}" DecodeWidth="320" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" VerticalAlignment="Bottom" MaxWidth="140" MaxHeight="44" Margin="14,0,0,12" IsHitTestVisible="False" />
               </Grid>
             </c:RoundedBorder>
             <TextBlock Text="{Binding Name}" Margin="2,8,2,0" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
