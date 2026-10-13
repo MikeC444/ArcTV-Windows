@@ -193,8 +193,15 @@ public class StorageTests : IDisposable
 
     private sealed class ReversingProtector : ISecretProtector
     {
-        public byte[] Protect(byte[] data) => data.Reverse().ToArray();
-        public byte[] Unprotect(byte[] data) => data.Reverse().ToArray();
+        public byte[] Protect(byte[] data) => Flip(data);
+        public byte[] Unprotect(byte[] data) => Flip(data);
+
+        private static byte[] Flip(byte[] data)
+        {
+            var copy = (byte[])data.Clone();
+            Array.Reverse(copy);
+            return copy;
+        }
     }
 
     [Fact]
