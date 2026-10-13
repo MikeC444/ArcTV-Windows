@@ -58,12 +58,6 @@ public partial class ShellView : UserControl
         _settingsModel = new SettingsModel(new AccountSettingsStore(account));
         _settingsModel.Changed += ApplySettings;
         _plus = new PlusModel(new AccountPlusStore(account));
-        _picked = new PickedModel(
-            () => new PickedInputs(_plus.Active, _plus.StatusKnown && _plus.RatingsLoaded && _home.State == HomeState.Loaded && MyListFor().Items is not null,
-                BlockedGenres.Without(_home.AllRows.SelectMany(row => row.Items).GroupBy(i => i.Id).Select(g => g.First()).ToList(), _settingsModel.Blocked),
-                MyListFor().Items ?? [], _plus.Ratings, _continue.Items.Select(i => i.ContentId).ToList()),
-            FeatureLoading.Loader(new FeatureCache(Path.Combine(AppPaths.DataFolder(), "features.json")), FeaturesOfAsync),
-            new AccountPickedStore(account), Path.Combine(AppPaths.DataFolder(), "picked.json"));
         _continue = new ContinueModel(new AccountContinueStore(account), async title =>
         {
             // a movie played to the end is marked watched on My List (once)
@@ -71,6 +65,12 @@ public partial class ShellView : UserControl
             if (list.Items is null) await list.LoadAsync();
             if (!list.IsWatched(title.Id)) await list.ToggleWatchedAsync(title);
         });
+        _picked = new PickedModel(
+            () => new PickedInputs(_plus.Active, _plus.StatusKnown && _plus.RatingsLoaded && _home.State == HomeState.Loaded && MyListFor().Items is not null,
+                BlockedGenres.Without(_home.AllRows.SelectMany(row => row.Items).GroupBy(i => i.Id).Select(g => g.First()).ToList(), _settingsModel.Blocked),
+                MyListFor().Items ?? [], _plus.Ratings, _continue.Items.Select(i => i.ContentId).ToList()),
+            FeatureLoading.Loader(new FeatureCache(Path.Combine(AppPaths.DataFolder(), "features.json")), FeaturesOfAsync),
+            new AccountPickedStore(account), Path.Combine(AppPaths.DataFolder(), "picked.json"));
 
         foreach (var place in Places)
         {
