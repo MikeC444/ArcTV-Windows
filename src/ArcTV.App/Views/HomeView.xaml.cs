@@ -77,19 +77,4 @@ public partial class HomeView : UserControl
     }
 
     private void OnRetry(object sender, RoutedEventArgs e) => _ = _model.LoadAsync();
-
-    /// <summary>A row sits inside the page, so the wheel scrolls the page; Shift-wheel moves along the row.</summary>
-    private void OnRowWheel(object sender, MouseWheelEventArgs e)
-    {
-        var row = (ScrollViewer)sender;
-        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
-        {
-            row.ScrollToHorizontalOffset(row.HorizontalOffset - Math.Sign(e.Delta) * 3);
-        }
-        else
-        {
-            PageScroll.ScrollToVerticalOffset(PageScroll.VerticalOffset - e.Delta);
-        }
-        e.Handled = true;
-    }
 }

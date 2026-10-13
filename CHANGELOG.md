@@ -223,3 +223,8 @@ darkening is smoother too.
 The glide moved into one helper (`SmoothScroller`: each notch moves the target further, every frame eases most of the way there) that `PosterGrid`, Home and the title page now share. Shift-wheel still moves a row sideways (that is not smoothed).
 Not changed: the scroll bar, the keyboard (PageUp / PageDown / arrows) and Shift-wheel along a row still move in steps.
 The first build of this failed (one missing `using` in `PosterGrid`; Visual Studio showed "There were build errors" on pulling it) and was fixed in the next commit.
+
+**Follow-up (owner: a way to scroll on rows): arrows on rows.** Rows (Home's rows, a title page's seasons, episodes, cast and similar titles) only moved sideways with Shift plus the wheel, which is easy to miss.
+`ArrowScrollViewer` (the "ArrowRowScroll" style) puts a round arrow at each end of a row while the pointer is over it, only the one that leads somewhere (left once scrolled along, right while there is more), each
+click glides about 80% of the row's width; Shift plus the wheel now glides along the row too. `SmoothScroller` gained a sideways mode for this. Home's rows scroll in pixels (not whole posters) so the glide is smooth.
+Not done: sideways swipes on a touchpad (WPF does not report them without more work).

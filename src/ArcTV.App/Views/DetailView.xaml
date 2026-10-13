@@ -106,44 +106,44 @@
         <!-- a show's seasons and episodes -->
         <StackPanel x:Name="SeasonsPanel" Margin="0,34,0,0" Visibility="Collapsed">
           <TextBlock Text="Seasons" FontSize="22" FontWeight="Bold" Margin="44,0,44,14" />
-          <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" PreviewMouseWheel="OnRowWheel">
+          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
             <StackPanel x:Name="SeasonButtons" Orientation="Horizontal" Margin="44,0" />
-          </ScrollViewer>
+          </c:ArrowScrollViewer>
           <StackPanel Orientation="Horizontal" Margin="44,18,44,10">
             <TextBlock x:Name="SeasonTitle" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Bottom" />
             <TextBlock x:Name="SeasonCount" FontSize="14" Foreground="{StaticResource Text3Brush}" VerticalAlignment="Bottom" Margin="12,0,0,1" />
           </StackPanel>
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" PreviewMouseWheel="OnRowWheel">
+          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="EpisodeList" Margin="44,0,28,10">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate><VirtualizingStackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
               </ItemsControl.ItemsPanel>
             </ItemsControl>
-          </ScrollViewer>
+          </c:ArrowScrollViewer>
         </StackPanel>
 
         <!-- the cast -->
         <StackPanel x:Name="CastPanel" Margin="0,30,0,0" Visibility="Collapsed">
           <TextBlock Text="Cast" FontSize="22" FontWeight="Bold" Margin="44,0,44,12" />
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" PreviewMouseWheel="OnRowWheel">
+          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="CastList" Margin="44,0,28,10">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate><VirtualizingStackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
               </ItemsControl.ItemsPanel>
             </ItemsControl>
-          </ScrollViewer>
+          </c:ArrowScrollViewer>
         </StackPanel>
 
         <!-- a movie's page ends with other titles to try -->
         <StackPanel x:Name="SimilarPanel" Margin="0,30,0,0" Visibility="Collapsed">
           <TextBlock Text="You May Also Like" FontSize="22" FontWeight="Bold" Margin="44,0,44,12" />
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" PreviewMouseWheel="OnRowWheel">
+          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="SimilarList" Margin="44,0,28,10">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate><VirtualizingStackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
               </ItemsControl.ItemsPanel>
             </ItemsControl>
-          </ScrollViewer>
+          </c:ArrowScrollViewer>
         </StackPanel>
       </StackPanel>
     </ScrollViewer>

@@ -170,13 +170,4 @@ public partial class DetailView : UserControl
 
     /// <summary>The title shows instead of the logo until the logo has loaded (a title with no logo, or one that never loads, keeps its words).</summary>
     private void OnLogoShown(object? sender, EventArgs e) => TitleText.Visibility = Visibility.Hidden;
-
-    /// <summary>A row sits inside the page, so the wheel scrolls the page; Shift-wheel moves along the row.</summary>
-    private void OnRowWheel(object sender, MouseWheelEventArgs e)
-    {
-        var row = (ScrollViewer)sender;
-        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)) row.ScrollToHorizontalOffset(row.HorizontalOffset - Math.Sign(e.Delta) * 60);
-        else PageScroll.ScrollToVerticalOffset(PageScroll.VerticalOffset - e.Delta);
-        e.Handled = true;
-    }
 }

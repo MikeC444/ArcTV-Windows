@@ -12,12 +12,12 @@
     <DataTemplate DataType="{x:Type home:HomeSection}">
       <StackPanel Margin="0,0,0,16">
         <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" Margin="44,0,0,0" />
-        <ItemsControl ItemsSource="{Binding Items}" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+        <ItemsControl ItemsSource="{Binding Items}" VirtualizingPanel.ScrollUnit="Pixel" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollBarVisibility="Disabled">
           <ItemsControl.Template>
             <ControlTemplate TargetType="ItemsControl">
-              <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" CanContentScroll="True" Focusable="False" Padding="44,0,0,0" PreviewMouseWheel="OnRowWheel">
+              <c:ArrowScrollViewer CanContentScroll="True" Padding="44,0,0,0">
                 <ItemsPresenter />
-              </ScrollViewer>
+              </c:ArrowScrollViewer>
             </ControlTemplate>
           </ItemsControl.Template>
           <ItemsControl.ItemsPanel>
