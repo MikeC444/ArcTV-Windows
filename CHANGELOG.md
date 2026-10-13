@@ -614,3 +614,5 @@ Issues discovered: none yet.
 
 Still open: a Download button on each episode (the Mac has one; here the panel's episode choice covers it), debrid cached/not-cached chips, the Downloads page the Mac's panel links to, resuming a download after the app closes.
 
+**Follow-up (owner: the Downloads popup shrank and grew when a season or episode was picked).** The panel sized itself to what it held, so the loading and short lists made it smaller. It now has a fixed size (720 x 700, or what the window allows) and the files scroll inside it.
+

@@ -17,6 +17,7 @@ public sealed class DownloadPanelView : Grid
 {
     private const string Mdl2 = "Segoe MDL2 Assets";
     private const double PanelWidth = 720;
+    private const double PanelHeight = 700;
     private const double BannerHeight = 230;
 
     private readonly Func<PlayTarget, CancellationToken, Task<SourceResult>> _find;
@@ -76,11 +77,11 @@ public sealed class DownloadPanelView : Grid
         _panel.MouseLeftButtonDown += (_, e) => e.Handled = true; // a click inside is not a click on the dim
         Children.Add(_panel);
 
-        // as wide as 720 and as tall as the window allows
+        // always the same size, whatever the files below are showing: as wide as 720 and as tall as 700, or as the window allows (never changing with the season or episode picked)
         SizeChanged += (_, e) =>
         {
             _panel.Width = Math.Max(320, Math.Min(PanelWidth, e.NewSize.Width - 48));
-            _panel.MaxHeight = Math.Max(300, e.NewSize.Height - 60);
+            _panel.Height = Math.Max(300, Math.Min(PanelHeight, e.NewSize.Height - 60));
         };
 
         ShowBanner();
