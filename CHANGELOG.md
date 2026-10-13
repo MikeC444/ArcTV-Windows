@@ -517,3 +517,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: more space between Home's rows; bigger title text under the posters).** The gap under each row is 44 pixels (was 16) for the addon rows, Continue Watching and Picked for you. The title under a poster is 17 (was 13) on every poster (the shared poster design, so Movies, TV Shows, Search and My List too) and under Continue Watching's and Picked for you's cards; the reason line under a Picked for you card is 14 (was 11). Not seen on screen.
 
+**Follow-up (owner: Settings > Addons in two columns, not one).** The addons are in a two-column grid (messages such as "Loading your addons…" and "No addons yet" still take the full width), and the Addons page is allowed to be wider than the other settings pages (1180, the others stay 700) so each card keeps about the width it had. Not seen on screen: a narrow window gives each card less room for its description, which is trimmed to two lines.
+

@@ -182,6 +182,7 @@ public sealed class SettingsView : UserControl
         _current = name;
         foreach (var (place, row) in _rows) row.Background = place == name ? new SolidColorBrush(Color.FromArgb(0x1A, 255, 255, 255)) : Brushes.Transparent;
         _title.Text = name;
+        _right.MaxWidth = name == "Addons" ? 1180 : 700; // the addons sit two to a row, so their page is wider
         _pane.Content = name switch
         {
             "Account" => new AccountPane(_settings, _user.Email, _user.DisplayName, _refreshHome, _signOut),

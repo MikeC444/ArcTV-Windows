@@ -12,7 +12,7 @@ namespace ArcTV.App.Views;
 public sealed class AddonsPane : UserControl
 {
     private readonly AddonsModel _addons;
-    private readonly StackPanel _list = new();
+    private readonly UniformGrid _list = new() { Columns = 1 };
     private readonly TextBlock _message = new() { FontSize = 13, Margin = new Thickness(0, 10, 0, 0), TextWrapping = TextWrapping.Wrap };
     private readonly TextBox _link = new() { Style = (Style)Application.Current.FindResource("Field") };
     private readonly Button _add = new() { Content = "Add", Style = (Style)Application.Current.FindResource("PrimaryButton"), Height = 44, Width = 96, Margin = new Thickness(10, 0, 0, 0) };
@@ -90,6 +90,7 @@ public sealed class AddonsPane : UserControl
         _add.IsEnabled = !_addons.Busy;
 
         _list.Children.Clear();
+        _list.Columns = 1; // messages take the whole width; the addons go two to a row
         if (!_addons.Loaded)
         {
             _list.Children.Add(new TextBlock { Text = "Loading your addons…", Foreground = Res("Text2Brush") });
@@ -102,6 +103,7 @@ public sealed class AddonsPane : UserControl
             return;
         }
 
+        _list.Columns = 2;
         foreach (var addon in _addons.Items) _list.Children.Add(Card(addon));
     }
 
@@ -110,7 +112,7 @@ public sealed class AddonsPane : UserControl
         var card = new Border
         {
             Background = Res("BgElevatedBrush"), BorderBrush = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255)), BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(14), Padding = new Thickness(16, 14, 16, 14), Margin = new Thickness(0, 0, 0, 10),
+            CornerRadius = new CornerRadius(14), Padding = new Thickness(16, 14, 16, 14), Margin = new Thickness(0, 0, 10, 10),
         };
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new ColumnDefinition());
