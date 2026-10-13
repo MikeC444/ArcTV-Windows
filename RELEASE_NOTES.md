@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Posters are bigger, so fewer fit across the screen at once.
 - Sign in with your email, or scan a QR code with your phone. You stay signed in next time.
 - Home is here: a rotating banner (with More info and My List buttons) and rows of movies and shows from your addons.
 - Movies and TV Shows pages: pick a genre, sort by Featured, Highest Rated or Newest, and keep scrolling for more. Posters are bigger and fade in, scrolling glides, and rows spread to fill the window as you resize it.
