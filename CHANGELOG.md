@@ -303,7 +303,7 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 - The picture is drawn by mpv into a child window (`MpvHost`); WPF cannot draw over such a window, so the controls live in a transparent owned window (`PlayerOverlay`) kept over the video. Loading cover: the title's artwork dimmed, the logo in the middle, a spinner under it. Once playing, the logo sits top right (with the episode name for a show).
 - Controls: back, -10 / +10, play/pause, time, timeline (click and drag), time left, mute and volume, Audio / Subtitles / Speed menus, full screen; they hide after 3 seconds of no movement. Keys: Space, Left/Right, Up/Down, M, F, Esc.
 - Sources page: clicking a direct link now plays it (a torrent is still listed only). `ShellView` hides the top bar while playing.
-- libmpv is an LGPL build fetched by `scripts/get-libmpv.ps1` (from shinchiro/mpv-winbuild-cmake) by the CI workflow and, on a Windows build, by the project when the file is missing; copied beside `ArcTV.exe`. Not kept in git. `THIRD_PARTY_NOTICES.md` added.
+- libmpv is fetched by `scripts/get-libmpv.ps1` (from shinchiro/mpv-winbuild-cmake; the first run found no LGPL-only asset in its releases, so the standard x86_64 build is used, whose licence still needs checking) by the CI workflow and, on a Windows build, by the project when the file is missing; copied beside `ArcTV.exe`. Not kept in git. `THIRD_PARTY_NOTICES.md` added.
 
 **Tests performed:** see the build run. New: `PlayerTests` (Core) and a screen test that opens the player with a stand-in engine.
 
