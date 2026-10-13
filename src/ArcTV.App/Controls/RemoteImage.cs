@@ -22,13 +22,14 @@ public sealed class RemoteImage : Image
     private static readonly Dictionary<string, BitmapSource> Kept = [];
     private static readonly Queue<string> KeptOrder = new();
 
-    public static readonly DependencyProperty UrlProperty = DependencyProperty.Register(nameof(Url), typeof(string), typeof(RemoteImage), new PropertyMetadata(null, (d, _) => ((RemoteImage)d).Load()));
+    public static readonly DependencyProperty UrlProperty = DependencyProperty.Register(nameof(Url), typeof(string), typeof(RemoteImage), new PropertyMetadata(null, (d, _) => ((RemoteImage)d).Schedule()));
 
-    public static readonly DependencyProperty DecodeWidthProperty = DependencyProperty.Register(nameof(DecodeWidth), typeof(int), typeof(RemoteImage), new PropertyMetadata(320));
+    public static readonly DependencyProperty DecodeWidthProperty = DependencyProperty.Register(nameof(DecodeWidth), typeof(int), typeof(RemoteImage), new PropertyMetadata(320, (d, _) => ((RemoteImage)d).Schedule()));
 
-    public static readonly DependencyProperty FallbackUrlProperty = DependencyProperty.Register(nameof(FallbackUrl), typeof(string), typeof(RemoteImage), new PropertyMetadata(null, (d, _) => ((RemoteImage)d).Load()));
+    public static readonly DependencyProperty FallbackUrlProperty = DependencyProperty.Register(nameof(FallbackUrl), typeof(string), typeof(RemoteImage), new PropertyMetadata(null, (d, _) => ((RemoteImage)d).Schedule()));
 
     private CancellationTokenSource? _cancel;
+    private bool _scheduled;
 
     /// <summary>The address the picture on show actually came from (it can be the fallback), or null while nothing is shown.</summary>
     public Uri? LoadedFrom { get; private set; }
@@ -48,6 +49,21 @@ public sealed class RemoteImage : Image
         {
             if (Source is null && (_cancel is null || _cancel.IsCancellationRequested)) Load();
         };
+    }
+
+    /// <summary>
+    /// Loading starts once the settings that go with a picture are all in (its address, a fallback address, the size to decode at), not at the first of them:
+    /// they are set one after another, and starting at the address used the default size for the picture.
+    /// </summary>
+    private void Schedule()
+    {
+        if (_scheduled) return;
+        _scheduled = true;
+        Dispatcher.BeginInvoke(() =>
+        {
+            _scheduled = false;
+            Load();
+        });
     }
 
     private async void Load()

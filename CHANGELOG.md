@@ -112,6 +112,10 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
   is a guess; if it is still blocky, the address itself is needed.
   Still blurry after that, so a temporary tooltip on the banner now shows the address the picture really came from and its size in pixels, to stop guessing.
   Remove it once the cause is known.
+  Cause found with it: the banner came from the "large" address but was decoded 320 x 180 pixels, the default decode width. `RemoteImage` started loading
+  the moment its address was set, before the decode width (set after it in the same initializer) was in, so every picture was decoded at 320 wide however
+  big it was asked to be: the banner from the start (so the size rewrites above were not what it needed), and posters at 320 instead of 400. Loading now waits
+  until the settings are all in (one dispatcher turn).
 - Pill text: the pill's content now takes its colour from the button, so the selected pill's black text applies.
 
 **Open:** blocked genres (needs profiles/settings), loading skeletons, a virtualised grid (the grid lays out every loaded poster), opening a title (needs title details).
