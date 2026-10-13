@@ -69,7 +69,7 @@ public sealed class CardMenuView : Grid
         panel.LayoutTransform = zoom;
         SizeChanged += (_, e) =>
         {
-            var scale = Math.Clamp(Math.Min(Zoom, (e.NewSize.Width - 40) / 500, (e.NewSize.Height - 60) / 640), 0.6, Zoom);
+            var scale = Math.Clamp(Math.Min(Zoom, Math.Min((e.NewSize.Width - 40) / 500, (e.NewSize.Height - 60) / 640)), 0.6, Zoom);
             zoom.ScaleX = zoom.ScaleY = scale;
             panel.MaxHeight = Math.Max(300, (e.NewSize.Height - 60) / scale);
         };

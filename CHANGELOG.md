@@ -549,3 +549,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: remove the Sources button from the title page).** The button was added with the remembered-source Play so the list could still be forced; it is removed (and its code). Choose source remains in the right-click card menu, and the player has its own Sources button. Play on the title page still uses the remembered or smart source. Not seen on screen.
 
+**Issue fixed (build error in the bigger card menu).** `Math.Min` was given three values, which C# does not allow (CS1501): it broke the build for the bigger card menu and for the removal of the Sources button that was pushed on top of it. It is now two nested `Math.Min` calls. I did not read the build result before pushing the next change.
+
