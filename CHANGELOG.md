@@ -101,6 +101,8 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
   - the wheel scrolls further per notch and glides to a stop (eased on each frame) instead of stepping;
   - a page of lines above and below the screen is kept ready, so scrolling does not wait on pictures; pictures fade in as they arrive; up to 8 download at once;
   - the hover lift on a poster eases in and out instead of snapping (this card is shared with Home).
+- Bigger posters on request: the shared card went from 156x234 to 192x288 (a line is now 208 wide with its gap) and pictures are decoded at 400 wide. Home's rows
+  use the same card, so they grow too.
 - Pill text: the pill's content now takes its colour from the button, so the selected pill's black text applies.
 
 **Open:** blocked genres (needs profiles/settings), loading skeletons, a virtualised grid (the grid lays out every loaded poster), opening a title (needs title details).

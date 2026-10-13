@@ -4,12 +4,12 @@
                     xmlns:addons="clr-namespace:ArcTV.Core.Addons;assembly=ArcTV.Core">
     <!-- one poster: the picture, and the name under it; it lifts a little under the pointer -->
     <DataTemplate DataType="{x:Type addons:MetaPreview}">
-      <StackPanel x:Name="Card" Width="156" Margin="0,10,16,10" Background="Transparent" RenderTransformOrigin="0.5,0.5" Cursor="Hand">
+      <StackPanel x:Name="Card" Width="192" Margin="0,10,16,10" Background="Transparent" RenderTransformOrigin="0.5,0.5" Cursor="Hand">
         <StackPanel.RenderTransform><ScaleTransform x:Name="Lift" ScaleX="1" ScaleY="1" /></StackPanel.RenderTransform>
-        <Border Width="156" Height="234" CornerRadius="10" Background="{StaticResource SurfaceBrush}" ClipToBounds="True">
+        <Border Width="192" Height="288" CornerRadius="10" Background="{StaticResource SurfaceBrush}" ClipToBounds="True">
           <Grid>
             <TextBlock Text="{Binding Name}" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" Margin="12" Foreground="{StaticResource Text3Brush}" FontSize="13" />
-            <c:RemoteImage Url="{Binding Poster}" DecodeWidth="320" Stretch="UniformToFill" />
+            <c:RemoteImage Url="{Binding Poster}" DecodeWidth="400" Stretch="UniformToFill" />
           </Grid>
         </Border>
         <TextBlock Text="{Binding Name}" Margin="2,8,2,0" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />

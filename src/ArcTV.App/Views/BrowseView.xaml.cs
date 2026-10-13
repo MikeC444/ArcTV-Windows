@@ -26,7 +26,7 @@ public partial class BrowseView : UserControl
 
     private readonly string _title;
     private readonly BrowseModel _model;
-    private const double TileWidth = 172;
+    private const double TileWidth = 208;
     private const double SideSpace = 72;
 
     public static readonly DependencyProperty ExtraProperty = DependencyProperty.Register(nameof(Extra), typeof(double), typeof(BrowseView), new PropertyMetadata(0.0));
