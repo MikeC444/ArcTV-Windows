@@ -4,7 +4,7 @@ using ArcTV.Core.Mvvm;
 namespace ArcTV.Core.Sources;
 
 /// <summary>What the source page shows: every stream the account's addons offer for a title or episode, filtered and sorted. Call it from the UI thread.</summary>
-public sealed class SourcesModel(PlayTarget target, Func<CancellationToken, Task<IReadOnlyList<SyncedAddon>>> addons, AddonClient? client = null) : ObservableObject
+public sealed class SourcesModel(PlayTarget target, Func<CancellationToken, Task<IReadOnlyList<SyncedAddon>>> addons, AddonClient? client = null, Func<IReadOnlyList<SourceItem>, SourceItem?>? autoChoose = null) : ObservableObject
 {
     private SourceResult _result = new();
     private bool _loading = true;
@@ -14,6 +14,12 @@ public sealed class SourcesModel(PlayTarget target, Func<CancellationToken, Task
     private int _generation;
 
     public PlayTarget Target { get; } = target;
+
+    /// <summary>The source picked without asking (the next episode, the one last watched, or the best with smart picking), once the list is in; null when the person chooses.</summary>
+    public SourceItem? AutoChosen { get; private set; }
+
+    /// <summary>Raised once, from <see cref="LoadAsync"/>, when a source was picked without asking. The model stays "loading" so the list never flashes up first.</summary>
+    public event Action<SourceItem>? AutoChose;
 
     public SourceResult Result { get => _result; private set { _result = value; Raise(); Raise(nameof(Arranged)); Raise(nameof(RecommendedId)); } }
 
@@ -62,6 +68,13 @@ public sealed class SourcesModel(PlayTarget target, Func<CancellationToken, Task
         }
         catch (OperationCanceledException)
         {
+            return;
+        }
+
+        if (autoChoose?.Invoke(Result.Items) is { } chosen)
+        {
+            AutoChosen = chosen;
+            AutoChose?.Invoke(chosen);
             return;
         }
 

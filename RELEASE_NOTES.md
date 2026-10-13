@@ -5,6 +5,10 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Play carries on with the source you used last time, without asking again. A new "Sources" button on a title lets you pick a different one.
+- Smart source picking (Arc TV Plus) starts the best source that can play, once every addon has answered.
+- The next episode starts by itself when one ends (if Auto Play Next Episode is on), and a Next episode button shows in the last minute.
+- Episodes show a tick when watched and a bar for how far you got. Click the tick to mark one watched, or use Mark season watched. Play starts the next episode you have not seen.
 - Section headings on a title's page (Seasons, Cast, You May Also Like) are bigger.
 - The top of a title's page is bigger: the name or logo, the details, the description and the buttons.
 - "You May Also Like" now always sits at the bottom of a title's page.

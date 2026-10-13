@@ -54,20 +54,46 @@
           </Trigger>
         </DataTemplate.Triggers>
       </DataTemplate>
-    <!-- an episode: its picture with the number on it, then its name and a couple of lines about it -->
-    <DataTemplate DataType="{x:Type core:EpisodeInfo}">
+    <!-- an episode: its picture with the number on it and a tick (green once watched, a bar for how far in), then its name and a couple of lines about it -->
+    <DataTemplate DataType="{x:Type core:EpisodeEntry}">
       <Button Style="{StaticResource PosterButton}" Focusable="True">
       <StackPanel Width="280" Margin="0,6,16,6">
         <c:RoundedBorder Width="280" Height="158" CornerRadius="14" Background="{StaticResource SurfaceBrush}" BorderBrush="#24FFFFFF" BorderThickness="1">
           <Grid>
-            <c:RemoteImage Url="{Binding Thumbnail}" DecodeWidth="560" Stretch="UniformToFill" />
-            <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8" Padding="8,3" CornerRadius="6" Background="#B3000000">
-              <TextBlock Text="{Binding Episode, StringFormat=E{0}}" FontSize="12" FontWeight="Bold" />
+            <c:RemoteImage Url="{Binding Info.Thumbnail}" DecodeWidth="560" Stretch="UniformToFill" />
+            <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8,8,8,14" Padding="8,3" CornerRadius="6" Background="#B3000000">
+              <TextBlock Text="{Binding Info.Episode, StringFormat=E{0}}" FontSize="12" FontWeight="Bold" />
             </Border>
+            <ProgressBar Height="5" VerticalAlignment="Bottom" Minimum="0" Maximum="1" Value="{Binding Fraction, Mode=OneWay}" Foreground="{StaticResource AccentBrush}" Background="#66000000" BorderThickness="0" IsHitTestVisible="False">
+              <ProgressBar.Style>
+                <Style TargetType="ProgressBar">
+                  <Setter Property="Visibility" Value="Collapsed" />
+                  <Style.Triggers><DataTrigger Binding="{Binding InProgress}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                </Style>
+              </ProgressBar.Style>
+            </ProgressBar>
+            <!-- the tick: click it to mark the episode watched or not watched (its click is told apart from a click on the card by its Tag) -->
+            <Button Tag="tick" Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Cursor="Hand" Focusable="False" ToolTip="Mark as watched">
+              <Button.Template>
+                <ControlTemplate TargetType="Button">
+                  <Border x:Name="Disc" CornerRadius="15" Background="#99000000" BorderBrush="#66FFFFFF" BorderThickness="1">
+                    <TextBlock x:Name="Mark" Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  </Border>
+                  <ControlTemplate.Triggers>
+                    <DataTrigger Binding="{Binding Watched}" Value="True">
+                      <Setter TargetName="Disc" Property="Background" Value="#2ECC71" />
+                      <Setter TargetName="Disc" Property="BorderBrush" Value="#2ECC71" />
+                      <Setter TargetName="Mark" Property="Foreground" Value="Black" />
+                    </DataTrigger>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Disc" Property="BorderBrush" Value="White" /></Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate>
+              </Button.Template>
+            </Button>
           </Grid>
         </c:RoundedBorder>
-        <TextBlock Text="{Binding DisplayTitle}" Margin="2,8,2,0" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-        <TextBlock Text="{Binding Overview}" Margin="2,2,2,0" FontSize="12" Foreground="{StaticResource Text2Brush}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="34" />
+        <TextBlock Text="{Binding Info.DisplayTitle}" Margin="2,8,2,0" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+        <TextBlock Text="{Binding Info.Overview}" Margin="2,2,2,0" FontSize="12" Foreground="{StaticResource Text2Brush}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="34" />
       </StackPanel>
       </Button>
     </DataTemplate>
@@ -140,6 +166,7 @@
         <Grid Margin="24,28,24,0">
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
             <Button x:Name="PlayButton" Content="&#x25B6;  Play" Style="{StaticResource PrimaryButton}" Height="60" FontSize="18" Padding="34,0" IsEnabled="False" Margin="0,0,16,0" Click="OnPlay" />
+            <Button x:Name="SourcesButton" Content="Sources" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" IsEnabled="False" ToolTip="Choose which source to play from" Click="OnSources" />
             <Button x:Name="TrailerButton" Content="Trailer" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" IsEnabled="False" ToolTip="Looking for a trailer…" Click="OnTrailer" />
             <Button x:Name="ListButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" Click="OnList" />
             <Button x:Name="WatchedButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" Click="OnWatched" />
@@ -168,6 +195,7 @@
           <StackPanel Orientation="Horizontal" Margin="24,18,24,10">
             <TextBlock x:Name="SeasonTitle" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Bottom" />
             <TextBlock x:Name="SeasonCount" FontSize="14" Foreground="{StaticResource Text3Brush}" VerticalAlignment="Bottom" Margin="12,0,0,1" />
+            <Button x:Name="SeasonWatchedButton" Style="{StaticResource ChoicePill}" Margin="18,0,0,0" VerticalAlignment="Bottom" Click="OnSeasonWatched" />
           </StackPanel>
           <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ArrowCenter="85">
             <ItemsControl x:Name="EpisodeList" Margin="24,0,24,10">

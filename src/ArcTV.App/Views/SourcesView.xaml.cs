@@ -20,8 +20,12 @@ public partial class SourcesView : UserControl
     private readonly Action _back;
     private readonly Action<PlayingItem>? _play;
     private CancellationTokenSource? _run;
+    private bool _started;
     private SmoothScroller? _smooth;
     private SmoothScroller? _smoothInfo;
+
+    /// <summary>True when a source was picked without asking, so this page was only a way through to the player.</summary>
+    public bool AutoChosen => _model.AutoChosen is not null;
 
     public SourcesView(SourcesModel model, LastSourceStore? store, Action back, Action<PlayingItem>? play = null)
     {
@@ -38,12 +42,17 @@ public partial class SourcesView : UserControl
         {
             _model.PropertyChanged -= OnModelChanged;
             _model.PropertyChanged += OnModelChanged;
+            _model.AutoChose -= OnAutoChose;
+            _model.AutoChose += OnAutoChose;
             Refresh();
+            if (_started && !_model.Loading) return; // coming back from the player: the list is as it was (and a source picked last time must not start again)
+            _started = true;
             await LoadAsync();
         };
         Unloaded += (_, _) =>
         {
             _model.PropertyChanged -= OnModelChanged;
+            _model.AutoChose -= OnAutoChose;
             _run?.Cancel();
             _smooth?.Stop();
             _smoothInfo?.Stop();
@@ -58,6 +67,9 @@ public partial class SourcesView : UserControl
     }
 
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
+
+    /// <summary>A source was picked without asking: play it at once (the list was never shown).</summary>
+    private void OnAutoChose(SourceItem item) => Choose(item);
 
     // ---- the title on the left ----
 

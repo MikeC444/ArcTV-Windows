@@ -30,6 +30,9 @@ public partial class DetailView : UserControl
     private SmoothScroller? _smooth;
     private CancellationTokenSource? _run;
     private IReadOnlyList<int> _seasonsShown = [];
+    private IReadOnlyDictionary<string, EpisodeStatus> _statuses = new Dictionary<string, EpisodeStatus>();
+    private int _statusVersion;
+    private (EpisodeInfo? First, int Season, int Version)? _entriesKey;
 
     public DetailView(DetailModel model, MyListModel list, Action back, Func<IReadOnlyList<MetaPreview>>? similarPool = null, Action<PlayTarget>? play = null, PlusModel? plus = null, ContinueModel? cont = null)
     {
@@ -60,6 +63,7 @@ public partial class DetailView : UserControl
                 _continue.PropertyChanged -= OnContinueChanged;
                 _continue.PropertyChanged += OnContinueChanged;
                 if (_continue.Items.Count == 0) await _continue.LoadAsync(run.Token); // so Play knows where this title was left
+                await LoadStatusesAsync(run.Token); // so the episodes show their ticks, and Play knows which episode is next (read again on coming back from the player)
             }
 
             if (_plus is not null)
@@ -143,7 +147,8 @@ public partial class DetailView : UserControl
         if (!_model.IsShow) return left is null ? new PlayTarget(_model.Detail) : new PlayTarget(_model.Detail) with { StartAt = left.PositionSeconds };
         if (left is { SeasonNumber: { } s, EpisodeNumber: { } e } && _model.Detail.Seasons.GetValueOrDefault(s)?.FirstOrDefault(x => x.Episode == e) is { } episode)
             return EpisodeTarget(episode) with { StartAt = left.PositionSeconds };
-        var first = _model.Detail.SeasonNumbers.Count > 0 ? _model.Detail.Seasons[_model.Detail.SeasonNumbers[0]].FirstOrDefault() : null;
+        // nothing to resume: the episode after the furthest one watched, else the first
+        var first = EpisodeProgress.NextEpisode(_model.Detail.Seasons, _statuses) ?? (_model.Detail.SeasonNumbers.Count > 0 ? _model.Detail.Seasons[_model.Detail.SeasonNumbers[0]].FirstOrDefault() : null);
         return first is null ? null : EpisodeTarget(first);
     }
 
@@ -154,6 +159,7 @@ public partial class DetailView : UserControl
     {
         var target = MainTarget();
         PlayButton.IsEnabled = _play is not null && target is not null;
+        SourcesButton.IsEnabled = PlayButton.IsEnabled;
         var resuming = target is { StartAt: > 0 };
         PlayButton.Content = target is { Season: { } season, Episode: { } episode } ? $"\u25B6  {(resuming ? "Resume" : "Play")} S{season}E{episode}" : resuming ? "\u25B6  Resume" : "\u25B6  Play";
         PlayButton.ToolTip = _play is null ? "Playing is coming soon to Arc TV for Windows." : target is null ? "Looking for episodes…" : null;
@@ -164,10 +170,68 @@ public partial class DetailView : UserControl
         if (_play is not null && MainTarget() is { } target) _play(target);
     }
 
+    /// <summary>Choose which source to play from: the list is shown even when a source was used before.</summary>
+    private void OnSources(object sender, RoutedEventArgs e)
+    {
+        if (_play is not null && MainTarget() is { } target) _play(target with { ChooseSource = true });
+    }
+
+    /// <summary>A click on an episode's card plays it; a click on the tick on its picture marks it watched or not watched.</summary>
     private void OnEpisodeClick(object sender, RoutedEventArgs e)
     {
-        if (_play is not null && e.OriginalSource is Button { DataContext: EpisodeInfo episode }) _play(EpisodeTarget(episode));
+        if (e.OriginalSource is not Button { DataContext: EpisodeEntry entry } button) return;
+        if (button.Tag is "tick")
+        {
+            SetWatched([entry.Info], !entry.Watched);
+            e.Handled = true;
+        }
+        else if (_play is not null)
+        {
+            _play(EpisodeTarget(entry.Info));
+        }
     }
+
+    // ---- which episodes have been watched ----
+
+    private async Task LoadStatusesAsync(CancellationToken cancel = default)
+    {
+        if (_continue is null || !_model.IsShow) return;
+        if (await _continue.EpisodeStatusesAsync(_model.Detail.Id, cancel) is { } found) SetStatuses(found);
+    }
+
+    private void SetStatuses(IReadOnlyDictionary<string, EpisodeStatus> statuses)
+    {
+        _statuses = statuses;
+        _statusVersion++;
+        RefreshSeasons();
+        RefreshPlay();
+    }
+
+    /// <summary>Marks episodes watched or not watched: the tick changes at once, the account is told, and if that fails the real state is read again.</summary>
+    private async void SetWatched(IReadOnlyList<EpisodeInfo> episodes, bool watched)
+    {
+        if (_continue is null) return;
+        var next = _statuses.ToDictionary(p => p.Key, p => p.Value);
+        foreach (var episode in episodes)
+        {
+            if (EpisodeProgress.Key(episode.Season, episode.Episode) is not { } key) continue;
+            if (watched) next[key] = new EpisodeStatus(true, 1);
+            else next.Remove(key);
+        }
+
+        SetStatuses(next);
+        if (!await _continue.SetEpisodesWatchedAsync(episodes, watched, _model.Detail)) await LoadStatusesAsync();
+    }
+
+    private void OnSeasonWatched(object sender, RoutedEventArgs e)
+    {
+        var episodes = _model.Episodes;
+        if (episodes.Count == 0) return;
+        SetWatched(episodes, !AllWatched(episodes));
+    }
+
+    private bool AllWatched(IReadOnlyList<EpisodeInfo> episodes) =>
+        episodes.Count > 0 && episodes.All(ep => EpisodeProgress.Key(ep.Season, ep.Episode) is { } key && _statuses.TryGetValue(key, out var status) && status.Watched);
 
     private void RefreshTrailer()
     {
@@ -232,7 +296,18 @@ public partial class DetailView : UserControl
         var episodes = _model.Episodes;
         SeasonTitle.Text = $"Season {_model.CurrentSeason}";
         SeasonCount.Text = $"{episodes.Count} {(episodes.Count == 1 ? "Episode" : "Episodes")}";
-        if (!ReferenceEquals(EpisodeList.ItemsSource, episodes)) EpisodeList.ItemsSource = episodes;
+        var allWatched = AllWatched(episodes);
+        SeasonWatchedButton.Content = allWatched ? "\u2713  Season watched" : "Mark season watched";
+        SeasonWatchedButton.Tag = allWatched ? "selected" : "";
+        SeasonWatchedButton.ToolTip = allWatched ? "Mark this season as not watched" : "Mark every episode of this season as watched";
+        SeasonWatchedButton.Visibility = _continue is null ? Visibility.Collapsed : Visibility.Visible;
+
+        var key = (episodes.FirstOrDefault(), _model.CurrentSeason, _statusVersion);
+        if (_entriesKey != key || EpisodeList.ItemsSource is null)
+        {
+            _entriesKey = key;
+            EpisodeList.ItemsSource = EpisodeProgress.Entries(episodes, _statuses);
+        }
     }
 
     // ---- buttons ----

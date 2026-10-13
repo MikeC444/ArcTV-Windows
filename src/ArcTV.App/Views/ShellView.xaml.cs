@@ -285,16 +285,34 @@ public partial class ShellView : UserControl
     {
         target = _continue.Resume(target); // a title in Continue Watching starts from where it was left
         if (Page.Content is UIElement current) _history.Push((current, _place));
-        var store = new LastSourceStore(Path.Combine(AppPaths.DataFolder(), "last-sources.json"), _account.Session!.User.Id);
-        Page.Content = new SourcesView(new SourcesModel(target, AccountAddonsAsync, _addonClient), store, GoBack, OpenPlayer);
+        Page.Content = SourcesPage(target);
     }
 
-    /// <summary>The player, over the sources page; the top bar is out of the way while it plays, and Back returns to the sources.</summary>
+    /// <summary>
+    /// The source page for a target. It skips itself (and the player starts) when a source can be picked without asking: the next episode of a binge, the one this title was last
+    /// watched on, or (with Plus) the best one when smart source picking is on.
+    /// </summary>
+    private SourcesView SourcesPage(PlayTarget target)
+    {
+        var store = new LastSourceStore(Path.Combine(AppPaths.DataFolder(), "last-sources.json"), _account.Session!.User.Id);
+        var smart = _plus.Active && _local.SmartPicking;
+        var model = new SourcesModel(target, AccountAddonsAsync, _addonClient, items => AutoPick.Choose(target, items, store.Get(target.Title.Id, target.Season, target.Episode), smart));
+        return new SourcesView(model, store, GoBack, OpenPlayer);
+    }
+
+    /// <summary>The player, over the sources page; the top bar is out of the way while it plays, and Back returns to the sources (or, when the source was picked without asking, to the page before).</summary>
     private void OpenPlayer(PlayingItem item)
     {
-        if (Page.Content is UIElement current) _history.Push((current, _place));
+        if (Page.Content is UIElement current && current is not SourcesView { AutoChosen: true }) _history.Push((current, _place));
         Bar.Visibility = Visibility.Collapsed;
-        Page.Content = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack, (target, position, duration) => _ = _continue.ReportAsync(target, position, duration));
+        Page.Content = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack, (target, position, duration) => _ = _continue.ReportAsync(target, position, duration), PlayNext, () => _settingsModel.Current?.AutoplayNextEpisode ?? true);
+    }
+
+    /// <summary>The next episode takes the player's place (Back from it goes where Back from this one would have).</summary>
+    private void PlayNext(PlayTarget target)
+    {
+        if (_history.Count > 0 && _history.Peek().Item1 is SourcesView) _history.Pop(); // the list for the episode that just ended is out of date
+        Page.Content = SourcesPage(target);
     }
 
     private void GoBack()

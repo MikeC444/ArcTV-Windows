@@ -4,6 +4,7 @@ using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Details;
 using ArcTV.Core.Mvvm;
+using ArcTV.Core.Plus;
 using ArcTV.Core.Sources;
 
 namespace ArcTV.Core.Continue;
@@ -84,6 +85,9 @@ public interface IContinueStore
     Task ReportAsync(string body, CancellationToken cancel = default);
 
     Task RemoveAsync(ContinueItem item, CancellationToken cancel = default);
+
+    /// <summary>The profile's watch history (one row per movie or episode), for the episode ticks.</summary>
+    Task<IReadOnlyList<HistoryItem>> HistoryAsync(CancellationToken cancel = default);
 }
 
 public sealed class AccountContinueStore(AccountModel account) : IContinueStore
@@ -96,6 +100,8 @@ public sealed class AccountContinueStore(AccountModel account) : IContinueStore
             await c.ReportProgressAsync(t, body, cancel).ConfigureAwait(false);
             return true;
         });
+
+    public async Task<IReadOnlyList<HistoryItem>> HistoryAsync(CancellationToken cancel = default) => (await account.AuthorizedAsync((c, t) => c.HistoryAsync(t, cancel)).ConfigureAwait(false)).Items;
 
     public Task RemoveAsync(ContinueItem item, CancellationToken cancel = default) =>
         account.AuthorizedAsync(async (c, t) =>
@@ -229,5 +235,58 @@ public sealed class ContinueModel(IContinueStore store, Func<MetaDetail, Task>? 
         if (target.StartAt > 0) return target;
         var item = ResumeItem(target.Title.Id, target.Season, target.Episode);
         return item is { NearlyDone: false, PositionSeconds: >= 10 } ? target with { StartAt = item.PositionSeconds } : target;
+    }
+
+    /// <summary>Which episodes of a show are finished or part-way, from the watch history; null when the history cannot be read.</summary>
+    public async Task<IReadOnlyDictionary<string, EpisodeStatus>?> EpisodeStatusesAsync(string contentId, CancellationToken cancel = default)
+    {
+        try
+        {
+            return EpisodeProgress.Statuses(await store.HistoryAsync(cancel).ConfigureAwait(true), contentId);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Marks episodes watched or not watched from the episode list. Watched is a finished report for each episode (it lands in the watch history as completed); not watched writes it back
+    /// to the start. The account keeps one Continue Watching pointer per show and a finished report clears it, so the episode the person is actually partway through (when it is not one of
+    /// these) is put back afterwards; un-marking with nothing to put back clears the pointer the report just made. The steps run one after another, each stamped later than the last.
+    /// Returns false when any step failed (the caller then reads the real state again).
+    /// </summary>
+    public async Task<bool> SetEpisodesWatchedAsync(IReadOnlyList<EpisodeInfo> episodes, bool watched, MetaDetail title, CancellationToken cancel = default)
+    {
+        var duration = (Format.RuntimeMinutes(title.Runtime) ?? EpisodeProgress.FallbackRuntimeMinutes) * 60.0;
+        var keys = episodes.Select(e => EpisodeProgress.Key(e.Season, e.Episode)).OfType<string>().ToHashSet();
+        var restore = Items.FirstOrDefault(i => i.ContentId == title.Id && i.SeasonNumber is not null && i.EpisodeNumber is not null && !keys.Contains(EpisodeProgress.Key(i.SeasonNumber, i.EpisodeNumber)!));
+        var stamp = _now();
+        string At() => IsoDate.From(stamp = stamp.AddMilliseconds(5));
+        try
+        {
+            foreach (var episode in episodes)
+            {
+                var heading = $"S{episode.Season ?? 0} E{episode.Episode ?? 0} {episode.DisplayTitle}";
+                await store.ReportAsync(ContinueApi.ProgressBody(title, episode.Season, episode.Episode, heading, watched ? duration : 0, duration, watched, At()), cancel).ConfigureAwait(true);
+            }
+
+            if (restore is not null)
+            {
+                await store.ReportAsync(ContinueApi.ProgressBody(title, restore.SeasonNumber, restore.EpisodeNumber, restore.EpisodeTitle, restore.PositionSeconds, Math.Max(restore.DurationMs / 1000.0, 1), false, At()), cancel).ConfigureAwait(true);
+            }
+            else if (!watched && (await store.ListAsync(cancel).ConfigureAwait(true)).FirstOrDefault(i => i.ContentId == title.Id) is { } pointer)
+            {
+                await store.RemoveAsync(pointer, cancel).ConfigureAwait(true);
+            }
+
+            await LoadAsync(cancel).ConfigureAwait(true);
+            return true;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            await LoadAsync(cancel).ConfigureAwait(true);
+            return false;
+        }
     }
 }

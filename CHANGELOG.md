@@ -459,3 +459,21 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 **Follow-up (owner: make the top of the title page bigger).** The title is 58 (was 44), the logo can be 520 x 145 (was 400 x 110), the year and length 21 (was 16), the genres 17 (was 13), the description 20 (was 15) and up to 840 wide, and the buttons 60 high with 18-point words (were 48 and 14), with wider spacing; the thumbs are 26. The column holding the text is wider (1000, was 800) so the bigger text does not wrap early. Seasons, Cast and You May Also Like are unchanged. Not seen on screen.
 
 **Follow-up (owner: bigger "You May Also Like" heading).** The headings Seasons, Cast and You May Also Like on the title page are 30 (were 22); the three are kept the same size so they match. Not seen on screen.
+
+## 16 -- Playback behaviour: last source, smart picking, next episode, episode ticks
+
+**Status:** Built and tested by the Windows build server (the xUnit tests and the screen tests); not run on a screen here (see below). Ported from the Mac app's `SourcesView.load`, `EpisodeProgress`, `DetailView` and `MPVPlayerScreen`.
+
+**Context:** Choosing a source every time, no next episode, and no sign of what had been watched were the biggest gaps once the player worked.
+
+**Changes:**
+- `AutoPick.Choose` (Core) decides when the source page skips itself: the next episode of a binge takes the best source that plays; otherwise the source last used for this title or episode (only a direct link, since torrents cannot play yet); otherwise, with Plus and smart source picking on, the best that plays; "Sources" on the title page always shows the list. `SourcesModel` takes the rule, stays "loading" while it hands over (so the list never flashes), and raises `AutoChose`. A page picked this way is not put on the Back stack, so Back from the video goes to the page before it, and coming back to a list does not reload it (which would start the last source again).
+- Next episode: `MetaDetail.EpisodeAfter` (same season, else the next season, specials skipped). The player shows a Next episode button in the last minute and, when an episode ends and Auto Play Next Episode is on, starts the next one; it takes the player's place, with its source picked without asking.
+- Episode ticks: `EpisodeProgress` (statuses from the watch history, next episode after the furthest watched, entries for the list). Each episode card has a tick (green once watched, click to change) and a bar for a part-watched one; "Mark season watched"; Play and Resume start the episode after the furthest watched. `ContinueModel.SetEpisodesWatchedAsync` reports each episode as finished (or back to the start) one after another and puts back the Continue Watching pointer the reports would have cleared.
+
+**Tests performed:** New xUnit tests for the episode order, history statuses, next episode, the auto-pick rules, the model's hand-over, and marking watched or not (including the restored pointer and a failure). Build and tests run on the Windows server; nothing was run on a screen from this sandbox.
+
+**Issues discovered:** The sandbox cannot reach the .NET installer (blocked by the network policy), so this change was not compiled locally.
+
+**Issues fixed:** None yet.
+

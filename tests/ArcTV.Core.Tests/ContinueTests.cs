@@ -12,6 +12,9 @@ public class ContinueTests
         public List<ContinueItem> Items = [];
         public List<string> Reports = [];
         public bool Fail;
+        public List<ArcTV.Core.Plus.HistoryItem> History = [];
+
+        public Task<IReadOnlyList<ArcTV.Core.Plus.HistoryItem>> HistoryAsync(CancellationToken cancel = default) => Fail ? throw new HttpRequestException("down") : Task.FromResult<IReadOnlyList<ArcTV.Core.Plus.HistoryItem>>(History.ToList());
 
         public Task<IReadOnlyList<ContinueItem>> ListAsync(CancellationToken cancel = default) => Fail ? throw new HttpRequestException("down") : Task.FromResult<IReadOnlyList<ContinueItem>>(Items.ToList());
 
@@ -131,6 +134,58 @@ public class ContinueTests
         asked.Clear();
         await model.LoadAsync();
         Assert.Equal(["tt2"], asked); // only the one still without a logo is tried again
+    }
+
+    private static MetaDetail ThreeEpisodes() => new("tt5", "series", "Show tt5", Runtime: "40 min", Videos:
+        [new("a", Season: 1, Episode: 1, Title: "One"), new("b", Season: 1, Episode: 2, Title: "Two"), new("c", Season: 1, Episode: 3, Title: "Three")]);
+
+    [Fact]
+    public async Task MarkingEpisodesWatchedReportsEachAsFinishedAndPutsBackWhereThePersonIs()
+    {
+        var show = ThreeEpisodes();
+        var store = new FakeStore { Items = [Episode("tt5", 1, 3, 600_000)] }; // partway through episode 3
+        var model = new ContinueModel(store);
+        await model.LoadAsync();
+
+        Assert.True(await model.SetEpisodesWatchedAsync(show.Seasons[1].Take(2).ToList(), true, show));
+        Assert.Equal(3, store.Reports.Count); // two finished episodes, then episode 3 put back as the pointer
+        Assert.Contains("\"completed\":true", store.Reports[0]);
+        Assert.Contains("\"episodeNumber\":1", store.Reports[0]);
+        Assert.Contains("\"positionMs\":2400000", store.Reports[0]); // the show's own 40 minutes
+        Assert.Contains("\"episodeNumber\":2", store.Reports[1]);
+        Assert.Contains("\"episodeNumber\":3", store.Reports[2]);
+        Assert.Contains("\"completed\":false", store.Reports[2]);
+        Assert.Contains("\"positionMs\":600000", store.Reports[2]);
+    }
+
+    [Fact]
+    public async Task MarkingNotWatchedWritesTheStartBackAndClearsThePointerTheReportMade()
+    {
+        var show = ThreeEpisodes();
+        var store = new FakeStore { Items = [Episode("tt5", 1, 1, 2_400_000)] }; // the pointer is the very episode being un-marked
+        var model = new ContinueModel(store);
+        await model.LoadAsync();
+
+        Assert.True(await model.SetEpisodesWatchedAsync([show.Seasons[1][0]], false, show));
+        Assert.Single(store.Reports);
+        Assert.Contains("\"completed\":false", store.Reports[0]);
+        Assert.Contains("\"positionMs\":0", store.Reports[0]);
+        Assert.Empty(store.Items); // nothing else to put back: the pointer is cleared
+    }
+
+    [Fact]
+    public async Task AFailedMarkingSaysSoAndEpisodeStatusesComeFromTheHistory()
+    {
+        var show = ThreeEpisodes();
+        var store = new FakeStore { Fail = true };
+        var model = new ContinueModel(store);
+        Assert.False(await model.SetEpisodesWatchedAsync([show.Seasons[1][0]], true, show));
+        Assert.Null(await model.EpisodeStatusesAsync("tt5")); // the history cannot be read
+
+        store.Fail = false;
+        store.History = [new("p", "tt5", "TV_SHOW", "Show", 2_400_000, 2_400_000, true, "2026-10-01T00:00:00.000Z", 1, 1)];
+        var statuses = await model.EpisodeStatusesAsync("tt5");
+        Assert.True(statuses!["1:1"].Watched);
     }
 
     [Fact]

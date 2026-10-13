@@ -111,6 +111,24 @@
       </StackPanel>
     </Grid>
 
+    <!-- the last minute of an episode: the next one, one click away (it stays up when the controls have faded) -->
+    <Button x:Name="NextButton" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,40,150" Visibility="Collapsed" Cursor="Hand" Focusable="False" Click="OnNextEpisode">
+      <Button.Template>
+        <ControlTemplate TargetType="Button">
+          <Border CornerRadius="30" Background="White" Padding="22,12">
+            <Border.Effect><DropShadowEffect BlurRadius="14" ShadowDepth="4" Opacity="0.5" /></Border.Effect>
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="&#xE893;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="Black" VerticalAlignment="Center" Margin="0,0,12,0" />
+              <StackPanel>
+                <TextBlock Text="Next episode" FontSize="15" FontWeight="Bold" Foreground="Black" />
+                <TextBlock x:Name="NextText" Text="{TemplateBinding Tag}" FontSize="12" Foreground="Black" MaxWidth="320" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </ControlTemplate>
+      </Button.Template>
+    </Button>
+
     <!-- a jump or a slow patch on the network: the loading symbol in the middle of the picture -->
     <c:Spinner x:Name="Busy" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed" />
 

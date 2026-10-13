@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using ArcTV.App.Controls;
+using ArcTV.Core.Details;
 using ArcTV.Core.Player;
 using ArcTV.Core.Sources;
 
@@ -29,10 +30,15 @@ public partial class PlayerOverlay : Window
     private bool _controlsShown = true;
     private bool _menuOpen;
     private double _volumeBeforeMute = 100;
+    private readonly EpisodeInfo? _next;
+    private readonly Action? _playNext;
 
-    public PlayerOverlay(PlayerModel model, PlayingItem item, Action back, Action toggleFullscreen, Func<bool> isFullscreen, Func<Key, bool> handleKey)
+    public PlayerOverlay(PlayerModel model, PlayingItem item, Action back, Action toggleFullscreen, Func<bool> isFullscreen, Func<Key, bool> handleKey, EpisodeInfo? next = null, Action? playNext = null)
     {
         InitializeComponent();
+        _next = next;
+        _playNext = playNext;
+        if (next is not null) NextButton.Tag = $"S{next.Season ?? 0} E{next.Episode ?? 0} \u2022 {next.DisplayTitle}";
         _model = model;
         _back = back;
         _toggleFullscreen = toggleFullscreen;
@@ -102,6 +108,8 @@ public partial class PlayerOverlay : Window
         FullscreenGlyph.Text = _isFullscreen() ? "" : "";
         SpeedButton.Content = $"Speed {_model.Speed:0.##}x";
 
+        NextButton.Visibility = _next is not null && _playNext is not null && _model.Duration > 120 && _model.Duration - _model.Position <= 60 ? Visibility.Visible : Visibility.Collapsed;
+
         FailurePanel.Visibility = _model.Failure is null ? Visibility.Collapsed : Visibility.Visible;
         FailureText.Text = _model.Failure ?? "";
         if (_model.Failure is not null) SetControls(true);
@@ -135,6 +143,8 @@ public partial class PlayerOverlay : Window
     // ---- the buttons ----
 
     private void OnBack(object sender, RoutedEventArgs e) => _back();
+
+    private void OnNextEpisode(object sender, RoutedEventArgs e) => _playNext?.Invoke();
 
     private void OnBack10(object sender, RoutedEventArgs e) => _model.Skip(-10);
 

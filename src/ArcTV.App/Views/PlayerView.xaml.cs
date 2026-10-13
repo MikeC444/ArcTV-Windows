@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using ArcTV.App.Player;
+using ArcTV.Core.Details;
 using ArcTV.Core.Player;
 using ArcTV.Core.Sources;
 
@@ -20,15 +21,20 @@ public partial class PlayerView : UserControl
     private IVideoEngine? _engine;
     private PlayerModel? _model;
     private readonly Action<PlayTarget, double, double>? _report;
+    private readonly Action<PlayTarget>? _playNext;
+    private readonly Func<bool>? _autoplayNext;
+    private bool _leaving;
     private DispatcherTimer? _reportTimer;
     private PlayerOverlay? _overlay;
     private Window? _window;
     private DispatcherTimer? _waitForVideoWindow;
     private (WindowStyle Style, WindowState State, ResizeMode Resize, bool Topmost)? _beforeFullscreen;
 
-    public PlayerView(PlayingItem item, Func<IVideoEngine> makeEngine, Action back, Action<PlayTarget, double, double>? report = null)
+    public PlayerView(PlayingItem item, Func<IVideoEngine> makeEngine, Action back, Action<PlayTarget, double, double>? report = null, Action<PlayTarget>? playNext = null, Func<bool>? autoplayNext = null)
     {
         _report = report;
+        _playNext = playNext;
+        _autoplayNext = autoplayNext;
         InitializeComponent();
         _item = item;
         _makeEngine = makeEngine;
@@ -58,11 +64,14 @@ public partial class PlayerView : UserControl
         engine.Started += () => model.OnBuffering(false);
         engine.Ended += () =>
         {
-            if (!model.Placeholder) _back();
+            if (model.Placeholder || _leaving) return;
+            // the video finished: carry on with the next episode when Auto Play Next Episode is on, else go back
+            if (NextEpisode() is not null && _autoplayNext?.Invoke() != false) PlayNext();
+            else _back();
         };
         engine.Failed += model.OnFailed;
 
-        _overlay = new PlayerOverlay(model, _item, _back, ToggleFullscreen, () => IsFullscreen, HandleKey) { Owner = _window };
+        _overlay = new PlayerOverlay(model, _item, _back, ToggleFullscreen, () => IsFullscreen, HandleKey, NextEpisode(), _playNext is null ? null : (Action)PlayNext) { Owner = _window };
         _overlay.Show();
         PlaceOverlay();
         if (_window is not null)
@@ -87,6 +96,19 @@ public partial class PlayerView : UserControl
         _reportTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
         _reportTimer.Tick += (_, _) => ReportProgress();
         _reportTimer.Start();
+    }
+
+    /// <summary>The episode after this one (a show's episode only; null for a movie or the last episode).</summary>
+    private EpisodeInfo? NextEpisode() =>
+        _playNext is not null && _item.Target is { Season: { } season, Episode: { } episode } ? _item.Target.Title.EpisodeAfter(season, episode) : null;
+
+    /// <summary>Starts the next episode: its source is picked without asking, and this player gives way to it.</summary>
+    private void PlayNext()
+    {
+        if (_leaving || NextEpisode() is not { } next) return;
+        _leaving = true;
+        var title = _item.Target.Title;
+        _playNext?.Invoke(new PlayTarget(title, next.Season, next.Episode, $"S{next.Season ?? 0} E{next.Episode ?? 0} {next.DisplayTitle}", AutoPick: true));
     }
 
     private void ReportProgress()
