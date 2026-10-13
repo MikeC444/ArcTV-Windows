@@ -21,6 +21,7 @@ public partial class DetailView : UserControl
     private readonly Action _back;
     private readonly Func<IReadOnlyList<MetaPreview>>? _similarPool;
     private bool _similarShown;
+    private SmoothScroller? _smooth;
     private CancellationTokenSource? _run;
     private IReadOnlyList<int> _seasonsShown = [];
 
@@ -43,8 +44,13 @@ public partial class DetailView : UserControl
             if (!_model.Loaded) await _model.LoadAsync(run.Token);
             if (_list.Items is null) await _list.LoadAsync(run.Token); // so the My List button knows whether this title is already on it
         };
+        PageScroll.PreviewMouseWheel += (_, e) =>
+        {
+            if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)) (_smooth ??= new SmoothScroller(PageScroll, 1.1)).Wheel(e); // Shift-wheel moves a row sideways
+        };
         Unloaded += (_, _) =>
         {
+            _smooth?.Stop();
             _model.PropertyChanged -= OnModelChanged;
             _list.PropertyChanged -= OnListChanged;
             _run?.Cancel();

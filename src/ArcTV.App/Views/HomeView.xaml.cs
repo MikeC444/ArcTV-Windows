@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using ArcTV.App.Controls;
 using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
@@ -12,6 +13,7 @@ public partial class HomeView : UserControl
 {
     private readonly HomeModel _model;
     private readonly MyListModel? _list;
+    private SmoothScroller? _smooth;
     private readonly IDetailExtras? _extras;
     private HeroBanner? _hero;
 
@@ -28,8 +30,13 @@ public partial class HomeView : UserControl
             _hero?.Start(); // coming back from a title page, the banner goes on rotating
             if (_list is { Items: null }) _ = _list.LoadAsync(); // so the banner's My List button knows what is on the list
         };
+        PageScroll.PreviewMouseWheel += (_, e) =>
+        {
+            if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)) (_smooth ??= new SmoothScroller(PageScroll, 1.1)).Wheel(e); // Shift-wheel is left for a row to move sideways
+        };
         Unloaded += (_, _) =>
         {
+            _smooth?.Stop();
             _model.PropertyChanged -= OnModelChanged;
             _hero?.Stop();
         };

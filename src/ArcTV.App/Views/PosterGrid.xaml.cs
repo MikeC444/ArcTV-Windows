@@ -1,8 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 using ArcTV.Core.Addons;
 
 namespace ArcTV.App.Views;
@@ -25,8 +23,6 @@ public partial class PosterGrid : UserControl
     private const double TileWidth = 208;
     private const double SideSpace = 72;
     private const double LoadMoreWithin = 900;
-    private const double WheelStep = 1.3;
-    private const double Glide = 0.3;
 
     public static readonly DependencyProperty ExtraProperty = DependencyProperty.Register(nameof(Extra), typeof(double), typeof(PosterGrid), new PropertyMetadata(0.0));
 
@@ -40,20 +36,22 @@ public partial class PosterGrid : UserControl
     private IReadOnlyList<PosterSection> _sections = [];
     private int _perRow;
     private ScrollViewer? _scroll;
-    private double _target;
-    private bool _gliding;
+    private SmoothScroller? _smooth;
 
     public PosterGrid()
     {
         InitializeComponent();
         Rows.ItemsSource = _entries;
-        Rows.PreviewMouseWheel += OnWheel;
+        Rows.PreviewMouseWheel += (_, e) =>
+        {
+            if (Scroll() is { } scroll) (_smooth ??= new SmoothScroller(scroll)).Wheel(e);
+        };
         SizeChanged += (_, _) =>
         {
             UpdateExtra();
             if (PerRow() != _perRow) Rebuild();
         };
-        Unloaded += (_, _) => StopGlide();
+        Unloaded += (_, _) => _smooth?.Stop();
     }
 
     /// <summary>Shows these groups of titles. Lines that are already right are left alone, so adding a page of titles does not rebuild what is on screen.</summary>
@@ -65,7 +63,7 @@ public partial class PosterGrid : UserControl
 
     public void ScrollToTop()
     {
-        StopGlide();
+        _smooth?.Stop();
         Scroll()?.ScrollToTop();
     }
 
@@ -144,47 +142,5 @@ public partial class PosterGrid : UserControl
     {
         if (e.VerticalChange == 0 && e.ExtentHeightChange == 0 && e.ViewportHeightChange == 0) return;
         if (e.OriginalSource is ScrollViewer scroll && scroll.ScrollableHeight - scroll.VerticalOffset < LoadMoreWithin) NearEnd?.Invoke(this, EventArgs.Empty);
-    }
-
-    // ---- scrolling: the wheel moves further than WPF's default and glides to a stop instead of jumping ----
-
-    private void OnWheel(object sender, MouseWheelEventArgs e)
-    {
-        if (Scroll() is not { } scroll) return;
-        if (!_gliding) _target = scroll.VerticalOffset;
-        _target = Math.Clamp(_target - e.Delta * WheelStep, 0, scroll.ScrollableHeight);
-        if (!_gliding)
-        {
-            _gliding = true;
-            CompositionTarget.Rendering += OnFrame;
-        }
-
-        e.Handled = true;
-    }
-
-    private void OnFrame(object? sender, EventArgs e)
-    {
-        if (Scroll() is not { } scroll)
-        {
-            StopGlide();
-            return;
-        }
-
-        var current = scroll.VerticalOffset;
-        var next = current + (_target - current) * Glide;
-        if (Math.Abs(_target - next) < 0.5)
-        {
-            next = _target;
-            StopGlide();
-        }
-
-        scroll.ScrollToVerticalOffset(next);
-    }
-
-    private void StopGlide()
-    {
-        if (!_gliding) return;
-        _gliding = false;
-        CompositionTarget.Rendering -= OnFrame;
     }
 }
