@@ -36,7 +36,7 @@ public sealed class HeroBanner : Grid
         _list = list;
         _extras = extras;
         ClipToBounds = true;
-        Background = (Brush)Application.Current.FindResource("SurfaceBrush");
+        Background = (Brush)Application.Current.FindResource("BgBrush");
         Children.Add(_slide);
         if (items.Count > 1)
         {
