@@ -78,7 +78,8 @@ public sealed class TorrentStreamer : ITorrentStarter
 
             // 3. the start of it (the player is given its address once the first parts have arrived)
             progress(new TorrentProgress("Getting the start of the video…"));
-            var opening = manager.StreamProvider.CreateHttpStreamAsync(file, true);
+            var provider = manager.StreamProvider ?? throw new TorrentException("The torrent could not be streamed. Try another source.");
+            var opening = provider.CreateHttpStreamAsync(file, true);
             started = DateTime.UtcNow;
             while (!opening.IsCompleted)
             {

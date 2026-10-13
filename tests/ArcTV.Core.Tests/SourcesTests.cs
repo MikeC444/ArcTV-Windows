@@ -211,7 +211,7 @@ public class SourcesTests
         var stream = new AddonStream(InfoHash: "ABC123", Title: "Movie.2025.1080p\n👤 5", Sources: ["tracker:udp://t1.example:80/announce", "dht:ABC123", "tracker:udp://t1.example:80/announce", "tracker:udp://t2.example:1/a b"]);
         var magnet = TorrentLink.Magnet(stream)!;
         Assert.StartsWith("magnet:?xt=urn:btih:ABC123&dn=Movie.2025.1080p", magnet);
-        Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(magnet, "t1.example").Count); // each tracker once
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(magnet, "t1.example")); // each tracker once
         Assert.Contains("&tr=udp%3A%2F%2Ft2.example%3A1%2Fa%20b", magnet);
         Assert.DoesNotContain("dht", magnet);
         Assert.Contains("opentrackr", TorrentLink.Magnet(new AddonStream(InfoHash: "abc"))!); // no trackers named: the usual ones
