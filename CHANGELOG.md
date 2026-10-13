@@ -353,3 +353,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Open:** the four Plus pages, profiles (Watching as, kids genres), torrent buffer and storage, the next-episode behaviour.
 
+**Follow-up (owner: scale Settings as the window size changes).** In a narrow window the list of places filled the whole width and the chosen page was out of sight. `SettingsView` now scales with the window (the smaller of its width against 1300 and its height against 800, between 0.6 and 1.6, as the Home banner does), and when the window is narrow (under about 760 once scaled) the list of places goes above the page instead of beside it. The page scrolls as one. Not seen on screen.
+

@@ -31,6 +31,12 @@ public sealed class SettingsView : UserControl
     private readonly Action _signOut;
     private readonly LocalSettings _local;
     private readonly ContentControl _pane = new();
+    private readonly Grid _body;
+    private readonly Border _sidebar;
+    private readonly StackPanel _right;
+    private readonly ScaleTransform _scale;
+    private bool _stacked;
+    private bool _arranged;
     private readonly TextBlock _title = new() { FontSize = 28, FontWeight = FontWeights.ExtraBold, Margin = new Thickness(0, 0, 0, 18) };
     private readonly Dictionary<string, Border> _rows = [];
     private string _current = "Account";
@@ -47,9 +53,11 @@ public sealed class SettingsView : UserControl
         _current = open;
         Background = Ui.Res("BgBrush");
 
-        var grid = new Grid { Margin = new Thickness(24, 96, 24, 24) };
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(280) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition());
+        _body = new Grid { Margin = new Thickness(24, 96, 24, 24), VerticalAlignment = VerticalAlignment.Top };
+        _body.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(280) });
+        _body.ColumnDefinitions.Add(new ColumnDefinition());
+        _body.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        _body.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
         var side = new StackPanel { Margin = new Thickness(12) };
         foreach (var (group, places) in Groups)
@@ -58,21 +66,51 @@ public sealed class SettingsView : UserControl
             foreach (var place in places) side.Children.Add(Row(place));
         }
 
-        var sidebar = new Border
+        _sidebar = new Border
         {
-            Background = Ui.Res("BgElevatedBrush"), BorderBrush = Ui.Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(18), Margin = new Thickness(0, 0, 24, 0),
-            Child = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = side },
+            Background = Ui.Res("BgElevatedBrush"), BorderBrush = Ui.Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(18), VerticalAlignment = VerticalAlignment.Top,
+            Child = side,
         };
-        grid.Children.Add(sidebar);
+        _body.Children.Add(_sidebar);
 
-        var right = new StackPanel { MaxWidth = 700, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 40) };
-        right.Children.Add(_title);
-        right.Children.Add(_pane);
-        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = right };
-        Grid.SetColumn(scroll, 1);
-        grid.Children.Add(scroll);
-        Content = grid;
+        _right = new StackPanel { MaxWidth = 700, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 40) };
+        _right.Children.Add(_title);
+        _right.Children.Add(_pane);
+        _body.Children.Add(_right);
+
+        _scale = new ScaleTransform(1, 1);
+        _body.LayoutTransform = _scale;
+        Content = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Content = _body };
+        SizeChanged += (_, e) => Fit(e.NewSize);
+        PlaceParts(false);
         Show(_current);
+    }
+
+    /// <summary>
+    /// The page grows and shrinks with the window: its size follows the smaller of how wide and how tall the window is (measured against a 1300 x 800 window), within limits. Seen at that
+    /// size a narrow window is still narrow, so below about 760 the list of places goes above the page instead of beside it.
+    /// </summary>
+    private void Fit(Size size)
+    {
+        if (size.Width <= 0 || size.Height <= 0) return;
+        var scale = Math.Clamp(Math.Min(size.Width / 1300.0, size.Height / 800.0), 0.6, 1.6);
+        _scale.ScaleX = _scale.ScaleY = scale;
+        PlaceParts(size.Width / scale < 760);
+    }
+
+    private void PlaceParts(bool stacked)
+    {
+        if (_stacked == stacked && _arranged) return;
+        _stacked = stacked;
+        _arranged = true;
+        _body.ColumnDefinitions[0].Width = stacked ? new GridLength(1, GridUnitType.Star) : new GridLength(280);
+        _body.ColumnDefinitions[1].Width = stacked ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        Grid.SetRow(_sidebar, 0);
+        Grid.SetColumn(_sidebar, 0);
+        _sidebar.Margin = stacked ? new Thickness(0, 0, 0, 24) : new Thickness(0, 0, 24, 0);
+        Grid.SetRow(_right, stacked ? 1 : 0);
+        Grid.SetColumn(_right, stacked ? 0 : 1);
+        _right.HorizontalAlignment = stacked ? HorizontalAlignment.Stretch : HorizontalAlignment.Left;
     }
 
     private Border Row(Place place)
