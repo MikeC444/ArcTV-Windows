@@ -82,6 +82,7 @@ public sealed class TorrentStreamer : ITorrentStarter
                 cancel.ThrowIfCancellationRequested();
                 if (DateTime.UtcNow - started > MetadataWait) throw new TorrentException("No one is sharing this torrent right now (it never gave its file list). Try another source.");
                 var peers = manager.OpenConnections;
+                Note(manager, "metadata");
                 progress(new TorrentProgress(peers > 0 ? "Getting the file list…" : "Finding people who share this…", peers > 0 ? $"{peers} connected" : null));
                 await Task.WhenAny(metadata, Task.Delay(500, cancel)).ConfigureAwait(false);
             }
@@ -102,6 +103,7 @@ public sealed class TorrentStreamer : ITorrentStarter
             {
                 cancel.ThrowIfCancellationRequested();
                 if (DateTime.UtcNow - started > BufferWait) throw new TorrentException("The video did not start downloading in time. It may have too few people sharing it. Try another source.");
+                Note(manager, "start of video");
                 progress(new TorrentProgress("Getting the start of the video…", $"{manager.OpenConnections} connected, {manager.Monitor.DownloadRate / 1_000_000.0:0.0} MB/s"));
                 await Task.WhenAny(opening, Task.Delay(500, cancel)).ConfigureAwait(false);
             }
@@ -110,8 +112,9 @@ public sealed class TorrentStreamer : ITorrentStarter
             _stream = stream;
             return new TorrentStart(new Uri(stream.FullUri), () => _ = StopAsync());
         }
-        catch
+        catch (Exception ex)
         {
+            PlayerLog.Write($"torrent: stopped before playing ({ex.GetType().Name}: {ex.Message})");
             await StopAsync().ConfigureAwait(false);
             throw;
         }
@@ -119,6 +122,16 @@ public sealed class TorrentStreamer : ITorrentStarter
         {
             _one.Release();
         }
+    }
+
+    private DateTime _lastNote = DateTime.MinValue;
+
+    /// <summary>Writes how the torrent is doing to the player log every few seconds, so a start that never happens can be understood afterwards.</summary>
+    private void Note(TorrentManager manager, string stage)
+    {
+        if (DateTime.UtcNow - _lastNote < TimeSpan.FromSeconds(5)) return;
+        _lastNote = DateTime.UtcNow;
+        PlayerLog.Write($"torrent ({stage}): state {manager.State}, {manager.OpenConnections} connected, {manager.Monitor.DownloadRate / 1000} kB/s down, {manager.Progress:0.0}% of it done");
     }
 
     /// <summary>Stops the torrent being watched (if any) and removes what was downloaded for it.</summary>
