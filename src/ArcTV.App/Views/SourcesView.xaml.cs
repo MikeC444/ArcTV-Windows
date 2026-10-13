@@ -37,6 +37,7 @@ public partial class SourcesView : UserControl
         _store = store;
         _play = play;
         _back = back;
+        torrents?.Warm(); // the sources are being listed: the torrent engine's peer finding starts now, so a torrent chosen from the list starts sooner
         ShowTitle();
         if (logoLookup is not null && string.IsNullOrEmpty(model.Target.Title.Logo)) _ = ShowLogoAsync(logoLookup);
         ListScroll.PreviewMouseWheel += (_, e) => (_smooth ??= new SmoothScroller(ListScroll, 1.1)).Wheel(e);

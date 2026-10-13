@@ -596,3 +596,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Test fix.** `TheLastRowsShowAtOnceAndAreReplacedByTheFreshOnes` failed once on the build server ("Collection was empty" on the banner): the model sets its state and then its banner, and the test read the banner between the two. The test now waits a moment for the banner. No app change.
 
+**Torrent start: peers found sooner (owner's log: 80 s with no one found).** Read MonoTorrent's source (ClientEngine.StopAsync): when its last torrent stops, the engine shuts down its DHT, its listeners and its router port mapping, so every torrent started with a cold DHT and had to bootstrap again (the earlier logs show the same: 0 connected for 10 to 60 s, then a burst). Now one idle made-up torrent is kept running (it asks nowhere but the DHT) so the engine stays up between torrents, and opening a title's source list starts it ahead of time. The log line shows the DHT state and node count. Not measured on the PC; the first torrent after the app opens still starts the engine, so it can be slower than the ones after it.
+

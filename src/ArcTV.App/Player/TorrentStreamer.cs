@@ -1,4 +1,5 @@
 using System.IO;
+using System.Security.Cryptography;
 using MonoTorrent;
 using MonoTorrent.Client;
 using ArcTV.Core.Sources;
@@ -20,6 +21,9 @@ public sealed class TorrentException(string message) : Exception(message);
 public interface ITorrentStarter
 {
     Task<TorrentStart> StartAsync(SourceItem item, PlayTarget target, Action<TorrentProgress> progress, CancellationToken cancel);
+
+    /// <summary>Gets the torrent engine's peer finding going ahead of time (a torrent about to be chosen then starts sooner).</summary>
+    void Warm() { }
 }
 
 /// <summary>
@@ -56,12 +60,46 @@ public sealed class TorrentStreamer : ITorrentStarter
         AllowLocalPeerDiscovery = true,
     }.ToSettings());
 
+    private readonly SemaphoreSlim _keepLock = new(1, 1);
+    private TorrentManager? _keep;
+
+    /// <summary>
+    /// The engine shuts its peer finding (the DHT) and its router port mapping down whenever its last torrent stops, so every torrent started cold and took many seconds to find anyone. This keeps one idle
+    /// torrent (a made-up one, asked about nowhere but the DHT) running, so the engine stays up between the torrents that are watched.
+    /// </summary>
+    private async Task KeepEngineRunningAsync()
+    {
+        await _keepLock.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            if (_keep is not null) return;
+            var folder = Path.Combine(Root, "keep");
+            Directory.CreateDirectory(folder);
+            var magnet = MagnetLink.Parse("magnet:?xt=urn:btih:" + Convert.ToHexString(RandomNumberGenerator.GetBytes(20)));
+            var manager = await Engine.AddAsync(magnet, folder).ConfigureAwait(false);
+            await manager.StartAsync().ConfigureAwait(false);
+            _keep = manager;
+            PlayerLog.Write("torrent: engine kept running");
+        }
+        catch (Exception ex)
+        {
+            PlayerLog.Write($"torrent: could not keep the engine running ({ex.Message})");
+        }
+        finally
+        {
+            _keepLock.Release();
+        }
+    }
+
+    public void Warm() => _ = KeepEngineRunningAsync();
+
     public async Task<TorrentStart> StartAsync(SourceItem item, PlayTarget target, Action<TorrentProgress> progress, CancellationToken cancel)
     {
         await _one.WaitAsync(cancel).ConfigureAwait(false);
         try
         {
             await StopAsync().ConfigureAwait(false);
+            await KeepEngineRunningAsync().ConfigureAwait(false);
             var text = TorrentLink.Magnet(item.Stream) ?? throw new TorrentException("This source has no torrent address. Try another source.");
             var magnet = MagnetLink.Parse(text);
             _folder = Path.Combine(Root, "data", Guid.NewGuid().ToString("N"));
@@ -156,7 +194,7 @@ public sealed class TorrentStreamer : ITorrentStarter
     {
         if (DateTime.UtcNow - _lastNote < TimeSpan.FromSeconds(5)) return;
         _lastNote = DateTime.UtcNow;
-        PlayerLog.Write($"torrent ({stage}): state {manager.State}, {manager.OpenConnections} connected, {manager.Peers.Available} known and waiting, {manager.Monitor.DownloadRate / 1000} kB/s down, {manager.Progress:0.0}% of it done");
+        PlayerLog.Write($"torrent ({stage}): state {manager.State}, dht {_engine?.DhtEngine.State} with {_engine?.DhtEngine.NodeCount} nodes, {manager.OpenConnections} connected, {manager.Peers.Available} known and waiting, {manager.Monitor.DownloadRate / 1000} kB/s down, {manager.Progress:0.0}% of it done");
     }
 
     /// <summary>Stops the torrent being watched (if any) and removes what was downloaded for it.</summary>
