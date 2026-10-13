@@ -12,6 +12,9 @@ public static class TorrentLink
     public static readonly string[] FallbackTrackers =
     [
         "udp://tracker.opentrackr.org:1337/announce", "udp://open.tracker.cl:1337/announce", "udp://tracker.torrent.eu.org:451/announce", "udp://exodus.desync.com:6969/announce",
+        "udp://open.stealth.si:80/announce", "udp://tracker.openbittorrent.com:6969/announce", "udp://tracker.tiny-vps.com:6969/announce", "udp://tracker.dler.org:6969/announce",
+        "udp://opentracker.io:6969/announce", "udp://explodie.org:6969/announce", "udp://p4p.arenabg.com:1337/announce", "udp://tracker.moeking.me:6969/announce",
+        "http://tracker.opentrackr.org:1337/announce", "https://tracker.tamersunion.org:443/announce",
     ];
 
     /// <summary>The magnet link for a torrent stream: its hash, a name, and the trackers the addon listed. Null when the stream has no hash.</summary>

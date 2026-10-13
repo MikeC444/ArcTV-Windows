@@ -586,3 +586,7 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: make Who's watching match the Mac).** Logo, heading and two lines of words above, rounded-square pictures (150, corner 14) with a white ring on the one in use, small round lock/pencil badges (lock bottom right, pencil top right) as on the Mac. Added tile stays in Manage only (the Mac shows it for Plus accounts; the Windows model does not check Plus here). Built by CI only; not seen on screen.
 
+
+
+**Follow-up (owner: torrents stay on "Finding people who share this…", the Mac starts faster).** The Mac app only uses the trackers the addon lists plus its engine's own peer finding; Windows had only 4 extra trackers and a cold peer finder, and the owner's screen sat at no one found. The usual public tracker list is now 14 (all asked at once), and the log line says how many people are known. Not measured: the real fix may be elsewhere (the log lines will show whether people are found at all). Not seen on screen.
+

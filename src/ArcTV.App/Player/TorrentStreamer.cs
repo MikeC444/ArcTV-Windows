@@ -131,7 +131,7 @@ public sealed class TorrentStreamer : ITorrentStarter
     {
         if (DateTime.UtcNow - _lastNote < TimeSpan.FromSeconds(5)) return;
         _lastNote = DateTime.UtcNow;
-        PlayerLog.Write($"torrent ({stage}): state {manager.State}, {manager.OpenConnections} connected, {manager.Monitor.DownloadRate / 1000} kB/s down, {manager.Progress:0.0}% of it done");
+        PlayerLog.Write($"torrent ({stage}): state {manager.State}, {manager.OpenConnections} connected, {manager.Peers.Available} known and waiting, {manager.Monitor.DownloadRate / 1000} kB/s down, {manager.Progress:0.0}% of it done");
     }
 
     /// <summary>Stops the torrent being watched (if any) and removes what was downloaded for it.</summary>
