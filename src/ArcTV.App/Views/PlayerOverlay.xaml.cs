@@ -29,6 +29,8 @@ public partial class PlayerOverlay : Window
     private DateTime _lastActivity = DateTime.UtcNow;
     private bool _controlsShown = true;
     private bool _menuOpen;
+    private Button? _menuAnchor;
+    private DateTime _menuClosedAt = DateTime.MinValue;
     private double _volumeBeforeMute = 100;
     private readonly EpisodeInfo? _next;
     private bool? _flashedPaused;
@@ -231,6 +233,14 @@ public partial class PlayerOverlay : Window
 
     private void Open(Button anchor, IReadOnlyList<(string Text, bool Selected, Action Pick)> rows, string emptyText)
     {
+        // clicking the pill whose list is showing closes it: the click that lands on the pill has already closed the popup (a click outside does that), so a list that closed an instant ago counts as showing
+        if (_menuAnchor == anchor && (MenuPopup.IsOpen || DateTime.UtcNow - _menuClosedAt < TimeSpan.FromMilliseconds(250)))
+        {
+            MenuPopup.IsOpen = false;
+            _menuAnchor = null;
+            return;
+        }
+
         MenuRows.Children.Clear();
         if (rows.Count == 0 || (rows.Count == 1 && rows[0].Text == "Off" && emptyText.Length > 0 && !_model.SubtitleTracks.Any()))
         {
@@ -254,6 +264,7 @@ public partial class PlayerOverlay : Window
         }
 
         MenuPopup.PlacementTarget = anchor;
+        _menuAnchor = anchor;
         _menuOpen = true;
         MenuPopup.IsOpen = true;
     }
@@ -261,6 +272,7 @@ public partial class PlayerOverlay : Window
     private void OnMenuClosed(object? sender, EventArgs e)
     {
         _menuOpen = false;
+        _menuClosedAt = DateTime.UtcNow;
         Activity();
     }
 

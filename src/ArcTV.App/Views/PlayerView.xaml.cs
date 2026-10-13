@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using ArcTV.App.Player;
 using ArcTV.Core.Details;
@@ -166,14 +168,45 @@ public partial class PlayerView : UserControl
 
     // ---- the overlay follows the picture ----
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Rect
+    {
+        public int Left, Top, Right, Bottom;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool GetWindowRect(IntPtr window, out Rect rect);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int width, int height, uint flags);
+
+    private const uint NoZOrder = 0x0004;
+    private const uint NoActivate = 0x0010;
+
+    /// <summary>
+    /// Lays the overlay exactly over the picture. It is done in screen pixels, from where the video's own window really is: working it out in device-independent units went wrong
+    /// when the window and the overlay were on screens of different scaling, and left the controls part of the way up the picture instead of at its bottom.
+    /// </summary>
     private void PlaceOverlay()
     {
-        if (_overlay is null || !_overlay.IsVisible || ActualWidth <= 0 || ActualHeight <= 0 || PresentationSource.FromVisual(this) is not { } source) return;
-        var topLeft = source.CompositionTarget.TransformFromDevice.Transform(PointToScreen(new Point(0, 0)));
-        _overlay.Left = topLeft.X;
-        _overlay.Top = topLeft.Y;
-        _overlay.Width = ActualWidth;
-        _overlay.Height = ActualHeight;
+        if (_overlay is null || !_overlay.IsVisible || ActualWidth <= 0 || ActualHeight <= 0) return;
+        var overlay = new WindowInteropHelper(_overlay).Handle;
+        if (overlay == IntPtr.Zero) return;
+
+        int left, top, width, height;
+        if (Video.WindowHandle != IntPtr.Zero && GetWindowRect(Video.WindowHandle, out var video) && video.Right > video.Left && video.Bottom > video.Top)
+        {
+            (left, top, width, height) = (video.Left, video.Top, video.Right - video.Left, video.Bottom - video.Top);
+        }
+        else
+        {
+            var from = PointToScreen(new Point(0, 0));
+            var to = PointToScreen(new Point(ActualWidth, ActualHeight));
+            (left, top, width, height) = ((int)Math.Round(from.X), (int)Math.Round(from.Y), (int)Math.Round(to.X - from.X), (int)Math.Round(to.Y - from.Y));
+        }
+
+        if (GetWindowRect(overlay, out var now) && now.Left == left && now.Top == top && now.Right - now.Left == width && now.Bottom - now.Top == height) return;
+        SetWindowPos(overlay, IntPtr.Zero, left, top, width, height, NoZOrder | NoActivate);
     }
 
     // ---- full screen ----
