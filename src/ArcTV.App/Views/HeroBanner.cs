@@ -159,7 +159,7 @@ public sealed class HeroBanner : Grid
         var grid = new Grid();
         var picture = new RemoteImage { Url = Artwork.Bigger(item.Background) ?? item.Poster, FallbackUrl = item.Background ?? item.Poster, DecodeWidth = 0, Stretch = Stretch.UniformToFill, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top };
         grid.Children.Add(picture);
-        // fades into the page at the bottom, over the lower half and ending fully the page's colour, in steps so there is no visible edge; and darkens the right (where the words are) so they can be read
+        // fades into the page at the bottom, over the lower half and ending fully the page's colour, in steps so there is no visible edge; and darkens the left (where the words are) so they can be read
         var page = (Color)Application.Current.FindResource("BgColor");
         Color Page(byte alpha) => Color.FromArgb(alpha, page.R, page.G, page.B); // the page's own colour at every step: fading from "transparent black" would pass through a grey
         grid.Children.Add(new System.Windows.Shapes.Rectangle
@@ -179,11 +179,11 @@ public sealed class HeroBanner : Grid
             Fill = new LinearGradientBrush
             {
                 StartPoint = new Point(0, 0), EndPoint = new Point(1, 0),
-                GradientStops = { new GradientStop(Page(0), 0.3), new GradientStop(Color.FromArgb(0x80, page.R, page.G, page.B), 0.65), new GradientStop(Color.FromArgb(0xD9, page.R, page.G, page.B), 1) },
+                GradientStops = { new GradientStop(Color.FromArgb(0xD9, page.R, page.G, page.B), 0), new GradientStop(Color.FromArgb(0x80, page.R, page.G, page.B), 0.35), new GradientStop(Page(0), 0.7) },
             },
         });
 
-        var details = new StackPanel { Margin = new Thickness(24, 120, 24, 0), VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Right, MaxWidth = 600 }; // top right, under the top bar
+        var details = new StackPanel { Margin = new Thickness(24, 120, 24, 0), VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 600 }; // top left, under the top bar
         if (!string.IsNullOrEmpty(item.Logo))
         {
             details.Children.Add(new RemoteImage { Url = item.Logo, DecodeWidth = 760, Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 380, MaxHeight = 110 });
@@ -199,6 +199,16 @@ public sealed class HeroBanner : Grid
         var description = Text.HtmlDecoded(item.Description);
         if (description.Length > 0) details.Children.Add(new TextBlock { Text = description, FontSize = 14, TextWrapping = TextWrapping.Wrap, MaxHeight = 66, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Thickness(0, 10, 0, 0) });
         details.Children.Add(Buttons(item));
+
+        // the block grows and shrinks with the banner: its size follows the smaller of how wide and how tall the banner is (measured against a 1300 x 560 banner), within limits,
+        // and it sits a fifth of the way down (never under the top bar)
+        var scale = new ScaleTransform(1, 1);
+        details.LayoutTransform = scale;
+        grid.SizeChanged += (_, e) =>
+        {
+            scale.ScaleX = scale.ScaleY = Math.Clamp(Math.Min(e.NewSize.Width / 1300.0, e.NewSize.Height / 560.0), 0.7, 1.6);
+            details.Margin = new Thickness(24, Math.Max(104, e.NewSize.Height * 0.2), 24, 0);
+        };
         grid.Children.Add(details);
         RefreshListButton();
         return grid;

@@ -284,3 +284,6 @@ it now keeps 24 pixels from the right edge (and still holds to 600 wide when the
 
 **Follow-up (owner: the Home banner's info is still too low, it needs to be top right).** The info block (logo or title, facts, genres, description, buttons) is now at the banner's top right, 120 pixels down (under the top bar) and 24 from the right edge, still up to 600 wide with its text left-aligned inside; the shade that keeps it readable
 moved from the left of the picture to the right. The banner went back to 62% of the window's height (at least 500): with the info at the top there is no need for it to be taller. The page dots stay at the bottom right. If "top right" was meant as "top left", it is one setting (`HorizontalAlignment`) and the shade's direction.
+
+**Follow-up (owner: top left, not top right; scale with the window).** The Home banner's info block is back on the left, at the top (under the top bar), with the shade that keeps it readable on the left again. It now scales with the window: its size follows the smaller of how wide and how tall the banner is (measured against a 1300 x 560 banner,
+kept between 70% and 160%), and its distance from the top is a fifth of the banner's height (at least 104 pixels, so never under the top bar). The earlier try at "top right" is undone.
