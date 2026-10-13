@@ -19,29 +19,29 @@
 
     <Grid>
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="0.37*" MinWidth="300" />
-        <ColumnDefinition Width="0.63*" />
+        <ColumnDefinition Width="0.40*" MinWidth="360" />
+        <ColumnDefinition Width="0.60*" />
       </Grid.ColumnDefinitions>
 
       <!-- the title: poster, year, logo, genres and length, description -->
       <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28,104,16,24">
           <Button Content="&#x2039;  Back" Style="{StaticResource ChoicePill}" HorizontalAlignment="Left" Click="OnBack" />
-          <c:RoundedBorder Width="132" Height="198" CornerRadius="12" Margin="0,16,0,0" HorizontalAlignment="Left" Background="{StaticResource SurfaceBrush}" BorderBrush="#24FFFFFF" BorderThickness="1">
-            <c:RemoteImage x:Name="PosterImage" DecodeWidth="300" Stretch="UniformToFill" />
+          <c:RoundedBorder Width="240" Height="360" CornerRadius="18" Margin="0,18,0,0" HorizontalAlignment="Left" Background="{StaticResource SurfaceBrush}" BorderBrush="#24FFFFFF" BorderThickness="1">
+            <c:RemoteImage x:Name="PosterImage" DecodeWidth="520" Stretch="UniformToFill" />
           </c:RoundedBorder>
-          <TextBlock x:Name="YearText" FontSize="15" Foreground="{StaticResource Text2Brush}" Margin="0,12,0,0" />
+          <TextBlock x:Name="YearText" FontSize="18" Foreground="{StaticResource Text2Brush}" Margin="0,16,0,0" />
           <Grid HorizontalAlignment="Left" Margin="0,6,0,0">
-            <TextBlock x:Name="TitleText" FontSize="24" FontWeight="ExtraBold" TextWrapping="Wrap" MaxWidth="320" />
-            <c:RemoteImage x:Name="LogoImage" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" MaxWidth="240" MaxHeight="80" DecodeWidth="480" Shown="OnLogoShown" />
+            <TextBlock x:Name="TitleText" FontSize="34" FontWeight="ExtraBold" TextWrapping="Wrap" MaxWidth="420" />
+            <c:RemoteImage x:Name="LogoImage" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" MaxWidth="340" MaxHeight="110" DecodeWidth="680" Shown="OnLogoShown" />
           </Grid>
-          <TextBlock x:Name="EpisodeText" FontSize="15" FontWeight="SemiBold" Margin="0,6,0,0" TextWrapping="Wrap" Visibility="Collapsed" />
-          <TextBlock x:Name="FactsText" FontSize="14" Foreground="{StaticResource Text2Brush}" Margin="0,8,0,0" TextWrapping="Wrap" />
-          <TextBlock x:Name="DescriptionText" FontSize="14" Foreground="{StaticResource Text2Brush}" Margin="0,10,0,0" TextWrapping="Wrap" MaxHeight="110" TextTrimming="CharacterEllipsis" />
+          <TextBlock x:Name="EpisodeText" FontSize="18" FontWeight="SemiBold" Margin="0,6,0,0" TextWrapping="Wrap" Visibility="Collapsed" />
+          <TextBlock x:Name="FactsText" FontSize="16" Foreground="{StaticResource Text2Brush}" Margin="0,8,0,0" TextWrapping="Wrap" />
+          <TextBlock x:Name="DescriptionText" FontSize="16" Foreground="{StaticResource Text2Brush}" Margin="0,12,0,0" TextWrapping="Wrap" MaxHeight="140" TextTrimming="CharacterEllipsis" />
           <Border CornerRadius="12" Background="#80000000" Padding="12" Margin="0,24,0,0">
             <StackPanel>
-              <TextBlock Text="What are sources?" FontSize="13" FontWeight="SemiBold" />
-              <TextBlock Text="Sources are different streams or files available online. Choose the one that works best for you." FontSize="12" Foreground="{StaticResource Text2Brush}" TextWrapping="Wrap" Margin="0,4,0,0" />
+              <TextBlock Text="What are sources?" FontSize="15" FontWeight="SemiBold" />
+              <TextBlock Text="Sources are different streams or files available online. Choose the one that works best for you." FontSize="14" Foreground="{StaticResource Text2Brush}" TextWrapping="Wrap" Margin="0,4,0,0" />
             </StackPanel>
           </Border>
         </StackPanel>

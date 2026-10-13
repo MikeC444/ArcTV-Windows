@@ -252,3 +252,5 @@ window's own `WM_MOUSEHWHEEL` message is listened for. Not tested on a touchpad 
 **Issues fixed:** see above.
 
 **Open:** playing (the built-in player), starting torrents, "play the last source again without asking" and Resume, smart source picking (Plus), Download, a shown "Manage Addons" button (needs Settings).
+
+**Follow-up (owner: make the title on the sources page bigger).** The title column was small: the poster is now 240 x 360 (was 132 x 198, with rounder corners), the title 34 (was 24), the year, facts, description and the "What are sources?" note about a quarter bigger, the logo up to 340 x 110, and the column takes 40% of the width (was 37%).
