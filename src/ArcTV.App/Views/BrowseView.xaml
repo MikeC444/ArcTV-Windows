@@ -1,18 +1,19 @@
 <UserControl x:Class="ArcTV.App.Views.BrowseView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:v="clr-namespace:ArcTV.App.Views">
+             xmlns:v="clr-namespace:ArcTV.App.Views"
+             xmlns:c="clr-namespace:ArcTV.App.Controls">
   <UserControl.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="PosterTemplate.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
-      <!-- one line of posters; only the lines on screen exist, so only their pictures are fetched -->
+      <!-- one line of posters; only the lines on screen exist, so only their pictures are fetched. Spare width is shared out between the posters. -->
       <DataTemplate DataType="{x:Type v:PosterRow}">
         <ItemsControl ItemsSource="{Binding Items}" Margin="44,0,0,0" Focusable="False" IsTabStop="False">
           <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+            <ItemsPanelTemplate><c:SpacedRowPanel Extra="{Binding Extra, RelativeSource={RelativeSource AncestorType={x:Type v:BrowseView}}}" /></ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
         </ItemsControl>
       </DataTemplate>

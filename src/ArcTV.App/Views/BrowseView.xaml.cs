@@ -24,6 +24,12 @@ public partial class BrowseView : UserControl
     private readonly string _title;
     private readonly BrowseModel _model;
     private const double TileWidth = 172;
+    private const double SideSpace = 72;
+
+    public static readonly DependencyProperty ExtraProperty = DependencyProperty.Register(nameof(Extra), typeof(double), typeof(BrowseView), new PropertyMetadata(0.0));
+
+    /// <summary>Space added between posters so a line fills the width: the window is rarely an exact number of posters wide.</summary>
+    public double Extra { get => (double)GetValue(ExtraProperty); private set => SetValue(ExtraProperty, value); }
 
     private readonly ObservableCollection<PosterRow> _rows = [];
     private List<MetaPreview> _items = [];
@@ -41,7 +47,11 @@ public partial class BrowseView : UserControl
         _model = model;
         TitleText.Text = title;
         Rows.ItemsSource = _rows;
-        SizeChanged += (_, _) => { if (PerRow() != _perRow) Sync(); };
+        SizeChanged += (_, _) =>
+        {
+            UpdateExtra();
+            if (PerRow() != _perRow) Sync();
+        };
 
         foreach (var sort in BrowseSorts.All)
         {
@@ -101,7 +111,16 @@ public partial class BrowseView : UserControl
         Message.Visibility = message is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
-    private int PerRow() => Math.Max(1, (int)((ActualWidth - 44 - 28) / TileWidth));
+    /// <summary>The width a line of posters has to fill (the page less its side space and the scroll bar).</summary>
+    private double Available() => ActualWidth - SystemParameters.VerticalScrollBarWidth - SideSpace;
+
+    private int PerRow() => Math.Max(1, (int)(Available() / TileWidth));
+
+    private void UpdateExtra()
+    {
+        var perRow = PerRow();
+        Extra = perRow > 1 ? Math.Max(0, (Available() - perRow * TileWidth) / (perRow - 1)) : 0;
+    }
 
     /// <summary>
     /// Brings the grid in line with the model. The posters sit in lines (as many as fit across); a new page only adds lines at the end, so the lines
