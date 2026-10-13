@@ -31,7 +31,7 @@ Needs Visual Studio 2022 (the **.NET desktop development** workload) or the .NET
 git clone https://github.com/MikeC444/ArcTV-Windows
 cd ArcTV-Windows
 dotnet test ArcTV.sln                  # the tests (ArcTV.Core)
-dotnet run --project src/ArcTV.App     # run the app (or open ArcTV.sln in Visual Studio and press F5)
+dotnet run --project src/ArcTV.App     # run the app (or open ArcTV.sln in Visual Studio and press F5; if Visual Studio says a class library cannot be started, right-click **ArcTV.App** in Solution Explorer and choose **Set as Startup Project**)
 .\scripts\try-branch.ps1 <branch>      # fetch, build and open any branch
 ```
 
