@@ -5,6 +5,7 @@ using System.Windows.Input;
 using ArcTV.App.Controls;
 using ArcTV.Core;
 using ArcTV.Core.Addons;
+using ArcTV.Core.Continue;
 using ArcTV.Core.Details;
 using ArcTV.Core.MyList;
 using ArcTV.Core.Plus;
@@ -21,6 +22,7 @@ public partial class DetailView : UserControl
     private readonly DetailModel _model;
     private readonly MyListModel _list;
     private readonly PlusModel? _plus;
+    private readonly ContinueModel? _continue;
     private readonly Action _back;
     private readonly Func<IReadOnlyList<MetaPreview>>? _similarPool;
     private readonly Action<PlayTarget>? _play;
@@ -29,9 +31,10 @@ public partial class DetailView : UserControl
     private CancellationTokenSource? _run;
     private IReadOnlyList<int> _seasonsShown = [];
 
-    public DetailView(DetailModel model, MyListModel list, Action back, Func<IReadOnlyList<MetaPreview>>? similarPool = null, Action<PlayTarget>? play = null, PlusModel? plus = null)
+    public DetailView(DetailModel model, MyListModel list, Action back, Func<IReadOnlyList<MetaPreview>>? similarPool = null, Action<PlayTarget>? play = null, PlusModel? plus = null, ContinueModel? cont = null)
     {
         _plus = plus;
+        _continue = cont;
         InitializeComponent();
         _model = model;
         _list = list;
@@ -50,6 +53,13 @@ public partial class DetailView : UserControl
             var run = _run = new CancellationTokenSource();
             if (!_model.Loaded) await _model.LoadAsync(run.Token);
             if (_list.Items is null) await _list.LoadAsync(run.Token); // so the My List button knows whether this title is already on it
+            if (_continue is not null)
+            {
+                _continue.PropertyChanged -= OnContinueChanged;
+                _continue.PropertyChanged += OnContinueChanged;
+                if (_continue.Items.Count == 0) await _continue.LoadAsync(run.Token); // so Play knows where this title was left
+            }
+
             if (_plus is not null)
             {
                 _plus.PropertyChanged -= OnListChanged;
@@ -68,6 +78,7 @@ public partial class DetailView : UserControl
             _model.PropertyChanged -= OnModelChanged;
             _list.PropertyChanged -= OnListChanged;
             if (_plus is not null) _plus.PropertyChanged -= OnListChanged;
+            if (_continue is not null) _continue.PropertyChanged -= OnContinueChanged;
             _run?.Cancel();
         };
     }
@@ -75,6 +86,8 @@ public partial class DetailView : UserControl
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
 
     private void OnListChanged(object? sender, PropertyChangedEventArgs e) => RefreshButtons();
+
+    private void OnContinueChanged(object? sender, PropertyChangedEventArgs e) => RefreshPlay();
 
     private void Refresh()
     {
@@ -118,10 +131,16 @@ public partial class DetailView : UserControl
 
     private static bool SameCast(IReadOnlyList<CastMember>? shown, IReadOnlyList<CastMember> cast) => shown is not null && shown.SequenceEqual(cast);
 
-    /// <summary>What Play starts: a movie, or a show's first episode (there is no watch history here yet to say where you were).</summary>
+    /// <summary>
+    /// What Play starts: a movie (from where it was left, if Continue Watching has it), or a show's episode: the one Continue Watching holds, from where it was left, else the first
+    /// episode.
+    /// </summary>
     private PlayTarget? MainTarget()
     {
-        if (!_model.IsShow) return new PlayTarget(_model.Detail);
+        var left = _continue?.ResumeItem(_model.Detail.Id) is { NearlyDone: false, PositionSeconds: >= 10 } item ? item : null;
+        if (!_model.IsShow) return left is null ? new PlayTarget(_model.Detail) : new PlayTarget(_model.Detail) with { StartAt = left.PositionSeconds };
+        if (left is { SeasonNumber: { } s, EpisodeNumber: { } e } && _model.Detail.Seasons.GetValueOrDefault(s)?.FirstOrDefault(x => x.Episode == e) is { } episode)
+            return EpisodeTarget(episode) with { StartAt = left.PositionSeconds };
         var first = _model.Detail.SeasonNumbers.Count > 0 ? _model.Detail.Seasons[_model.Detail.SeasonNumbers[0]].FirstOrDefault() : null;
         return first is null ? null : EpisodeTarget(first);
     }
@@ -133,7 +152,8 @@ public partial class DetailView : UserControl
     {
         var target = MainTarget();
         PlayButton.IsEnabled = _play is not null && target is not null;
-        PlayButton.Content = target is { Season: { } season, Episode: { } episode } ? $"\u25B6  Play S{season}E{episode}" : "\u25B6  Play";
+        var resuming = target is { StartAt: > 0 };
+        PlayButton.Content = target is { Season: { } season, Episode: { } episode } ? $"\u25B6  {(resuming ? "Resume" : "Play")} S{season}E{episode}" : resuming ? "\u25B6  Resume" : "\u25B6  Play";
         PlayButton.ToolTip = _play is null ? "Playing is coming soon to Arc TV for Windows." : target is null ? "Looking for episodes…" : null;
     }
 

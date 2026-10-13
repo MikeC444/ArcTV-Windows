@@ -34,7 +34,10 @@
     <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" CanContentScroll="False" Visibility="Collapsed">
       <StackPanel>
         <Grid x:Name="HeroHost" />
-        <ItemsControl x:Name="Rows" Margin="0,-60,0,8" />
+        <StackPanel x:Name="RowsHost" Margin="0,-60,0,8">
+          <StackPanel x:Name="ContinueHost" />
+          <ItemsControl x:Name="Rows" />
+        </StackPanel>
       </StackPanel>
     </ScrollViewer>
 

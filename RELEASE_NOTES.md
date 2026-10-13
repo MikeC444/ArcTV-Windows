@@ -16,4 +16,5 @@ under its version automatically.
 - Settings > Addons is here: see the addons on your account, switch each on or off, remove one, or add one by pasting its link (Torrentio, for example). Home, Movies and TV Shows update straight away.
 - The Plus pages are here: Arc TV Plus (what you get, your plan, cancel, and subscribe on Stripe's secure page), Plus settings, Recommendations (what you've liked or marked Not for me, and what shapes your picks) and Your stats (hours watched, streak, a 13-week map and your busiest day).
 - Like and Not for me on a title's page (with Arc TV Plus): rate a movie or show from Windows. What you rate shows under Settings > Recommendations and syncs to your other devices.
+- Continue Watching is here: Home has a row of what you were watching, with how far in you got, and a click starts it from where you stopped. Play on a title says Resume when you've left it part-way. Arc TV tells your account where you are every half minute while you watch, so it follows you to your other devices. A movie watched to the end gets its green tick on My List.
 

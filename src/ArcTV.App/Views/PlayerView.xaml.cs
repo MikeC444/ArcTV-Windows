@@ -19,13 +19,16 @@ public partial class PlayerView : UserControl
     private readonly Action _back;
     private IVideoEngine? _engine;
     private PlayerModel? _model;
+    private readonly Action<PlayTarget, double, double>? _report;
+    private DispatcherTimer? _reportTimer;
     private PlayerOverlay? _overlay;
     private Window? _window;
     private DispatcherTimer? _waitForVideoWindow;
     private (WindowStyle Style, WindowState State, ResizeMode Resize, bool Topmost)? _beforeFullscreen;
 
-    public PlayerView(PlayingItem item, Func<IVideoEngine> makeEngine, Action back)
+    public PlayerView(PlayingItem item, Func<IVideoEngine> makeEngine, Action back, Action<PlayTarget, double, double>? report = null)
     {
+        _report = report;
         InitializeComponent();
         _item = item;
         _makeEngine = makeEngine;
@@ -79,6 +82,16 @@ public partial class PlayerView : UserControl
             else engine.Start(Video.WindowHandle, _item.Url, _item.Target.StartAt);
         };
         _waitForVideoWindow.Start();
+
+        // tell the account where playback is every half minute (and once more on leaving), so Continue Watching and Resume know
+        _reportTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _reportTimer.Tick += (_, _) => ReportProgress();
+        _reportTimer.Start();
+    }
+
+    private void ReportProgress()
+    {
+        if (_report is not null && _model is { Duration: > 0 } model) _report(_item.Target, model.Position, model.Duration);
     }
 
     private void OnWindowClosed(object? sender, EventArgs e) => OnUnloaded(this, new RoutedEventArgs());
@@ -86,6 +99,8 @@ public partial class PlayerView : UserControl
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         _waitForVideoWindow?.Stop();
+        _reportTimer?.Stop();
+        ReportProgress();
         if (_window is not null)
         {
             _window.PreviewKeyDown -= OnWindowKey;

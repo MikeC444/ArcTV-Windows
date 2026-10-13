@@ -396,3 +396,24 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Open:** the same buttons on a poster's menu (the Mac has a three-dot menu); Picked for you (uses these ratings).
 
+## 14 -- Continue Watching and Resume
+
+**Status:** Written without a compiler here; built and tested by the Windows build server only (see the run for this commit). Not run or seen on screen; never tried against a real account or a real video.
+
+**Context:** Second of the three requested together. Ported from the Mac app's `AppModel` (`loadContinueWatching`, `reportProgress`, `resumeItem`) and `Account.swift`.
+
+**Changes:**
+- Core (`ArcTV.Core/Continue`): `ContinueItem` (progress, "S1 E3" label, `ToTarget`), `ContinueApi` (GET `/user/continue-watching`, POST `/user/watch-progress`, DELETE `/user/continue-watching`), `IContinueStore` / `AccountContinueStore`, and `ContinueModel` (reports with the Mac's rules: nothing under 5 seconds in or for a length under 30 seconds, finished at 92 percent; a finished movie is marked watched once; the row is read again after each report; remove with put-back; `ResumeItem` and `Resume`, which start a target from where it was left unless it is nearly finished or already has a place).
+- Player: `PlayerView` reports the position every 30 seconds and once more on leaving.
+- Home: a "Continue Watching" row above the other rows (`ContinueRow`): poster, a progress line, the episode for a show, a cross to take it off, a click plays it from where it was left.
+- Title page: Play says "Resume" (and, for a show, starts the episode Continue Watching holds, from where it was left); the sources page starts any target that matches Continue Watching from its place.
+- Tests: `ContinueTests`.
+
+**Tests performed:** see the build run.
+
+**Issues discovered:** playing a title still goes through the source list (the Mac's "play the last source again without asking" is not ported); episode ticks and the "next episode after the furthest watched" rule (which need the watch history) are not ported: a show's Play starts the episode in Continue Watching, else the first.
+
+**Issues fixed:** n/a.
+
+**Open:** play the last source without asking, episode watched ticks and part-way bars, next-episode logic from the history, Picked for you.
+

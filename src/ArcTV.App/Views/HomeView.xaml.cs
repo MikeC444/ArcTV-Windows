@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using ArcTV.App.Controls;
+using ArcTV.Core.Continue;
 using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
@@ -18,9 +19,12 @@ public partial class HomeView : UserControl
     private readonly IDetailExtras? _extras;
     private readonly Action<PlayTarget>? _play;
     private HeroBanner? _hero;
+    private readonly ContinueModel? _continue;
+    private ContinueRow? _continueRow;
 
-    public HomeView(HomeModel model, MyListModel? list = null, IDetailExtras? extras = null, Action<PlayTarget>? play = null)
+    public HomeView(HomeModel model, MyListModel? list = null, IDetailExtras? extras = null, Action<PlayTarget>? play = null, ContinueModel? cont = null)
     {
+        _continue = cont;
         InitializeComponent();
         _model = model;
         _list = list;
@@ -29,6 +33,13 @@ public partial class HomeView : UserControl
         Loaded += (_, _) =>
         {
             _model.PropertyChanged += OnModelChanged;
+            if (_continue is not null)
+            {
+                _continue.PropertyChanged -= OnContinueChanged;
+                _continue.PropertyChanged += OnContinueChanged;
+                _ = _continue.LoadAsync(); // coming back from a title, how far you got is read again
+            }
+
             Refresh();
             _hero?.Start(); // coming back from a title page, the banner goes on rotating
             if (_list is { Items: null }) _ = _list.LoadAsync(); // so the banner's My List button knows what is on the list
@@ -41,6 +52,7 @@ public partial class HomeView : UserControl
         {
             _smooth?.Stop();
             _model.PropertyChanged -= OnModelChanged;
+            if (_continue is not null) _continue.PropertyChanged -= OnContinueChanged;
             _hero?.Stop();
         };
         SizeChanged += (_, e) => { if (_hero is not null) _hero.Height = HeroHeight(e.NewSize.Height); };
@@ -50,12 +62,30 @@ public partial class HomeView : UserControl
 
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
 
+    private void OnContinueChanged(object? sender, PropertyChangedEventArgs e) => Dispatcher.BeginInvoke(RefreshContinue);
+
+    private void RefreshContinue()
+    {
+        if (_continue is null || _play is null) return;
+        if (_continueRow is null)
+        {
+            _continueRow = new ContinueRow(_continue, _play);
+            ContinueHost.Children.Clear();
+            ContinueHost.Children.Add(_continueRow);
+        }
+        else
+        {
+            _continueRow.Refresh();
+        }
+    }
+
     private void Refresh()
     {
         var showRows = _model.Sections.Count > 0;
         PageScroll.Visibility = showRows ? Visibility.Visible : Visibility.Collapsed;
         LoadingPanel.Visibility = !showRows && _model.State is HomeState.Idle or HomeState.Loading ? Visibility.Visible : Visibility.Collapsed;
         EmptyPanel.Visibility = !showRows && _model.State == HomeState.Empty ? Visibility.Visible : Visibility.Collapsed;
+        RefreshContinue();
         if (!showRows) return;
 
         // update in place rather than rebuilding, so rows already on screen don't flicker as more arrive
@@ -67,7 +97,7 @@ public partial class HomeView : UserControl
             HeroHost.Children.Clear();
             _hero?.Stop();
             _hero = null;
-            Rows.Margin = new Thickness(0, 90, 0, 8);
+            RowsHost.Margin = new Thickness(0, 90, 0, 8);
         }
         else if (_hero is null || !_hero.Shows(hero))
         {
@@ -75,7 +105,7 @@ public partial class HomeView : UserControl
             _hero = new HeroBanner(hero, _list, _extras, _play) { Height = HeroHeight(ActualHeight) };
             HeroHost.Children.Clear();
             HeroHost.Children.Add(_hero);
-            Rows.Margin = new Thickness(0, -60, 0, 8);
+            RowsHost.Margin = new Thickness(0, -60, 0, 8);
         }
     }
 

@@ -11,6 +11,7 @@ using ArcTV.Core.Player;
 using ArcTV.Core.Plus;
 using ArcTV.Core.Settings;
 using ArcTV.Core.Browse;
+using ArcTV.Core.Continue;
 using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
@@ -33,6 +34,7 @@ public partial class ShellView : UserControl
     private AddonsModel? _addonsModel;
     private readonly SettingsModel _settingsModel;
     private readonly PlusModel _plus;
+    private readonly ContinueModel _continue;
     private readonly LocalSettings _local = new(Path.Combine(AppPaths.DataFolder(), "settings.json"));
     private readonly AccountUser _user;
     private string _blockedKey = "";
@@ -54,6 +56,13 @@ public partial class ShellView : UserControl
         _settingsModel = new SettingsModel(new AccountSettingsStore(account));
         _settingsModel.Changed += ApplySettings;
         _plus = new PlusModel(new AccountPlusStore(account));
+        _continue = new ContinueModel(new AccountContinueStore(account), async title =>
+        {
+            // a movie played to the end is marked watched on My List (once)
+            var list = MyListFor();
+            if (list.Items is null) await list.LoadAsync();
+            if (!list.IsWatched(title.Id)) await list.ToggleWatchedAsync(title);
+        });
 
         foreach (var place in Places)
         {
@@ -227,12 +236,13 @@ public partial class ShellView : UserControl
     private void OpenTitle(MetaPreview item)
     {
         if (Page.Content is UIElement current) _history.Push((current, _place));
-        Page.Content = new DetailView(new DetailModel(item, _addonClient, _extras), MyListFor(), GoBack, () => _home.AllRows.SelectMany(row => row.Items).ToList(), OpenSources, _plus);
+        Page.Content = new DetailView(new DetailModel(item, _addonClient, _extras), MyListFor(), GoBack, () => _home.AllRows.SelectMany(row => row.Items).ToList(), OpenSources, _plus, _continue);
     }
 
     /// <summary>The source list for a movie or an episode, over the page that asked for it; Back returns to that page.</summary>
     private void OpenSources(PlayTarget target)
     {
+        target = _continue.Resume(target); // a title in Continue Watching starts from where it was left
         if (Page.Content is UIElement current) _history.Push((current, _place));
         var store = new LastSourceStore(Path.Combine(AppPaths.DataFolder(), "last-sources.json"), _account.Session!.User.Id);
         Page.Content = new SourcesView(new SourcesModel(target, AccountAddonsAsync, _addonClient), store, GoBack, OpenPlayer);
@@ -243,7 +253,7 @@ public partial class ShellView : UserControl
     {
         if (Page.Content is UIElement current) _history.Push((current, _place));
         Bar.Visibility = Visibility.Collapsed;
-        Page.Content = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack);
+        Page.Content = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack, (target, position, duration) => _ = _continue.ReportAsync(target, position, duration));
     }
 
     private void GoBack()
@@ -265,7 +275,7 @@ public partial class ShellView : UserControl
         foreach (var (name, pill) in _pills) pill.Tag = name == place ? "selected" : name;
         Page.Content = place switch
         {
-            "Home" => new HomeView(_home, MyListFor(), _extras, OpenSources),
+            "Home" => new HomeView(_home, MyListFor(), _extras, OpenSources, _continue),
             "Movies" => new BrowseView("Movies", BrowseFor("movie")),
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
             "My List" => new MyListView(MyListFor()),
