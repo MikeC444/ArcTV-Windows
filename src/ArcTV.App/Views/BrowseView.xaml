@@ -10,20 +10,20 @@
     </Grid.RowDefinitions>
 
     <StackPanel Grid.Row="0">
-      <StackPanel Orientation="Horizontal" Margin="44,96,44,12">
+      <StackPanel Orientation="Horizontal" Margin="24,96,24,12">
         <TextBlock x:Name="TitleText" FontSize="34" FontWeight="ExtraBold" VerticalAlignment="Center" Margin="0,0,18,0" />
         <Button x:Name="GenreButton" Style="{StaticResource ChoicePill}" Click="OnGenreButton" />
         <Popup x:Name="GenrePopup" PlacementTarget="{Binding ElementName=GenreButton}" Placement="Bottom" VerticalOffset="6" StaysOpen="False" AllowsTransparency="True" Closed="OnGenreClosed" />
       </StackPanel>
 
-      <StackPanel x:Name="SortPills" Orientation="Horizontal" Margin="44,0,44,12" Visibility="Collapsed" />
+      <StackPanel x:Name="SortPills" Orientation="Horizontal" Margin="24,0,24,12" Visibility="Collapsed" />
 
-      <StackPanel x:Name="LoadingPanel" Margin="44,12,44,0" HorizontalAlignment="Left" Visibility="Collapsed">
+      <StackPanel x:Name="LoadingPanel" Margin="24,12,24,0" HorizontalAlignment="Left" Visibility="Collapsed">
         <TextBlock Text="Getting titles ready…" FontSize="16" Foreground="{StaticResource Text2Brush}" />
         <ProgressBar IsIndeterminate="True" Height="3" Width="220" Margin="0,14,0,0" HorizontalAlignment="Left" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
       </StackPanel>
 
-      <TextBlock x:Name="Message" Margin="44,12,44,0" FontSize="15" TextWrapping="Wrap" Foreground="{StaticResource Text2Brush}" Visibility="Collapsed" />
+      <TextBlock x:Name="Message" Margin="24,12,24,0" FontSize="15" TextWrapping="Wrap" Foreground="{StaticResource Text2Brush}" Visibility="Collapsed" />
     </StackPanel>
 
     <v:PosterGrid x:Name="Posters" Grid.Row="1" />

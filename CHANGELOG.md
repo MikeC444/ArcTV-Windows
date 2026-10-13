@@ -266,3 +266,6 @@ middle sits): episodes use the middle of the 158-high picture, the cast the midd
 
 **Follow-up (owner: remove the black bar at the bottom of the app).** The "Arc TV for Windows · dev" text in the bottom-left corner (a development aid since the first commit) sat on an empty strip under the last row of every page; it is gone, and the empty space under Home's last row and under a poster grid is smaller
 (8 and 12 pixels instead of 40). The version number will be shown in Settings when that page is built.
+
+**Follow-up (owner: the empty space on the left of the app).** Pages started 44 pixels in from the left (and ended 44 from the right), which looks like a wide empty strip, most of all in a narrow window. The side gutter is now 24 pixels on every page (Home, Movies, TV Shows, Search, My List, title and the banner's text), the
+top bar sits 24 in from each side (it was 36), rows that ended 28 from the right now end 24 from it, and the poster grid's width sums count the smaller gutter. Posters per line may go up by one in some window widths.

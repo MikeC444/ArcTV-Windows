@@ -22,7 +22,7 @@ public sealed record PosterSection(string? Title, string? Detail, IReadOnlyList<
 public partial class PosterGrid : UserControl
 {
     private const double TileWidth = 208;
-    private const double SideSpace = 72;
+    private const double SideSpace = 48;
     private const double ScrollBarWidth = 0; // the theme hides scroll bars
     private const double LoadMoreWithin = 900;
 

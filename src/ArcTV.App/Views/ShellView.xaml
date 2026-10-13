@@ -12,7 +12,7 @@
           <GradientStop Color="#00080A0A" Offset="1" />
         </LinearGradientBrush>
       </Grid.Background>
-      <Grid Margin="36,14,36,0" VerticalAlignment="Top">
+      <Grid Margin="24,14,24,0" VerticalAlignment="Top">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" MinWidth="120" />
           <ColumnDefinition Width="Auto" />

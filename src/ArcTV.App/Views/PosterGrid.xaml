@@ -11,7 +11,7 @@
 
       <!-- one line of posters; only the lines on screen exist, so only their pictures are fetched. Spare width is shared out between the posters. -->
       <DataTemplate DataType="{x:Type v:PosterRow}">
-        <ItemsControl ItemsSource="{Binding Items}" Margin="44,0,0,0" Focusable="False" IsTabStop="False">
+        <ItemsControl ItemsSource="{Binding Items}" Margin="24,0,0,0" Focusable="False" IsTabStop="False">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate><c:SpacedRowPanel Extra="{Binding Extra, RelativeSource={RelativeSource AncestorType={x:Type v:PosterGrid}}}" /></ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
@@ -20,7 +20,7 @@
 
       <!-- a title over a group of lines, with a quieter note beside it ("12 results") -->
       <DataTemplate DataType="{x:Type v:SectionHeader}">
-        <StackPanel Orientation="Horizontal" Margin="44,20,44,8">
+        <StackPanel Orientation="Horizontal" Margin="24,20,24,8">
           <TextBlock Text="{Binding Title}" FontSize="22" FontWeight="Bold" VerticalAlignment="Bottom" />
           <TextBlock Text="{Binding Detail}" FontSize="14" Foreground="{StaticResource Text3Brush}" VerticalAlignment="Bottom" Margin="10,0,0,2" />
         </StackPanel>

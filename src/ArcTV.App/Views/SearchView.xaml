@@ -9,10 +9,10 @@
     </Grid.RowDefinitions>
 
     <StackPanel Grid.Row="0">
-      <TextBlock Text="Search" FontSize="34" FontWeight="ExtraBold" Margin="44,96,44,0" />
+      <TextBlock Text="Search" FontSize="34" FontWeight="ExtraBold" Margin="24,96,24,0" />
 
       <!-- the round search box -->
-      <Grid Margin="44,20,44,12">
+      <Grid Margin="24,20,24,12">
        <Grid.ColumnDefinitions>
          <ColumnDefinition Width="*" MaxWidth="900" />
          <ColumnDefinition Width="Auto" />
@@ -50,7 +50,7 @@
 
       <!-- before anything is searched: recent searches, and a hint -->
       <StackPanel x:Name="IdlePanel">
-        <Grid x:Name="RecentPanel" Margin="44,8,44,16">
+        <Grid x:Name="RecentPanel" Margin="24,8,24,16">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MaxWidth="900" />
             <ColumnDefinition Width="Auto" />
@@ -63,23 +63,23 @@
             <WrapPanel x:Name="Recents" />
           </StackPanel>
         </Grid>
-        <TextBlock Text="Search for movies and TV shows across your installed addons." FontSize="14" Foreground="{StaticResource Text2Brush}" Margin="44,0" />
+        <TextBlock Text="Search for movies and TV shows across your installed addons." FontSize="14" Foreground="{StaticResource Text2Brush}" Margin="24,0" />
       </StackPanel>
 
-      <StackPanel x:Name="SearchingPanel" Margin="44,16,44,0" HorizontalAlignment="Left" Visibility="Collapsed">
+      <StackPanel x:Name="SearchingPanel" Margin="24,16,24,0" HorizontalAlignment="Left" Visibility="Collapsed">
         <TextBlock Text="Searching your addons…" FontSize="16" Foreground="{StaticResource Text2Brush}" />
         <ProgressBar IsIndeterminate="True" Height="3" Width="220" Margin="0,14,0,0" HorizontalAlignment="Left" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
       </StackPanel>
 
-      <StackPanel x:Name="NonePanel" Margin="44,50,44,0" HorizontalAlignment="Center" Visibility="Collapsed">
+      <StackPanel x:Name="NonePanel" Margin="24,50,24,0" HorizontalAlignment="Center" Visibility="Collapsed">
         <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="40" Foreground="{StaticResource Text3Brush}" HorizontalAlignment="Center" />
         <TextBlock Text="No results" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,10,0,6" />
         <TextBlock x:Name="NoneText" Foreground="{StaticResource Text2Brush}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
       </StackPanel>
 
-      <TextBlock x:Name="ErrorText" Margin="44,16,44,0" FontSize="15" TextWrapping="Wrap" Foreground="#FF8A80" Visibility="Collapsed" />
+      <TextBlock x:Name="ErrorText" Margin="24,16,24,0" FontSize="15" TextWrapping="Wrap" Foreground="#FF8A80" Visibility="Collapsed" />
 
-      <StackPanel x:Name="CheckingPanel" Orientation="Horizontal" Margin="44,0,44,0" Visibility="Collapsed">
+      <StackPanel x:Name="CheckingPanel" Orientation="Horizontal" Margin="24,0,24,0" Visibility="Collapsed">
         <ProgressBar IsIndeterminate="True" Height="3" Width="60" Margin="0,0,12,0" VerticalAlignment="Center" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
         <TextBlock Text="Still checking other addons…" FontSize="13" Foreground="{StaticResource Text2Brush}" />
       </StackPanel>
