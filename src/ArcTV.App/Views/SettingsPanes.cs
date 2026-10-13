@@ -16,6 +16,8 @@ internal static class Ui
 {
     public static Brush Res(string key) => (Brush)Application.Current.FindResource(key);
 
+    public static Style StyleOf(string key) => (Style)Application.Current.FindResource(key);
+
     public static Brush Pink => new SolidColorBrush(Color.FromRgb(0xFF, 0x6B, 0x8A));
 
     public static Brush Line => new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255));

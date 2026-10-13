@@ -169,6 +169,7 @@
             <Button x:Name="PlayButton" Content="&#x25B6;  Play" Style="{StaticResource PrimaryButton}" Height="60" FontSize="18" Padding="34,0" IsEnabled="False" Margin="0,0,16,0" Click="OnPlay" />
             <Button x:Name="TrailerButton" Content="Trailer" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" IsEnabled="False" ToolTip="Looking for a trailer…" Click="OnTrailer" />
             <Button x:Name="ListButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" Click="OnList" />
+            <Button x:Name="DownloadButton" Content="Download" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" Click="OnDownload" />
             <Button x:Name="WatchedButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" Click="OnWatched" />
             <Button x:Name="LikeButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" MinWidth="80" Margin="0,0,16,0" Visibility="Collapsed" Click="OnLike" />
             <Button x:Name="DislikeButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" MinWidth="80" Visibility="Collapsed" Click="OnDislike" />

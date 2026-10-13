@@ -26,6 +26,7 @@ public partial class DetailView : UserControl
     private readonly Action _back;
     private readonly Func<IReadOnlyList<MetaPreview>>? _similarPool;
     private readonly Action<PlayTarget>? _play;
+    private readonly Action<PlayTarget>? _download;
     private bool _similarShown;
     private SmoothScroller? _smooth;
     private CancellationTokenSource? _run;
@@ -34,8 +35,9 @@ public partial class DetailView : UserControl
     private int _statusVersion;
     private (EpisodeInfo? First, int Season, int Version)? _entriesKey;
 
-    public DetailView(DetailModel model, MyListModel list, Action back, Func<IReadOnlyList<MetaPreview>>? similarPool = null, Action<PlayTarget>? play = null, PlusModel? plus = null, ContinueModel? cont = null)
+    public DetailView(DetailModel model, MyListModel list, Action back, Func<IReadOnlyList<MetaPreview>>? similarPool = null, Action<PlayTarget>? play = null, PlusModel? plus = null, ContinueModel? cont = null, Action<PlayTarget>? download = null)
     {
+        _download = download;
         _plus = plus;
         _continue = cont;
         InitializeComponent();
@@ -159,9 +161,17 @@ public partial class DetailView : UserControl
     {
         var target = MainTarget();
         PlayButton.IsEnabled = _play is not null && target is not null;
+        DownloadButton.Visibility = _download is null ? Visibility.Collapsed : Visibility.Visible;
+        DownloadButton.IsEnabled = target is not null;
         var resuming = target is { StartAt: > 0 };
         PlayButton.Content = target is { Season: { } season, Episode: { } episode } ? $"\u25B6  {(resuming ? "Resume" : "Play")} S{season}E{episode}" : resuming ? "\u25B6  Resume" : "\u25B6  Play";
         PlayButton.ToolTip = _play is null ? "Playing is coming soon to Arc TV for Windows." : target is null ? "Looking for episodes…" : null;
+    }
+
+    /// <summary>Download opens the panel of files for what Play would start (a movie, or a show's next episode; the panel lets a show's episode be changed).</summary>
+    private void OnDownload(object sender, RoutedEventArgs e)
+    {
+        if (_download is not null && MainTarget() is { } target) _download(target with { StartAt = 0 });
     }
 
     private void OnPlay(object sender, RoutedEventArgs e)

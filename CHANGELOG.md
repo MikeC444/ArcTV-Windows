@@ -600,3 +600,17 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Torrent start waited for the wrong pieces (owner's log: 154 s to start while downloading at 1 to 4 MB/s, 5% of the whole torrent done).** With the library's prebuffer off, nothing asked for the start of the file, so it arrived in the torrent's normal order (all over the file). The start is now read through the stream's own local address (a ranged request for as many bytes as the Torrent buffer says): reading makes the torrent fetch those parts first, and the read ends when they have arrived. This also drops the 20 s hand-over fallback, which would have given the player nothing more. The log says how long the first megabytes took. Not run on the PC.
 
+## Downloads (owner approved: the Mac's way)
+
+Status: built, unit tested, not seen on screen.
+
+Context: the Mac app's Download panel (Arc TV Plus) lists only sources that are a plain web file (what a debrid service gives), best quality first then smallest, and saves them with the system downloader; torrents are not saved. Windows now does the same.
+
+Changes: `Core/Downloads` (choices, safe file names, release kind labels, a `DownloadManager` that writes `name.part` and renames it when whole, numbers a taken name, reports progress, cancels, and reports a failure in words); `DownloadPanelView` (picture across the top, season and episode choice for a show, one row per file with quality badge, kind, size and codec, a Downloads bar with progress, Cancel and Show in folder); a Download button on the title page (for what Play would start); without Plus the panel says Downloads are part of Arc TV Plus and offers the Plus page.
+
+Tests performed: unit tests for the choices, names, labels and the manager (saved file, numbered name, server error, nothing left behind). Not run on the PC.
+
+Issues discovered: none yet.
+
+Still open: a Download button on each episode (the Mac has one; here the panel's episode choice covers it), debrid cached/not-cached chips, the Downloads page the Mac's panel links to, resuming a download after the app closes.
+

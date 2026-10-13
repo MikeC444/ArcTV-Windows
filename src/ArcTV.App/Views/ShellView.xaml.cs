@@ -1,4 +1,5 @@
 using System.IO;
+using System.Net.Http;
 using System.Windows.Interop;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,6 +15,7 @@ using ArcTV.Core.Settings;
 using ArcTV.Core.Browse;
 using ArcTV.Core.Continue;
 using ArcTV.Core.Details;
+using ArcTV.Core.Downloads;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
 using ArcTV.Core.Recommend;
@@ -397,7 +399,29 @@ public partial class ShellView : UserControl
     {
         ShowBar(true);
         if (Page.Content is UIElement current) _history.Push((current, _place));
-        Page.Content = new DetailView(new DetailModel(item, _addonClient, _extras), MyListFor(), GoBack, () => _home.AllRows.SelectMany(row => row.Items).ToList(), OpenSources, _plus, _continue);
+        Page.Content = new DetailView(new DetailModel(item, _addonClient, _extras), MyListFor(), GoBack, () => _home.AllRows.SelectMany(row => row.Items).ToList(), OpenSources, _plus, _continue, OpenDownloads);
+    }
+
+    private static readonly DownloadManager Downloads = new(new HttpClient { Timeout = Timeout.InfiniteTimeSpan }, DownloadManager.DefaultFolder());
+
+    /// <summary>The Downloads panel for a movie or episode, over the page (Arc TV Plus; without it the panel says so and offers the Plus page).</summary>
+    private void OpenDownloads(PlayTarget target)
+    {
+        MenuLayer.Content = new DownloadPanelView(target, async (t, cancel) => await SourceFinder.FindAsync(await AccountAddonsAsync(cancel), t.Title.Type, t.StreamId, _addonClient, cancel),
+            Downloads, _plus.Active, () =>
+            {
+                _settingsPane = "Arc TV Plus";
+                Open("Settings");
+            }, CloseCardMenu, _ => { });
+    }
+
+    private string _settingsPane = "Account";
+
+    private string TakeSettingsPane()
+    {
+        var pane = _settingsPane;
+        _settingsPane = "Account";
+        return pane;
     }
 
     /// <summary>The source list for a movie or an episode, over the page that asked for it; Back returns to that page.</summary>
@@ -472,7 +496,7 @@ public partial class ShellView : UserControl
             "Movies" => new BrowseView("Movies", BrowseFor("movie")),
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
             "My List" => new MyListView(MyListFor()),
-            "Settings" => new SettingsView(_settingsModel, AddonsFor(), _home, _user, _local, _plus, MyListFor(), PosterFor, () => { _picked.Reload(); _ = _home.LoadAsync(); }, () => _ = _account.SignOutAsync()),
+            "Settings" => new SettingsView(_settingsModel, AddonsFor(), _home, _user, _local, _plus, MyListFor(), PosterFor, () => { _picked.Reload(); _ = _home.LoadAsync(); }, () => _ = _account.SignOutAsync(), TakeSettingsPane()),
             "Search" => new SearchView(new SearchModel(_account.Scope!, SourcesAsync, new RecentSearchStore(Path.Combine(AppPaths.DataFolder(), "recent-searches.json")), _addonClient) { Blocked = _settingsModel.Blocked }),
             _ => new ComingSoonView(place),
         };

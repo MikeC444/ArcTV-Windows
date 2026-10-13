@@ -447,5 +447,36 @@ public class ScreenTests
         Assert.Equal(3, model.Profiles.Count);
         window.Close();
     });
-}
 
+    [Fact]
+    public void DownloadsPanelListsDirectFilesAndInvitesWithoutPlus() => OnUiThread(async () =>
+    {
+        var target = new PlayTarget(new MetaDetail("tt1", "movie", "Film"));
+        SourceItem[] items =
+        [
+            new("Torrentio", new AddonStream(Url: "https://example.com/a.mkv", Title: "Film 1080p"), 0),
+            new("Torrentio", new AddonStream(InfoHash: "abc", Title: "Film torrent"), 1),
+        ];
+        var manager = new ArcTV.Core.Downloads.DownloadManager(new HttpClient(), Path.Combine(Path.GetTempPath(), "arctv-dl-screen-" + Guid.NewGuid().ToString("N")));
+        var listed = new DownloadPanelView(target, (_, _) => Task.FromResult(new SourceResult(items, [], [])), manager, true, () => { }, () => { }, _ => { });
+        var window = Host(listed);
+        for (var i = 0; i < 100 && listed.State != "list"; i++)
+        {
+            await Task.Delay(20);
+            await Settle();
+        }
+
+        Assert.Equal("list", listed.State);
+        Assert.Contains(Descendants<System.Windows.Controls.TextBlock>(listed), t => t.Text == "1 source"); // the torrent is not offered
+        window.Close();
+
+        var asked = false;
+        var invite = new DownloadPanelView(target, (_, _) => Task.FromResult(new SourceResult()), manager, false, () => asked = true, () => { }, _ => { });
+        window = Host(invite);
+        await Settle();
+        Assert.Equal("plus", invite.State);
+        Descendants<System.Windows.Controls.Button>(invite).Single(b => b.Content is "See Arc TV Plus").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+        Assert.True(asked);
+        window.Close();
+    });
+}
