@@ -154,7 +154,7 @@ public class DetailsTests
         var card = new MetaPreview("tt0816692", "movie", "Interstellar", ReleaseInfo: "2014", Runtime: "169 min");
         var model = new DetailModel(card, Client("""{"meta":{"id":"tt0816692","type":"movie","name":"Interstellar","releaseInfo":"2014","runtime":"169 min","cast":["Matthew McConaughey"]}}"""),
             new FakeExtras(cast: new TmdbCast("Matthew McConaughey", "Cooper", "m.jpg")));
-        Assert.Equal("2014   2h 49m", model.Facts);
+        Assert.Equal("2h 49m", model.Facts); // a movie waits for its release date rather than showing the year and then swapping it
 
         await model.LoadAsync();
         Assert.Equal("yt123", model.TrailerId);

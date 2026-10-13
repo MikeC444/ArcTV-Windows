@@ -9,7 +9,7 @@
       <Button Style="{StaticResource PosterButton}">
         <StackPanel x:Name="Card" Width="192" Margin="0,10,16,10" Background="Transparent" RenderTransformOrigin="0.5,0.5" Cursor="Hand">
           <StackPanel.RenderTransform><ScaleTransform x:Name="Lift" ScaleX="1" ScaleY="1" /></StackPanel.RenderTransform>
-          <Border Width="192" Height="288" CornerRadius="10" Background="{StaticResource SurfaceBrush}" ClipToBounds="True">
+          <c:RoundedBorder Width="192" Height="288" CornerRadius="16" Background="{StaticResource SurfaceBrush}" BorderBrush="#24FFFFFF" BorderThickness="1">
             <Grid>
               <TextBlock Text="{Binding Name}" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" Margin="12" Foreground="{StaticResource Text3Brush}" FontSize="13" />
               <c:RemoteImage Url="{Binding Poster}" DecodeWidth="400" Stretch="UniformToFill" />
@@ -18,7 +18,7 @@
                 <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="13" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" />
               </Border>
             </Grid>
-          </Border>
+          </c:RoundedBorder>
           <TextBlock Text="{Binding Name}" Margin="2,8,2,0" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
         </StackPanel>
       </Button>

@@ -11,14 +11,14 @@
     <!-- an episode: its picture with the number on it, then its name and a couple of lines about it -->
     <DataTemplate DataType="{x:Type core:EpisodeInfo}">
       <StackPanel Width="280" Margin="0,6,16,6">
-        <Border Width="280" Height="158" CornerRadius="10" Background="{StaticResource SurfaceBrush}" ClipToBounds="True">
+        <c:RoundedBorder Width="280" Height="158" CornerRadius="14" Background="{StaticResource SurfaceBrush}" BorderBrush="#24FFFFFF" BorderThickness="1">
           <Grid>
             <c:RemoteImage Url="{Binding Thumbnail}" DecodeWidth="560" Stretch="UniformToFill" />
             <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8" Padding="8,3" CornerRadius="6" Background="#B3000000">
               <TextBlock Text="{Binding Episode, StringFormat=E{0}}" FontSize="12" FontWeight="Bold" />
             </Border>
           </Grid>
-        </Border>
+        </c:RoundedBorder>
         <TextBlock Text="{Binding DisplayTitle}" Margin="2,8,2,0" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
         <TextBlock Text="{Binding Overview}" Margin="2,2,2,0" FontSize="12" Foreground="{StaticResource Text2Brush}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="34" />
       </StackPanel>
@@ -27,12 +27,12 @@
     <!-- a person in the cast: round photo (or their initial), name, character -->
     <DataTemplate DataType="{x:Type core:CastMember}">
       <StackPanel Width="112" Margin="0,4,16,4">
-        <Border Width="96" Height="96" CornerRadius="48" Background="{StaticResource SurfaceHighBrush}" ClipToBounds="True" HorizontalAlignment="Center">
+        <c:RoundedBorder Width="96" Height="96" CornerRadius="48" Background="{StaticResource SurfaceHighBrush}" HorizontalAlignment="Center">
           <Grid>
             <TextBlock Text="{Binding Name[0]}" FontSize="32" FontWeight="Bold" Foreground="{StaticResource Text3Brush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
             <c:RemoteImage Url="{Binding PhotoUrl}" DecodeWidth="220" Stretch="UniformToFill" />
           </Grid>
-        </Border>
+        </c:RoundedBorder>
         <TextBlock Text="{Binding Name}" Margin="0,8,0,0" FontSize="13" FontWeight="SemiBold" TextAlignment="Center" TextWrapping="Wrap" MaxHeight="36" TextTrimming="CharacterEllipsis" />
         <TextBlock Text="{Binding Role}" Margin="0,2,0,0" FontSize="12" Foreground="{StaticResource Text2Brush}" TextAlignment="Center" TextWrapping="Wrap" MaxHeight="34" TextTrimming="CharacterEllipsis" />
       </StackPanel>

@@ -149,7 +149,7 @@ public partial class SearchView : UserControl
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        var thumb = new Border { Width = 34, Height = 50, CornerRadius = new CornerRadius(5), ClipToBounds = true, Background = (Brush)FindResource("SurfaceHighBrush"), Margin = new Thickness(0, 0, 14, 0), Child = new RemoteImage { Url = item.Poster, DecodeWidth = 80, Stretch = Stretch.UniformToFill } };
+        var thumb = new RoundedBorder { Width = 34, Height = 50, CornerRadius = new CornerRadius(6), Background = (Brush)FindResource("SurfaceHighBrush"), Margin = new Thickness(0, 0, 14, 0), Child = new RemoteImage { Url = item.Poster, DecodeWidth = 80, Stretch = Stretch.UniformToFill } };
         var name = new TextBlock { Text = item.Name, FontSize = 16, FontWeight = FontWeights.Bold, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
         var kind = new TextBlock { Text = (item.Type == "movie" ? "Movie" : "TV Show") + (item.ReleaseInfo is { Length: > 0 } year ? $" · {year}" : ""), FontSize = 14, Foreground = (Brush)FindResource("Text3Brush"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
         Grid.SetColumn(name, 1);

@@ -209,3 +209,8 @@ server's trailer lookup, which is not ported yet.
 - "You May Also Like" at the end of a movie's page: other titles from Home's rows, preferring ones that share a genre (`SimilarTitles`).
 Each of these stays quiet when the server has nothing. Still not on the title page: Play and sources, Download, Like / Not for me and the three-dot menu (Plus), the episode watched ticks and per-episode Play / Download, Resume.
 Still not on Home: Continue Watching, Picked for you, hiding the top bar on scroll.
+
+**Follow-up: the build of the extras failed one test** (`ModelAddsTheTrailer...`): the test expected "2014   2h 49m" before the account had answered, but a movie shows only its length until the release date is known (as on the Mac, so the year does not appear and then swap to a full date). The test now expects that.
+
+**Follow-up (owner: posters look too squared off): rounded corners.** A WPF border draws round corners but does not clip what is inside it, so a picture's corners stayed square whatever the radius. `RoundedBorder` clips its contents to the rounded shape.
+Posters (every page), episode pictures, round cast photos and search-suggestion pictures use it; posters now have a 16 radius and a faint outline.
