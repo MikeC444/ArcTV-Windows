@@ -24,7 +24,7 @@
         </Border>
         <Button x:Name="AccountButton" Grid.Column="2" HorizontalAlignment="Right" Style="{StaticResource GhostButton}" Height="44" Padding="0" Click="OnAccount" ToolTip="Account">
           <Button.ContextMenu>
-            <ContextMenu x:Name="AccountMenu" />
+            <ContextMenu x:Name="AccountMenu" Style="{StaticResource DarkMenu}" />
           </Button.ContextMenu>
         </Button>
       </Grid>

@@ -72,11 +72,11 @@ public partial class ShellView : UserControl
         var label = new TextBlock { Text = name, MaxWidth = 150, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 14, 0), FontWeight = FontWeights.SemiBold };
         AccountButton.Content = new StackPanel { Orientation = Orientation.Horizontal, Children = { initial, label } };
 
-        var email = new MenuItem { Header = user.Email, IsEnabled = false };
-        var signOut = new MenuItem { Header = "Sign out" };
+        var email = new MenuItem { Header = new TextBlock { Text = user.Email, Foreground = (Brush)FindResource("Text2Brush") }, IsEnabled = false, Style = (Style)FindResource("DarkMenuItem") };
+        var signOut = new MenuItem { Header = "Sign out", Style = (Style)FindResource("DarkMenuItem") };
         signOut.Click += async (_, _) => await _account.SignOutAsync();
         AccountMenu.Items.Add(email);
-        AccountMenu.Items.Add(new Separator());
+        AccountMenu.Items.Add(new Separator { Style = (Style)FindResource("DarkMenuSeparator") });
         AccountMenu.Items.Add(signOut);
     }
 

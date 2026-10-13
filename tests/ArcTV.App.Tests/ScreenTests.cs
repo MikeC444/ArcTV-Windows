@@ -87,7 +87,7 @@ public class ScreenTests
     [Fact]
     public void ThemeStylesAllLoad() => OnUiThread(() =>
     {
-        foreach (var key in new[] { "PrimaryButton", "GhostButton", "LinkButton", "Field", "PasswordField", "FieldLabel", "NavPill", "ChoicePill", "SuggestionRow", "PosterButton", "SeasonCircle", "DotButton" })
+        foreach (var key in new[] { "PrimaryButton", "GhostButton", "LinkButton", "Field", "PasswordField", "FieldLabel", "NavPill", "ChoicePill", "SuggestionRow", "PosterButton", "SeasonCircle", "DarkMenu", "DarkMenuItem", "DarkMenuSeparator", "DotButton" })
             Assert.NotNull(Application.Current.TryFindResource(key));
         return Task.CompletedTask;
     });
