@@ -6,6 +6,5 @@
         Background="{StaticResource BgBrush}" WindowStartupLocation="CenterScreen">
   <Grid>
     <ContentControl x:Name="Host" />
-    <TextBlock x:Name="VersionLabel" Margin="16" FontSize="12" Foreground="{StaticResource Text3Brush}" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsHitTestVisible="False" />
   </Grid>
 </Window>

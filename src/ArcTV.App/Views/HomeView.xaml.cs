@@ -67,7 +67,7 @@ public partial class HomeView : UserControl
             HeroHost.Children.Clear();
             _hero?.Stop();
             _hero = null;
-            Rows.Margin = new Thickness(0, 90, 0, 40);
+            Rows.Margin = new Thickness(0, 90, 0, 8);
         }
         else if (_hero is null || !_hero.Shows(hero))
         {
@@ -75,7 +75,7 @@ public partial class HomeView : UserControl
             _hero = new HeroBanner(hero, _list, _extras, _play) { Height = HeroHeight(ActualHeight) };
             HeroHost.Children.Clear();
             HeroHost.Children.Add(_hero);
-            Rows.Margin = new Thickness(0, -60, 0, 40);
+            Rows.Margin = new Thickness(0, -60, 0, 8);
         }
     }
 

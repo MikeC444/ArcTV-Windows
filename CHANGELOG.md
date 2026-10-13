@@ -263,3 +263,6 @@ Pages, lists and rows still scroll with the wheel, a touchpad and the keyboard, 
 
 **Follow-up (owner: put the row arrow in the middle of the episode picture).** A row's arrows were centred on the whole row, so on an episode row (picture, then its name and a few lines) they sat well below the picture's middle. `ArrowScrollViewer` has an `ArrowCenter` (how far down the arrows'
 middle sits): episodes use the middle of the 158-high picture, the cast the middle of the photo, and the posters on Home and in "You May Also Like" the middle of the poster.
+
+**Follow-up (owner: remove the black bar at the bottom of the app).** The "Arc TV for Windows · dev" text in the bottom-left corner (a development aid since the first commit) sat on an empty strip under the last row of every page; it is gone, and the empty space under Home's last row and under a poster grid is smaller
+(8 and 12 pixels instead of 40). The version number will be shown in Settings when that page is built.
