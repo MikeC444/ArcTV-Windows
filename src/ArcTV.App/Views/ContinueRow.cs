@@ -30,7 +30,7 @@ public sealed class ContinueRow : StackPanel
         Visibility = items.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         if (items.Count == 0) return;
         Margin = new Thickness(0, 0, 0, 44);
-        Children.Add(new TextBlock { Text = "Continue Watching", FontSize = 26, FontWeight = FontWeights.Bold, Margin = new Thickness(24, 0, 0, 0) });
+        Children.Add(new TextBlock { Text = "Continue Watching", FontSize = 32, FontWeight = FontWeights.Bold, Margin = new Thickness(24, 0, 0, 0) });
         var strip = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(24, 0, 0, 0) };
         foreach (var item in items) strip.Children.Add(Card(item));
         Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 134, ScalesWithPosters = true, Content = strip });
@@ -74,7 +74,7 @@ public sealed class ContinueRow : StackPanel
 
         var card = new StackPanel { Width = CardWidth, Margin = new Thickness(0, 10, 16, 10), Background = Brushes.Transparent, Cursor = System.Windows.Input.Cursors.Hand };
         card.Children.Add(new RoundedBorder { Width = CardWidth, Height = PictureHeight, CornerRadius = new CornerRadius(16), Background = Res("SurfaceBrush"), BorderBrush = new SolidColorBrush(Color.FromArgb(0x24, 255, 255, 255)), BorderThickness = new Thickness(1), Child = picture });
-        card.Children.Add(new TextBlock { Text = item.Title, Margin = new Thickness(2, 8, 2, 0), FontSize = 17, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
+        card.Children.Add(new TextBlock { Text = item.Title, Margin = new Thickness(2, 8, 2, 0), FontSize = 20, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
 
         HoverLift.Attach(card);
 

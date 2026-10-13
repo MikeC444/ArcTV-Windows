@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- The row titles on Home and the titles under the posters are bigger again.
 - Posters never grow past a set size, however big the window is.
 - The source list starts at the middle of the window instead of stretching across most of it.
 - Posters now grow and shrink with the window, so about the same number fit across on a small window and on a big screen.
