@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
+using ArcTV.Core.Browse;
 using ArcTV.Core.Home;
 
 namespace ArcTV.App.Views;
@@ -15,6 +16,9 @@ public partial class ShellView : UserControl
 
     private readonly AccountModel _account;
     private readonly HomeModel _home;
+    private readonly Dictionary<string, BrowseModel> _browse = [];
+    private readonly AddonClient _addonClient = new();
+    private IReadOnlyList<HomeSource> _sources = [];
     private string _place = "";
     private readonly Dictionary<string, Button> _pills = [];
 
@@ -23,7 +27,7 @@ public partial class ShellView : UserControl
         InitializeComponent();
         _account = account;
         var user = account.Session!.User;
-        _home = new HomeModel(async cancel => await account.AuthorizedAsync((client, token) => client.AddonsAsync(token, cancel: cancel)), user.Id);
+        _home = new HomeModel(AccountAddonsAsync, user.Id);
 
         foreach (var place in Places)
         {
@@ -67,11 +71,36 @@ public partial class ShellView : UserControl
 
     private void OnLogo(object sender, MouseButtonEventArgs e) => Open("Home");
 
+    private async Task<IReadOnlyList<SyncedAddon>> AccountAddonsAsync(CancellationToken cancel) =>
+        await _account.AuthorizedAsync((client, token) => client.AddonsAsync(token, cancel: cancel));
+
+    /// <summary>The addons Movies and TV Shows browse. Kept once found, so each visit does not ask the account again.</summary>
+    private async Task<IReadOnlyList<HomeSource>> SourcesAsync(CancellationToken cancel)
+    {
+        if (_sources.Count > 0) return _sources;
+        var found = await AddonSources.LoadAsync(AccountAddonsAsync, _addonClient, cancel);
+        if (found.Count > 0) _sources = found;
+        return found;
+    }
+
+    /// <summary>One model per kind, kept for the session, so coming back to Movies finds the same titles in the same order.</summary>
+    private BrowseModel BrowseFor(string type)
+    {
+        if (!_browse.TryGetValue(type, out var model)) _browse[type] = model = new BrowseModel(type, SourcesAsync, _addonClient);
+        return model;
+    }
+
     private void Open(string place)
     {
         if (place == _place) return;
         _place = place;
         foreach (var (name, pill) in _pills) pill.Tag = name == place ? "selected" : name;
-        Page.Content = place == "Home" ? new HomeView(_home) : new ComingSoonView(place);
+        Page.Content = place switch
+        {
+            "Home" => new HomeView(_home),
+            "Movies" => new BrowseView("Movies", BrowseFor("movie")),
+            "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
+            _ => new ComingSoonView(place),
+        };
     }
 }

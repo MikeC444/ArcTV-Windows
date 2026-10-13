@@ -70,28 +70,7 @@ public sealed class HomeModel(Func<CancellationToken, Task<IReadOnlyList<SyncedA
 
         try
         {
-            IReadOnlyList<SyncedAddon> found;
-            try
-            {
-                found = await addons(cancel).ConfigureAwait(false);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                found = [];
-            }
-
-            var sources = found.Where(a => a.ManifestJson is not null).Select(a => new HomeSource(a.ManifestUrl, a.ManifestJson!)).Where(s => s.Catalogs.Count > 0).ToList();
-            if (sources.Count == 0)
-            {
-                try
-                {
-                    sources = [new HomeSource(AppInfo.CinemetaManifestUrl, await _client.FetchManifestAsync(AppInfo.CinemetaManifestUrl, cancel).ConfigureAwait(false))];
-                }
-                catch (Exception ex) when (ex is not OperationCanceledException)
-                {
-                    // no addons and no Cinemeta: Home ends up empty
-                }
-            }
+            var sources = await AddonSources.LoadAsync(addons, _client, cancel).ConfigureAwait(false);
 
             var seed = $"{userId}|{HomeVariety.DayStamp()}";
             await Task.WhenAll(sources.Select(source => HomeSections.LoadAsync(source, seed, batch =>

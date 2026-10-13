@@ -67,3 +67,24 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
 **Issues discovered:** the Home model's last state change could land after `LoadAsync` returned when a synchronization context was present (a test caught it); now awaited.
 
 **Issues fixed:** the above. Not done yet: hide-the-bar-on-scroll, Continue Watching, Picked for you, the hero's Play/Trailer/My List/Info buttons, the saved row cache (needs the details and player first).
+
+## 4 -- Movies and TV Shows: browse by genre
+
+**Status:** Written without a compiler (the sandbox could not download the .NET SDK); checked only by the Windows build server. Not run or seen on screen.
+
+**Context:** First of the places after Home. Ported from the Mac app's `Browse.swift`, `BrowseView.swift` and `HomeSource.browsePage`.
+
+**Changes:**
+- `ArcTV.Core/Browse`: `BrowseSort` (Featured, Highest Rated, Newest), `Genres` (Movies, TV Shows), `BrowsePaging.BrowsePageAsync` (one page of a type from an
+  addon, for a genre or all) and `BrowseModel` (first page, then more as you scroll; a genre's loaded titles kept while the shell lives).
+- `AddonSources`: the "which addons can fill pages" rule (enabled addons with catalogues, else Cinemeta), lifted out of `HomeModel` so Home and Browse share it.
+- `BrowseView`: title, genre pill with a two-column list, sort pills, poster grid that loads more near the bottom. The poster card moved to
+  `PosterTemplate.xaml` so Home and Browse share it. New `ChoicePill` style.
+
+**Tests performed:** see the build run for this commit. New: `BrowseTests` (sorting, year, genre filtering, paging, cache) and a screen test that opens the Movies page.
+
+**Issues discovered:** none yet.
+
+**Issues fixed:** none yet.
+
+**Open:** blocked genres (needs profiles/settings), loading skeletons, a virtualised grid (the grid lays out every loaded poster), opening a title (needs title details).

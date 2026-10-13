@@ -1,0 +1,38 @@
+<UserControl x:Class="ArcTV.App.Views.BrowseView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="PosterTemplate.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
+  <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" CanContentScroll="False" ScrollChanged="OnScrollChanged">
+    <StackPanel>
+      <StackPanel Orientation="Horizontal" Margin="44,96,44,12">
+        <TextBlock x:Name="TitleText" FontSize="34" FontWeight="ExtraBold" VerticalAlignment="Center" Margin="0,0,18,0" />
+        <Button x:Name="GenreButton" Style="{StaticResource ChoicePill}" Click="OnGenreButton" />
+        <Popup x:Name="GenrePopup" PlacementTarget="{Binding ElementName=GenreButton}" Placement="Bottom" VerticalOffset="6" StaysOpen="False" AllowsTransparency="True" Closed="OnGenreClosed" />
+      </StackPanel>
+
+      <StackPanel x:Name="SortPills" Orientation="Horizontal" Margin="44,0,44,18" Visibility="Collapsed" />
+
+      <ItemsControl x:Name="Posters" Margin="44,0,28,0">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+      </ItemsControl>
+
+      <StackPanel x:Name="LoadingPanel" Margin="44,24,44,0" HorizontalAlignment="Left" Visibility="Collapsed">
+        <TextBlock Text="Getting titles ready…" FontSize="16" Foreground="{StaticResource Text2Brush}" />
+        <ProgressBar IsIndeterminate="True" Height="3" Width="220" Margin="0,14,0,0" HorizontalAlignment="Left" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
+      </StackPanel>
+
+      <TextBlock x:Name="Message" Margin="44,12,44,0" FontSize="15" TextWrapping="Wrap" Foreground="{StaticResource Text2Brush}" Visibility="Collapsed" />
+
+      <Border Height="48" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

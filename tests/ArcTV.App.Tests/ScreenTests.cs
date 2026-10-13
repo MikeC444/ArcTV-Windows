@@ -7,6 +7,7 @@ using System.Windows.Threading;
 using ArcTV.App.Views;
 using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
+using ArcTV.Core.Browse;
 using ArcTV.Core.Home;
 using ArcTV.Core.Storage;
 using Xunit;
@@ -81,7 +82,7 @@ public class ScreenTests
     [Fact]
     public void ThemeStylesAllLoad() => OnUiThread(() =>
     {
-        foreach (var key in new[] { "PrimaryButton", "GhostButton", "LinkButton", "Field", "PasswordField", "FieldLabel", "NavPill", "DotButton" })
+        foreach (var key in new[] { "PrimaryButton", "GhostButton", "LinkButton", "Field", "PasswordField", "FieldLabel", "NavPill", "ChoicePill", "DotButton" })
             Assert.NotNull(Application.Current.TryFindResource(key));
         return Task.CompletedTask;
     });
@@ -110,6 +111,22 @@ public class ScreenTests
         Assert.Equal(HomeState.Loaded, model.State);
         Assert.NotEmpty(model.Sections);
         Assert.NotEmpty(model.Hero);
+        window.Close();
+    });
+
+    [Fact]
+    public void MoviesScreenShowsPostersAndGenres() => OnUiThread(async () =>
+    {
+        var client = new AddonClient(new HttpClient(new Handler(Answer)));
+        var sources = new List<HomeSource> { new("https://x.test/manifest.json", System.Text.Json.JsonSerializer.Deserialize<AddonManifest>(Manifest, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))!) };
+        var model = new BrowseModel("movie", _ => Task.FromResult<IReadOnlyList<HomeSource>>(sources), client);
+        var view = new BrowseView("Movies", model);
+        var window = Host(view);
+        await Settle();
+        await Task.Delay(300);
+        await Settle();
+        Assert.Equal(2, model.Items.Count);
+        Assert.True(view.ActualHeight > 0);
         window.Close();
     });
 

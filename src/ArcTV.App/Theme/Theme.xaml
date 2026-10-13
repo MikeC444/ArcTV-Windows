@@ -149,6 +149,32 @@
     </Setter>
   </Style>
 
+  <!-- a pill to choose with (genre, sort); the chosen one is white (the button's Tag is "selected") -->
+  <Style x:Key="ChoicePill" TargetType="Button">
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Box" CornerRadius="19" MinHeight="34" Padding="18,0" Background="#5908080A" BorderBrush="#8CFFFFFF" BorderThickness="1">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="Background" Value="#26FFFFFF" /></Trigger>
+            <Trigger Property="Tag" Value="selected">
+              <Setter Property="Foreground" Value="Black" />
+              <Setter Property="FontWeight" Value="Bold" />
+              <Setter TargetName="Box" Property="Background" Value="White" />
+              <Setter TargetName="Box" Property="BorderBrush" Value="White" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <Style x:Key="DotButton" TargetType="Button">
     <Setter Property="Width" Value="18" />
     <Setter Property="Height" Value="24" />
