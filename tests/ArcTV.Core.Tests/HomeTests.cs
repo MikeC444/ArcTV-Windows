@@ -280,6 +280,7 @@ public class HomeModelTests
         var load = model.LoadAsync();
         Assert.Equal(HomeState.Loaded, model.State); // before any addon has answered
         Assert.Equal("Old row", model.Sections.Single().Title);
+        for (var i = 0; i < 200 && model.Hero.Count == 0; i++) await Task.Delay(10); // (the banner is chosen just after the state changes, on another thread when the test runner has its own context)
         Assert.NotEmpty(model.Hero);
 
         release.SetResult([Addon(Cool)]);
