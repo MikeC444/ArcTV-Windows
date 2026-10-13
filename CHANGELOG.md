@@ -107,6 +107,9 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
   "large" background instead of the "medium" one the addon lists, and falls back to the listed address when there is no large one (a missing picture is not
   retried; `RemoteImage` gained a `FallbackUrl`); and it is no longer shrunk to 1600 wide when decoded, but kept at the size it arrives. That the artwork
   server has a "large" size is an assumption (it could not be reached from here); if it does not, nothing changes from before.
+  Still blocky afterwards (screenshot), which suggests the addon's picture is tiny (~300-500 wide). The same rule now also asks TMDB's artwork server for its
+  w1280 size in place of w300/w780 (that size exists for backdrops), again falling back to the address given. The actual address was never seen, so this too
+  is a guess; if it is still blocky, the address itself is needed.
 - Pill text: the pill's content now takes its colour from the button, so the selected pill's black text applies.
 
 **Open:** blocked genres (needs profiles/settings), loading skeletons, a virtualised grid (the grid lays out every loaded poster), opening a title (needs title details).

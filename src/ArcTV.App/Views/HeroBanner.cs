@@ -83,10 +83,17 @@ public sealed class HeroBanner : Grid
         return grid;
     }
 
+    private static readonly System.Text.RegularExpressions.Regex TmdbSize = new(@"(image\.tmdb\.org/t/p/)w\d+(/)", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
+
     /// <summary>
-    /// The artwork server these addresses come from (Cinemeta's) keeps the banner picture in sizes, and the addon hands out the medium one, which goes soft on a
-    /// big window. Ask for the large one; the picture falls back to the address given if there is none. Anything else is left alone.
+    /// Addons hand out small copies of the banner picture, which go blocky when stretched across a window. The two artwork servers they mostly use keep bigger
+    /// ones under a different size in the address: Cinemeta's (medium, large) and TMDB's (w300, w780, ... w1280). Ask for the big one; the picture falls back to
+    /// the address the addon gave when there is none. Any other address is left alone.
     /// </summary>
-    private static string? BiggerBackground(string? url) =>
-        url is not null && url.Contains("/background/medium/", StringComparison.Ordinal) ? url.Replace("/background/medium/", "/background/large/", StringComparison.Ordinal) : url;
+    private static string? BiggerBackground(string? url)
+    {
+        if (url is null) return null;
+        if (url.Contains("/background/medium/", StringComparison.Ordinal)) return url.Replace("/background/medium/", "/background/large/", StringComparison.Ordinal);
+        return TmdbSize.Replace(url, "${1}w1280${2}");
+    }
 }
