@@ -28,6 +28,9 @@ public sealed class RemoteImage : Image
 
     public static readonly DependencyProperty FallbackUrlProperty = DependencyProperty.Register(nameof(FallbackUrl), typeof(string), typeof(RemoteImage), new PropertyMetadata(null, (d, _) => ((RemoteImage)d).Schedule()));
 
+    /// <summary>Raised when a picture has loaded and is on show.</summary>
+    public event EventHandler? Shown;
+
     private CancellationTokenSource? _cancel;
     private bool _scheduled;
 
@@ -84,6 +87,7 @@ public sealed class RemoteImage : Image
             {
                 BeginAnimation(OpacityProperty, null);
                 Source = hit;
+                Shown?.Invoke(this, EventArgs.Empty);
                 return;
             }
 
@@ -95,7 +99,8 @@ public sealed class RemoteImage : Image
                     if (cancel.IsCancellationRequested) return;
                     Keep(key, picture);
                     Source = picture;
-                        BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)));
+                    BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)));
+                    Shown?.Invoke(this, EventArgs.Empty);
                     return;
                 }
                 catch (OperationCanceledException) when (cancel.IsCancellationRequested)

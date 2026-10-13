@@ -19,6 +19,7 @@ public partial class HomeView : UserControl
         {
             _model.PropertyChanged += OnModelChanged;
             Refresh();
+            _hero?.Start(); // coming back from a title page, the banner goes on rotating
         };
         Unloaded += (_, _) =>
         {

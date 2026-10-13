@@ -6,6 +6,7 @@ using System.Windows.Media;
 using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Browse;
+using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
 using ArcTV.Core.Search;
@@ -22,6 +23,7 @@ public partial class ShellView : UserControl
     private readonly HomeModel _home;
     private readonly Dictionary<string, BrowseModel> _browse = [];
     private MyListModel? _myList;
+    private readonly Stack<(UIElement Page, string Place)> _history = [];
     private readonly AddonClient _addonClient = new();
     private IReadOnlyList<HomeSource> _sources = [];
     private string _place = "";
@@ -43,6 +45,17 @@ public partial class ShellView : UserControl
         }
 
         BuildAccountButton(user);
+
+        // a click on any poster (or suggestion) that stands for a title opens that title; the mouse's Back button and Escape come back
+        AddHandler(Button.ClickEvent, new RoutedEventHandler(OnTitleClick));
+        MouseDown += (_, e) =>
+        {
+            if (e.ChangedButton == MouseButton.XButton1) GoBack();
+        };
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape && _history.Count > 0 && Keyboard.FocusedElement is not TextBox) GoBack();
+        };
         Open("Home");
         Loaded += async (_, _) => await _home.LoadAsync();
     }
@@ -96,11 +109,44 @@ public partial class ShellView : UserControl
     }
 
     /// <summary>One model for the session: coming back to My List shows what was there while it is fetched again.</summary>
-    private MyListModel MyListFor() => _myList ??= new MyListModel(cancel => _account.AuthorizedAsync((client, token) => client.WatchlistAsync(token, cancel)));
+    private MyListModel MyListFor() => _myList ??= new MyListModel(
+        cancel => _account.AuthorizedAsync((client, token) => client.WatchlistAsync(token, cancel)),
+        item => _account.AuthorizedAsync(async (client, token) =>
+        {
+            await client.SaveToWatchlistAsync(token, item);
+            return true;
+        }),
+        item => _account.AuthorizedAsync(async (client, token) =>
+        {
+            await client.RemoveFromWatchlistAsync(token, item);
+            return true;
+        }));
+
+    private void OnTitleClick(object sender, RoutedEventArgs e)
+    {
+        if (e.OriginalSource is Button { DataContext: MetaPreview item }) OpenTitle(item);
+    }
+
+    /// <summary>Shows a title's page over the one that is open; Back puts that page back exactly as it was (where it was scrolled to, what was typed).</summary>
+    private void OpenTitle(MetaPreview item)
+    {
+        if (Page.Content is UIElement current) _history.Push((current, _place));
+        Page.Content = new DetailView(new DetailModel(item, _addonClient), MyListFor(), GoBack);
+    }
+
+    private void GoBack()
+    {
+        if (_history.Count == 0) return;
+        var (page, place) = _history.Pop();
+        _place = place;
+        foreach (var (name, pill) in _pills) pill.Tag = name == place ? "selected" : name;
+        Page.Content = page;
+    }
 
     private void Open(string place)
     {
-        if (place == _place) return;
+        if (place == _place && _history.Count == 0) return;
+        _history.Clear();
         _place = place;
         foreach (var (name, pill) in _pills) pill.Tag = name == place ? "selected" : name;
         Page.Content = place switch

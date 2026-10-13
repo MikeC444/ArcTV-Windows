@@ -165,3 +165,28 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
 **Issues fixed:** none yet.
 
 **Open:** adding and removing titles (needs title details); the saved list is not cached on this PC.
+
+## 7 -- Title details (first part)
+
+**Status:** Written without a compiler here (no .NET SDK in the sandbox); built and tested by the Windows build server only (see the run for this commit). Not run or seen on screen.
+
+**Context:** Clicking a poster now opens the title's page. Ported from the Mac app's `DetailView`, `Details` and `DetailExtras`. This is the first part: what the page shows, and My List / Watched. Sources, Play, Trailer and Download come with the player.
+
+**Changes:**
+- `ArcTV.Core/Details`: `MetaDetail` / `EpisodeInfo` / `CastMember` (an addon's meta answer: cast with photos first, episodes by season with specials left out),
+  `AddonClient.FetchMetaAsync` (and `AddonUrl.MetaUrl`, ids keep their colons), `Format` (runtime, release date), `StreamIds` and `DetailModel` (the card's basics at once, then the
+  full details from Cinemeta merged with what the card had).
+- `MyListModel` can now save, remove and mark watched (shown at once, undone if the account cannot be reached); `SaveToWatchlistAsync` / `RemoveFromWatchlistAsync` call the account.
+- `DetailView`: the artwork behind everything (asked for in its bigger size, as the Home banner is), the logo or title, year and length, genres, a few lines about it, Play (switched off
+  for now), My List and Watched buttons, the IMDb rating, a show's seasons and episodes, and the cast.
+- Navigation: any poster (Home, Movies, TV Shows, Search, My List) or search suggestion that is clicked opens its title over the page you were on; Back (the button, Escape or the mouse's back button)
+  puts that page back as it was. A poster is now a button (`PosterButton`).
+- `Artwork.Bigger` (the bigger-picture rule from the Home banner) is shared; the Home banner starts rotating again after coming back from a title.
+
+**Tests performed:** see the build run. New: `DetailsTests` (formats, cast order, seasons, addresses, model merging, season choice, My List toggles and undo) and a screen test.
+
+**Issues discovered:** none yet.
+
+**Issues fixed:** none yet.
+
+**Open:** Play, sources, Trailer, Download; release date, trailer and cast photos from the account's server; the episode watched ticks; "You May Also Like"; the three-dot "more" menu and Like / Not for me (Plus).

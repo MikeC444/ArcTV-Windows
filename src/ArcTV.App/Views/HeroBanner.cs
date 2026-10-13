@@ -45,6 +45,11 @@ public sealed class HeroBanner : Grid
 
     public void Stop() => _timer.Stop();
 
+    public void Start()
+    {
+        if (_items.Count > 1) _timer.Start();
+    }
+
     private void Show(int index)
     {
         _index = index;
@@ -59,7 +64,7 @@ public sealed class HeroBanner : Grid
     private static UIElement Slide(MetaPreview item)
     {
         var grid = new Grid();
-        var picture = new RemoteImage { Url = BiggerBackground(item.Background) ?? item.Poster, FallbackUrl = item.Background ?? item.Poster, DecodeWidth = 0, Stretch = Stretch.UniformToFill, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top };
+        var picture = new RemoteImage { Url = Artwork.Bigger(item.Background) ?? item.Poster, FallbackUrl = item.Background ?? item.Poster, DecodeWidth = 0, Stretch = Stretch.UniformToFill, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top };
         grid.Children.Add(picture);
         // fades into the page at the bottom, and darkens the left so the words can be read
         grid.Children.Add(new System.Windows.Shapes.Rectangle { Fill = new LinearGradientBrush(Colors.Transparent, (Color)Application.Current.FindResource("BgColor"), 90) { GradientStops = { new GradientStop(Colors.Transparent, 0.45) } } });
@@ -82,19 +87,5 @@ public sealed class HeroBanner : Grid
         if (description.Length > 0) details.Children.Add(new TextBlock { Text = description, FontSize = 14, TextWrapping = TextWrapping.Wrap, MaxHeight = 66, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Thickness(0, 10, 0, 0) });
         grid.Children.Add(details);
         return grid;
-    }
-
-    private static readonly System.Text.RegularExpressions.Regex TmdbSize = new(@"(image\.tmdb\.org/t/p/)w\d+(/)", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
-
-    /// <summary>
-    /// Addons hand out small copies of the banner picture, which go blocky when stretched across a window. The two artwork servers they mostly use keep bigger
-    /// ones under a different size in the address: Cinemeta's (medium, large) and TMDB's (w300, w780, ... w1280). Ask for the big one; the picture falls back to
-    /// the address the addon gave when there is none. Any other address is left alone.
-    /// </summary>
-    private static string? BiggerBackground(string? url)
-    {
-        if (url is null) return null;
-        if (url.Contains("/background/medium/", StringComparison.Ordinal)) return url.Replace("/background/medium/", "/background/large/", StringComparison.Ordinal);
-        return TmdbSize.Replace(url, "${1}w1280${2}");
     }
 }

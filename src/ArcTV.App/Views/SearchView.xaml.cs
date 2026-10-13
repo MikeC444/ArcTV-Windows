@@ -133,8 +133,8 @@ public partial class SearchView : UserControl
         for (var i = 0; i < _suggestions.Count; i++)
         {
             var item = _suggestions[i];
-            var row = new Button { Style = (Style)FindResource("SuggestionRow"), Tag = i == _highlighted ? "selected" : "", Content = SuggestionContent(item) };
-            row.Click += async (_, _) => await PickAsync(item);
+            var row = new Button { Style = (Style)FindResource("SuggestionRow"), Tag = i == _highlighted ? "selected" : "", Content = SuggestionContent(item), DataContext = item };
+            row.Click += (_, _) => PickedSuggestion(); // the click goes on up to the page, which opens the title
             Suggestions.Children.Add(row);
         }
 
@@ -160,11 +160,11 @@ public partial class SearchView : UserControl
         return grid;
     }
 
-    /// <summary>Choosing a suggestion searches for that title (opening a title comes with title details).</summary>
-    private async Task PickAsync(MetaPreview item)
+    private void PickedSuggestion()
     {
+        _model.Remember(Box.Text);
         _suggestionsOpen = false;
-        await RunNowAsync(item.Name);
+        SuggestionPopup.IsOpen = false;
     }
 
     // ---- typing ----
@@ -226,7 +226,7 @@ public partial class SearchView : UserControl
                 break;
             case Key.Enter:
                 e.Handled = true;
-                if (listing && _highlighted >= 0 && _highlighted < _suggestions.Count) await PickAsync(_suggestions[_highlighted]);
+                if (listing && _highlighted >= 0 && _highlighted < Suggestions.Children.Count) ((Button)Suggestions.Children[_highlighted]).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 else await RunNowAsync(Box.Text);
                 break;
         }

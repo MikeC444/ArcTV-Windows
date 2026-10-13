@@ -195,6 +195,48 @@
       </Setter>
     </Style>
 
+  <!-- a poster you can click: no button chrome, just the card inside -->
+  <Style x:Key="PosterButton" TargetType="Button">
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <ContentPresenter />
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- a season number in a circle; the chosen one is white (the button's Tag is "selected") -->
+  <Style x:Key="SeasonCircle" TargetType="Button">
+    <Setter Property="Width" Value="52" />
+    <Setter Property="Height" Value="52" />
+    <Setter Property="Margin" Value="0,0,12,0" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="FontSize" Value="16" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Grid>
+            <Ellipse x:Name="Disc" Fill="#1FFFFFFF" />
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Disc" Property="Fill" Value="#33FFFFFF" /></Trigger>
+            <Trigger Property="Tag" Value="selected">
+              <Setter TargetName="Disc" Property="Fill" Value="White" />
+              <Setter Property="Foreground" Value="Black" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <Style x:Key="DotButton" TargetType="Button">
     <Setter Property="Width" Value="18" />
     <Setter Property="Height" Value="24" />

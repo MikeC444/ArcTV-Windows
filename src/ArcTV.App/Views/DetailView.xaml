@@ -1,0 +1,133 @@
+<UserControl x:Class="ArcTV.App.Views.DetailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:ArcTV.App.Controls"
+             xmlns:core="clr-namespace:ArcTV.Core.Details;assembly=ArcTV.Core">
+  <UserControl.Resources>
+    <!-- an episode: its picture with the number on it, then its name and a couple of lines about it -->
+    <DataTemplate DataType="{x:Type core:EpisodeInfo}">
+      <StackPanel Width="280" Margin="0,6,16,6">
+        <Border Width="280" Height="158" CornerRadius="10" Background="{StaticResource SurfaceBrush}" ClipToBounds="True">
+          <Grid>
+            <c:RemoteImage Url="{Binding Thumbnail}" DecodeWidth="560" Stretch="UniformToFill" />
+            <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8" Padding="8,3" CornerRadius="6" Background="#B3000000">
+              <TextBlock Text="{Binding Episode, StringFormat=E{0}}" FontSize="12" FontWeight="Bold" />
+            </Border>
+          </Grid>
+        </Border>
+        <TextBlock Text="{Binding DisplayTitle}" Margin="2,8,2,0" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+        <TextBlock Text="{Binding Overview}" Margin="2,2,2,0" FontSize="12" Foreground="{StaticResource Text2Brush}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="34" />
+      </StackPanel>
+    </DataTemplate>
+
+    <!-- a person in the cast: round photo (or their initial), name, character -->
+    <DataTemplate DataType="{x:Type core:CastMember}">
+      <StackPanel Width="112" Margin="0,4,16,4">
+        <Border Width="96" Height="96" CornerRadius="48" Background="{StaticResource SurfaceHighBrush}" ClipToBounds="True" HorizontalAlignment="Center">
+          <Grid>
+            <TextBlock Text="{Binding Name[0]}" FontSize="32" FontWeight="Bold" Foreground="{StaticResource Text3Brush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <c:RemoteImage Url="{Binding PhotoUrl}" DecodeWidth="220" Stretch="UniformToFill" />
+          </Grid>
+        </Border>
+        <TextBlock Text="{Binding Name}" Margin="0,8,0,0" FontSize="13" FontWeight="SemiBold" TextAlignment="Center" TextWrapping="Wrap" MaxHeight="36" TextTrimming="CharacterEllipsis" />
+        <TextBlock Text="{Binding Role}" Margin="0,2,0,0" FontSize="12" Foreground="{StaticResource Text2Brush}" TextAlignment="Center" TextWrapping="Wrap" MaxHeight="34" TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <Grid Background="{StaticResource BgBrush}">
+    <!-- the artwork fills the window; it is cropped to fit, never the other way round -->
+    <Grid IsHitTestVisible="False" ClipToBounds="True">
+      <c:RemoteImage x:Name="Backdrop" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Top" DecodeWidth="0" />
+      <Rectangle>
+        <Rectangle.Fill>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#8C08080A" Offset="0" />
+            <GradientStop Color="#3308080A" Offset="0.55" />
+            <GradientStop Color="#0008080A" Offset="1" />
+          </LinearGradientBrush>
+        </Rectangle.Fill>
+      </Rectangle>
+      <Rectangle>
+        <Rectangle.Fill>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#0008080A" Offset="0" />
+            <GradientStop Color="#0008080A" Offset="0.4" />
+            <GradientStop Color="#9408080A" Offset="0.75" />
+            <GradientStop Color="#EB08080A" Offset="1" />
+          </LinearGradientBrush>
+        </Rectangle.Fill>
+      </Rectangle>
+    </Grid>
+
+    <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" CanContentScroll="False">
+      <StackPanel Margin="0,0,0,48">
+        <Button x:Name="BackButton" Content="&#x2039;  Back" Style="{StaticResource ChoicePill}" HorizontalAlignment="Left" Margin="44,104,0,0" Click="OnBack" />
+
+        <!-- the title (or its logo), facts, genres and a few lines about it -->
+        <StackPanel MaxWidth="800" HorizontalAlignment="Left" Margin="44,22,44,0">
+          <Grid HorizontalAlignment="Left">
+            <TextBlock x:Name="TitleText" FontSize="44" FontWeight="ExtraBold" TextWrapping="Wrap" MaxWidth="780">
+              <TextBlock.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.6" /></TextBlock.Effect>
+            </TextBlock>
+            <c:RemoteImage x:Name="LogoImage" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" MaxWidth="400" MaxHeight="110" DecodeWidth="800" Shown="OnLogoShown" />
+          </Grid>
+          <TextBlock x:Name="FactsText" FontSize="16" FontWeight="Medium" Margin="0,14,0,0" />
+          <TextBlock x:Name="GenresText" FontSize="13" FontWeight="Medium" Margin="0,6,0,0" />
+          <TextBlock x:Name="DescriptionText" FontSize="15" TextWrapping="Wrap" MaxWidth="640" MaxHeight="96" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" Margin="0,14,0,0" />
+        </StackPanel>
+
+        <!-- the buttons, with the IMDb rating at the far end of the row -->
+        <Grid Margin="44,24,44,0">
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+            <Button x:Name="PlayButton" Content="&#x25B6;  Play" Style="{StaticResource PrimaryButton}" Height="48" Padding="28,0" IsEnabled="False" ToolTip="Playing is coming soon to Arc TV for Windows." Margin="0,0,14,0" />
+            <Button x:Name="ListButton" Style="{StaticResource ChoicePill}" Height="48" Margin="0,0,14,0" Click="OnList" />
+            <Button x:Name="WatchedButton" Style="{StaticResource ChoicePill}" Height="48" Click="OnWatched" />
+          </StackPanel>
+          <Border x:Name="RatingBox" HorizontalAlignment="Right" CornerRadius="12" Background="#73000000" Padding="18,8" Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="&#xE735;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
+              <StackPanel>
+                <TextBlock x:Name="RatingText" FontSize="18" FontWeight="Bold" />
+                <TextBlock Text="IMDb Rating" FontSize="11" Foreground="{StaticResource Text2Brush}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </Grid>
+
+        <ProgressBar x:Name="LoadingBar" IsIndeterminate="True" Height="3" Width="160" HorizontalAlignment="Left" Margin="44,22,0,0" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
+
+        <!-- a show's seasons and episodes -->
+        <StackPanel x:Name="SeasonsPanel" Margin="0,34,0,0" Visibility="Collapsed">
+          <TextBlock Text="Seasons" FontSize="22" FontWeight="Bold" Margin="44,0,44,14" />
+          <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" PreviewMouseWheel="OnRowWheel">
+            <StackPanel x:Name="SeasonButtons" Orientation="Horizontal" Margin="44,0" />
+          </ScrollViewer>
+          <StackPanel Orientation="Horizontal" Margin="44,18,44,10">
+            <TextBlock x:Name="SeasonTitle" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Bottom" />
+            <TextBlock x:Name="SeasonCount" FontSize="14" Foreground="{StaticResource Text3Brush}" VerticalAlignment="Bottom" Margin="12,0,0,1" />
+          </StackPanel>
+          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" PreviewMouseWheel="OnRowWheel">
+            <ItemsControl x:Name="EpisodeList" Margin="44,0,28,10">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><VirtualizingStackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+            </ItemsControl>
+          </ScrollViewer>
+        </StackPanel>
+
+        <!-- the cast -->
+        <StackPanel x:Name="CastPanel" Margin="0,30,0,0" Visibility="Collapsed">
+          <TextBlock Text="Cast" FontSize="22" FontWeight="Bold" Margin="44,0,44,12" />
+          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" PreviewMouseWheel="OnRowWheel">
+            <ItemsControl x:Name="CastList" Margin="44,0,28,10">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><VirtualizingStackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+            </ItemsControl>
+          </ScrollViewer>
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

@@ -8,6 +8,7 @@ using ArcTV.App.Views;
 using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Browse;
+using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
 using ArcTV.Core.Search;
@@ -30,6 +31,8 @@ public class ScreenTests
     private static string Answer(string path) => path switch
     {
         "/user/addons" => $$"""{"items":[{"manifestUrl":"https://x.test/manifest.json","addonId":"x","name":"Cool","enabled":true,"sortOrder":0,"manifestJson":{{Manifest}}}]}""",
+        var meta when meta.StartsWith("/meta/", StringComparison.Ordinal) =>
+            """{"meta":{"id":"tt9","type":"series","name":"A Show","releaseInfo":"2020","runtime":"49 min","genres":["Drama"],"description":"<b>About</b> it","cast":["Ann","Bob"],"videos":[{"id":"tt9:1:1","season":1,"episode":1,"name":"Pilot","overview":"It starts."},{"id":"tt9:2:1","season":2,"episode":1,"name":"Again"}]}}""",
         _ => """{"metas":[{"id":"a","type":"movie","name":"Alpha","description":"<b>Hi</b> &amp; bye","genres":["Noir"],"releaseInfo":"2020","imdbRating":"7.1"},{"id":"b","type":"movie","name":"Beta"}]}""",
     };
 
@@ -84,7 +87,7 @@ public class ScreenTests
     [Fact]
     public void ThemeStylesAllLoad() => OnUiThread(() =>
     {
-        foreach (var key in new[] { "PrimaryButton", "GhostButton", "LinkButton", "Field", "PasswordField", "FieldLabel", "NavPill", "ChoicePill", "SuggestionRow", "DotButton" })
+        foreach (var key in new[] { "PrimaryButton", "GhostButton", "LinkButton", "Field", "PasswordField", "FieldLabel", "NavPill", "ChoicePill", "SuggestionRow", "PosterButton", "SeasonCircle", "DotButton" })
             Assert.NotNull(Application.Current.TryFindResource(key));
         return Task.CompletedTask;
     });
@@ -165,6 +168,27 @@ public class ScreenTests
         await model.LoadAsync();
         await Settle();
         Assert.Equal(2, model.Items!.Count);
+        Assert.True(view.ActualHeight > 0);
+        window.Close();
+    });
+
+    [Fact]
+    public void TitleScreenShowsDetailsSeasonsAndCast() => OnUiThread(async () =>
+    {
+        var client = new AddonClient(new HttpClient(new Handler(Answer)));
+        var model = new DetailModel(new MetaPreview("tt9", "series", "A Show"), client);
+        var list = new MyListModel(_ => Task.FromResult(new List<ArcTV.Core.MyList.WatchlistItem>()));
+        var view = new DetailView(model, list, () => { });
+        var window = Host(view);
+        await Settle();
+        await model.LoadAsync();
+        await list.LoadAsync();
+        await Settle();
+        Assert.Equal(new[] { 1, 2 }, model.Detail.SeasonNumbers);
+        Assert.Equal(2, model.Cast.Count);
+        model.ChooseSeason(2);
+        await Settle();
+        Assert.Single(model.Episodes);
         Assert.True(view.ActualHeight > 0);
         window.Close();
     });

@@ -42,4 +42,10 @@ public static class AddonUrl
         }
         return url + ".json";
     }
+
+    /// <summary>A title id for a path: each ":"-separated part encoded on its own, so the colons in "tt123:1:2" stay (addons expect them literal).</summary>
+    internal static string EncodeId(string id) => string.Join(":", id.Split(':').Select(Encode));
+
+    /// <summary><c>&lt;base&gt;/meta/&lt;type&gt;/&lt;id&gt;.json</c>: one title's details.</summary>
+    public static string MetaUrl(string manifestUrl, string type, string id) => $"{ResourceBase(manifestUrl)}/meta/{Encode(type)}/{EncodeId(id)}.json";
 }
