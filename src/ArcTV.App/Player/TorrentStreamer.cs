@@ -65,10 +65,14 @@ public sealed class TorrentStreamer : ITorrentStarter
             var magnet = MagnetLink.Parse(text);
             _folder = Path.Combine(Root, "data", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_folder);
+            // leaving the player stops the torrent at once, wherever it has got to, rather than at the next look
+            using var stopOnLeave = cancel.Register(() => _ = StopAsync());
             progress(new TorrentProgress("Finding people who share this…"));
             var settings = new TorrentSettingsBuilder { MaximumConnections = 250 }.ToSettings(); // (60 by default)
             var manager = _manager = await Engine.AddStreamingAsync(magnet, _folder, settings).ConfigureAwait(false);
+            cancel.ThrowIfCancellationRequested();
             await manager.StartAsync().ConfigureAwait(false);
+            cancel.ThrowIfCancellationRequested();
 
             // 1. the file list
             var metadata = manager.WaitForMetadataAsync(cancel);
