@@ -28,7 +28,7 @@ public sealed class PickedRowView : StackPanel
         Visibility = row is null ? Visibility.Collapsed : Visibility.Visible;
         if (row is null) return;
         Margin = new Thickness(0, 0, 0, 16);
-        Children.Add(new TextBlock { Text = row.Title, FontSize = 20, FontWeight = FontWeights.Bold, Margin = new Thickness(24, 0, 0, 0) });
+        Children.Add(new TextBlock { Text = row.Title, FontSize = 26, FontWeight = FontWeights.Bold, Margin = new Thickness(24, 0, 0, 0) });
         var strip = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(24, 0, 0, 0) };
         foreach (var entry in row.Entries) strip.Children.Add(Card(entry));
         Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 226, Content = strip });

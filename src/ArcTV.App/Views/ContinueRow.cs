@@ -30,7 +30,7 @@ public sealed class ContinueRow : StackPanel
         Visibility = items.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         if (items.Count == 0) return;
         Margin = new Thickness(0, 0, 0, 16);
-        Children.Add(new TextBlock { Text = "Continue Watching", FontSize = 20, FontWeight = FontWeights.Bold, Margin = new Thickness(24, 0, 0, 0) });
+        Children.Add(new TextBlock { Text = "Continue Watching", FontSize = 26, FontWeight = FontWeights.Bold, Margin = new Thickness(24, 0, 0, 0) });
         var strip = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(24, 0, 0, 0) };
         foreach (var item in items) strip.Children.Add(Card(item));
         Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 100, Content = strip });

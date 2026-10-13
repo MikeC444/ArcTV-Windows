@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Row titles on Home are bigger and easier to read.
 - Posters are bigger, so fewer fit across the screen at once.
 - Sign in with your email, or scan a QR code with your phone. You stay signed in next time.
 - Home is here: a rotating banner (with More info and My List buttons) and rows of movies and shows from your addons.
