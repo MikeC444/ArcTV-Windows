@@ -36,6 +36,7 @@
         <Grid x:Name="HeroHost" />
         <StackPanel x:Name="RowsHost" Margin="0,-60,0,8">
           <StackPanel x:Name="ContinueHost" />
+          <StackPanel x:Name="PickedHost" />
           <ItemsControl x:Name="Rows" />
         </StackPanel>
       </StackPanel>

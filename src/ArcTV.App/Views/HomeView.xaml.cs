@@ -7,6 +7,7 @@ using ArcTV.Core.Continue;
 using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
+using ArcTV.Core.Recommend;
 using ArcTV.Core.Sources;
 
 namespace ArcTV.App.Views;
@@ -21,10 +22,13 @@ public partial class HomeView : UserControl
     private HeroBanner? _hero;
     private readonly ContinueModel? _continue;
     private ContinueRow? _continueRow;
+    private readonly PickedModel? _picked;
+    private PickedRowView? _pickedRow;
 
-    public HomeView(HomeModel model, MyListModel? list = null, IDetailExtras? extras = null, Action<PlayTarget>? play = null, ContinueModel? cont = null)
+    public HomeView(HomeModel model, MyListModel? list = null, IDetailExtras? extras = null, Action<PlayTarget>? play = null, ContinueModel? cont = null, PickedModel? picked = null)
     {
         _continue = cont;
+        _picked = picked;
         InitializeComponent();
         _model = model;
         _list = list;
@@ -40,6 +44,12 @@ public partial class HomeView : UserControl
                 _ = _continue.LoadAsync(); // coming back from a title, how far you got is read again
             }
 
+            if (_picked is not null)
+            {
+                _picked.PropertyChanged -= OnPickedChanged;
+                _picked.PropertyChanged += OnPickedChanged;
+            }
+
             Refresh();
             _hero?.Start(); // coming back from a title page, the banner goes on rotating
             if (_list is { Items: null }) _ = _list.LoadAsync(); // so the banner's My List button knows what is on the list
@@ -53,6 +63,7 @@ public partial class HomeView : UserControl
             _smooth?.Stop();
             _model.PropertyChanged -= OnModelChanged;
             if (_continue is not null) _continue.PropertyChanged -= OnContinueChanged;
+            if (_picked is not null) _picked.PropertyChanged -= OnPickedChanged;
             _hero?.Stop();
         };
         SizeChanged += (_, e) => { if (_hero is not null) _hero.Height = HeroHeight(e.NewSize.Height); };
@@ -63,6 +74,23 @@ public partial class HomeView : UserControl
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
 
     private void OnContinueChanged(object? sender, PropertyChangedEventArgs e) => Dispatcher.BeginInvoke(RefreshContinue);
+
+    private void OnPickedChanged(object? sender, PropertyChangedEventArgs e) => Dispatcher.BeginInvoke(RefreshPicked);
+
+    private void RefreshPicked()
+    {
+        if (_picked is null) return;
+        if (_pickedRow is null)
+        {
+            _pickedRow = new PickedRowView(_picked);
+            PickedHost.Children.Clear();
+            PickedHost.Children.Add(_pickedRow);
+        }
+        else
+        {
+            _pickedRow.Refresh();
+        }
+    }
 
     private void RefreshContinue()
     {
@@ -86,6 +114,7 @@ public partial class HomeView : UserControl
         LoadingPanel.Visibility = !showRows && _model.State is HomeState.Idle or HomeState.Loading ? Visibility.Visible : Visibility.Collapsed;
         EmptyPanel.Visibility = !showRows && _model.State == HomeState.Empty ? Visibility.Visible : Visibility.Collapsed;
         RefreshContinue();
+        RefreshPicked();
         if (!showRows) return;
 
         // update in place rather than rebuilding, so rows already on screen don't flicker as more arrive

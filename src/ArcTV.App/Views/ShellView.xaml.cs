@@ -15,6 +15,7 @@ using ArcTV.Core.Continue;
 using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
+using ArcTV.Core.Recommend;
 using ArcTV.Core.Search;
 using ArcTV.App.Player;
 using ArcTV.Core.Sources;
@@ -35,6 +36,7 @@ public partial class ShellView : UserControl
     private readonly SettingsModel _settingsModel;
     private readonly PlusModel _plus;
     private readonly ContinueModel _continue;
+    private readonly PickedModel _picked;
     private readonly LocalSettings _local = new(Path.Combine(AppPaths.DataFolder(), "settings.json"));
     private readonly AccountUser _user;
     private string _blockedKey = "";
@@ -56,6 +58,12 @@ public partial class ShellView : UserControl
         _settingsModel = new SettingsModel(new AccountSettingsStore(account));
         _settingsModel.Changed += ApplySettings;
         _plus = new PlusModel(new AccountPlusStore(account));
+        _picked = new PickedModel(
+            () => new PickedInputs(_plus.Active, _plus.StatusKnown && _plus.RatingsLoaded && _home.State == HomeState.Loaded && MyListFor().Items is not null,
+                BlockedGenres.Without(_home.AllRows.SelectMany(row => row.Items).GroupBy(i => i.Id).Select(g => g.First()).ToList(), _settingsModel.Blocked),
+                MyListFor().Items ?? [], _plus.Ratings, _continue.Items.Select(i => i.ContentId).ToList()),
+            FeatureLoading.Loader(new FeatureCache(Path.Combine(AppPaths.DataFolder(), "features.json")), FeaturesOfAsync),
+            new AccountPickedStore(account), Path.Combine(AppPaths.DataFolder(), "picked.json"));
         _continue = new ContinueModel(new AccountContinueStore(account), async title =>
         {
             // a movie played to the end is marked watched on My List (once)
@@ -89,8 +97,11 @@ public partial class ShellView : UserControl
         {
             if (PresentationSource.FromVisual(this) is HwndSource source) source.AddHook(OnWindowMessage);
             var settings = _settingsModel.LoadAsync(); // at the same time as Home: its rows are reordered and filtered when the settings arrive
+            var plus = LoadPlusDataAsync(); // and Plus, which Picked for you needs
             await _home.LoadAsync();
             await settings;
+            await plus;
+            _picked.Refresh();
         };
         Unloaded += (_, _) =>
         {
@@ -200,6 +211,34 @@ public partial class ShellView : UserControl
         return new PlaybackPreferences(s?.SubtitlesEnabled ?? false, s?.DefaultSubtitleLanguage, s?.DefaultAudioLanguage, SubtitleStyle.SizeFrom(_local.SubtitleSize), SubtitleStyle.ColorFrom(_local.SubtitleColor));
     }
 
+    /// <summary>What Picked for you needs from the account: whether it has Plus, what is rated, what was taken out of the row, and My List and Continue Watching (which Home asks for too).</summary>
+    private async Task LoadPlusDataAsync()
+    {
+        _plus.PropertyChanged += (_, _) => _picked.Refresh();
+        MyListFor().PropertyChanged += (_, _) => _picked.Refresh();
+        _continue.PropertyChanged += (_, _) => _picked.Refresh();
+        _home.PropertyChanged += (_, _) => _picked.Refresh();
+        await _plus.LoadStatusAsync();
+        if (!_plus.Active) return;
+        var list = MyListFor();
+        await Task.WhenAll(_plus.LoadRatingsAsync(), _picked.LoadRemovalsAsync(), list.Items is null ? list.LoadAsync() : Task.CompletedTask, _continue.LoadAsync());
+        _picked.Refresh();
+    }
+
+    /// <summary>A title's genres, directors and cast, from Cinemeta (for Picked for you); null when it cannot be had.</summary>
+    private async Task<Features?> FeaturesOfAsync(TitleRef title)
+    {
+        try
+        {
+            var meta = await _addonClient.FetchMetaAsync(ArcTV.Core.AppInfo.CinemetaManifestUrl, title.Type ?? "movie", title.Id);
+            return meta is null ? null : Features.FromMeta(meta);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
     /// <summary>A rated title's poster, from Cinemeta (the account keeps the rating, not the picture).</summary>
     private async Task<string?> PosterFor(FeedbackItem item, CancellationToken cancel)
     {
@@ -222,6 +261,7 @@ public partial class ShellView : UserControl
         {
             _sources = [];
             _browse.Clear();
+            _picked.Reload();
             _ = _home.LoadAsync();
         };
         return _addonsModel;
@@ -275,11 +315,11 @@ public partial class ShellView : UserControl
         foreach (var (name, pill) in _pills) pill.Tag = name == place ? "selected" : name;
         Page.Content = place switch
         {
-            "Home" => new HomeView(_home, MyListFor(), _extras, OpenSources, _continue),
+            "Home" => new HomeView(_home, MyListFor(), _extras, OpenSources, _continue, _picked),
             "Movies" => new BrowseView("Movies", BrowseFor("movie")),
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
             "My List" => new MyListView(MyListFor()),
-            "Settings" => new SettingsView(_settingsModel, AddonsFor(), _home, _user, _local, _plus, MyListFor(), PosterFor, () => _ = _home.LoadAsync(), () => _ = _account.SignOutAsync()),
+            "Settings" => new SettingsView(_settingsModel, AddonsFor(), _home, _user, _local, _plus, MyListFor(), PosterFor, () => { _picked.Reload(); _ = _home.LoadAsync(); }, () => _ = _account.SignOutAsync()),
             "Search" => new SearchView(new SearchModel(_account.Session!.User.Id, SourcesAsync, new RecentSearchStore(Path.Combine(AppPaths.DataFolder(), "recent-searches.json")), _addonClient) { Blocked = _settingsModel.Blocked }),
             _ => new ComingSoonView(place),
         };

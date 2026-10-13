@@ -417,3 +417,22 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Open:** play the last source without asking, episode watched ticks and part-way bars, next-episode logic from the history, Picked for you.
 
+## 15 -- Picked for you
+
+**Status:** Written without a compiler here; built and tested by the Windows build server only (see the run for this commit). Not run or seen on screen; never tried against a real Plus account.
+
+**Context:** Third of the three requested together. A port of the Mac app's recommendation engine (`RecommendSignals`, `RecommendFeatures`, `RecommendPreferences`, `RecommendScoring`, `RecommendRotation`, `RecommendEngine`, `PickedRow`, `FeatureCache`) and of `AppModel.schedulePicked`, with the same numbers (they come from the Fire TV and web apps, so every Arc TV app ranks the same way).
+
+**Changes:**
+- Core (`ArcTV.Core/Recommend`): interactions from My List and ratings (like 5, Not for me -5, finished 2, saved 1; the strongest applies, a dislike stays negative), normalised features (genres, directors, cast), taste preferences, cosine scoring with renormalised categories, reasons ("Because you liked X", "More from directors you enjoy"), the diversity step (one title explains at most 3 picks), composition (the best 5 stay, the rest follow the profile's genre split by Sainte-Lague, drawn with a seeded generator so a refresh changes most of them), the shortlist steps, the popular fallback, a feature cache (30 days, 800 titles) and loader, `PickedRow`, five-day removals (kept in `picked.json` and on the account, `GET`/`POST /user/picked-dismissals`), and `PickedModel` (works the row out again when ratings, My List, Continue Watching or the rows on offer change; a title rated, finished or started disappears at once).
+- App: `PickedRowView` on Home under Continue Watching (poster, name, the reason, a cross to take it out); the shell reads what it needs (Plus status, ratings, removals, My List, Continue Watching) and refreshes the row; "Refresh Home" and changing addons start a new draw.
+- Tests: `RecommendTests` (signals, features, preferences, scoring, reasons, diversity, composition, seeded generator, fallback, a personal run, the row, removals, the cache and loader, and the model).
+
+**Tests performed:** see the build run.
+
+**Issues discovered:** the feature lookups use Cinemeta only (as on the Mac); the row appears once Home, My List and the ratings have loaded. The Mac's three-dot card menu (Like, Not for me, Not now on a poster) is not ported: Like and Not for me are on the title page, "not now" is the cross.
+
+**Issues fixed:** n/a.
+
+**Open:** profiles (each profile has its own picks), the card menu, a loading skeleton for the row.
+
