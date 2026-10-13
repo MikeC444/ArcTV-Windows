@@ -222,3 +222,4 @@ darkening is smoother too.
 **Follow-up (owner: scrolling snaps): smooth scrolling everywhere.** Movies, TV Shows, Search and My List already glided (in `PosterGrid`); Home and the title page still used WPF's wheel step (a few lines at a time, then a jump).
 The glide moved into one helper (`SmoothScroller`: each notch moves the target further, every frame eases most of the way there) that `PosterGrid`, Home and the title page now share. Shift-wheel still moves a row sideways (that is not smoothed).
 Not changed: the scroll bar, the keyboard (PageUp / PageDown / arrows) and Shift-wheel along a row still move in steps.
+The first build of this failed (one missing `using` in `PosterGrid`; Visual Studio showed "There were build errors" on pulling it) and was fixed in the next commit.

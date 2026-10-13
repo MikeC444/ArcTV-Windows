@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
+using ArcTV.App.Controls;
 using ArcTV.Core.Addons;
 
 namespace ArcTV.App.Views;
