@@ -48,6 +48,7 @@ public partial class ShellView : UserControl
     private string _place = "";
     private readonly Dictionary<string, Button> _pills = [];
     private readonly Action? _switchProfile;
+    private readonly Dictionary<string, string?> _logos = [];
 
     public ShellView(AccountModel account) : this(account, new PlusModel(new AccountPlusStore(account)))
     {
@@ -260,6 +261,29 @@ public partial class ShellView : UserControl
         }
     }
 
+    /// <summary>
+    /// A title's logo for the sources page and the player when what started them has none (Continue Watching and some rows carry only the poster and backdrop): Continue Watching's own
+    /// lookup if it has it, else Cinemeta, remembered for the session. Null when there is none.
+    /// </summary>
+    private async Task<string?> LogoOfAsync(MetaDetail title)
+    {
+        if (!string.IsNullOrEmpty(title.Logo)) return title.Logo;
+        if (_continue.Logos.TryGetValue(title.Id, out var known)) return known;
+        if (_logos.TryGetValue(title.Id, out var cached)) return cached;
+        string? found = null;
+        try
+        {
+            found = (await _addonClient.FetchMetaAsync(ArcTV.Core.AppInfo.CinemetaManifestUrl, title.Type, title.Id))?.Logo;
+        }
+        catch (Exception)
+        {
+            // the words stand in for the logo
+        }
+
+        _logos[title.Id] = found;
+        return found;
+    }
+
     /// <summary>A rated title's poster, from Cinemeta (the account keeps the rating, not the picture).</summary>
     private async Task<string?> PosterFor(FeedbackItem item, CancellationToken cancel)
     {
@@ -317,7 +341,7 @@ public partial class ShellView : UserControl
         var store = new LastSourceStore(Path.Combine(AppPaths.DataFolder(), "last-sources.json"), _account.Scope!);
         var smart = _plus.Active && _local.SmartPicking;
         var model = new SourcesModel(target, AccountAddonsAsync, _addonClient, items => AutoPick.Choose(target, items, store.Get(target.Title.Id, target.Season, target.Episode), smart));
-        return new SourcesView(model, store, GoBack, OpenPlayer);
+        return new SourcesView(model, store, GoBack, OpenPlayer, LogoOfAsync);
     }
 
     /// <summary>The player, over the sources page; the top bar is out of the way while it plays, and Back returns to the sources (or, when the source was picked without asking, to the page before).</summary>
@@ -325,7 +349,7 @@ public partial class ShellView : UserControl
     {
         if (Page.Content is UIElement current && current is not SourcesView { AutoChosen: true }) _history.Push((current, _place));
         Bar.Visibility = Visibility.Collapsed;
-        Page.Content = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack, (target, position, duration) => _ = _continue.ReportAsync(target, position, duration), PlayNext, () => _settingsModel.Current?.AutoplayNextEpisode ?? true);
+        Page.Content = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack, (target, position, duration) => _ = _continue.ReportAsync(target, position, duration), PlayNext, () => _settingsModel.Current?.AutoplayNextEpisode ?? true, LogoOfAsync);
     }
 
     /// <summary>The next episode takes the player's place (Back from it goes where Back from this one would have).</summary>

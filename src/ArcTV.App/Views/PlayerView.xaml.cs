@@ -24,14 +24,16 @@ public partial class PlayerView : UserControl
     private readonly Action<PlayTarget>? _playNext;
     private readonly Func<bool>? _autoplayNext;
     private bool _leaving;
+    private readonly Func<Core.Details.MetaDetail, Task<string?>>? _logoLookup;
     private DispatcherTimer? _reportTimer;
     private PlayerOverlay? _overlay;
     private Window? _window;
     private DispatcherTimer? _waitForVideoWindow;
     private (WindowStyle Style, WindowState State, ResizeMode Resize, bool Topmost)? _beforeFullscreen;
 
-    public PlayerView(PlayingItem item, Func<IVideoEngine> makeEngine, Action back, Action<PlayTarget, double, double>? report = null, Action<PlayTarget>? playNext = null, Func<bool>? autoplayNext = null)
+    public PlayerView(PlayingItem item, Func<IVideoEngine> makeEngine, Action back, Action<PlayTarget, double, double>? report = null, Action<PlayTarget>? playNext = null, Func<bool>? autoplayNext = null, Func<Core.Details.MetaDetail, Task<string?>>? logoLookup = null)
     {
+        _logoLookup = logoLookup;
         _report = report;
         _playNext = playNext;
         _autoplayNext = autoplayNext;
@@ -71,7 +73,7 @@ public partial class PlayerView : UserControl
         };
         engine.Failed += model.OnFailed;
 
-        _overlay = new PlayerOverlay(model, _item, _back, ToggleFullscreen, () => IsFullscreen, HandleKey, NextEpisode(), _playNext is null ? null : (Action)PlayNext) { Owner = _window };
+        _overlay = new PlayerOverlay(model, _item, _back, ToggleFullscreen, () => IsFullscreen, HandleKey, NextEpisode(), _playNext is null ? null : (Action)PlayNext, _logoLookup) { Owner = _window };
         _overlay.Show();
         PlaceOverlay();
         if (_window is not null)

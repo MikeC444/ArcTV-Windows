@@ -27,7 +27,7 @@ public partial class SourcesView : UserControl
     /// <summary>True when a source was picked without asking, so this page was only a way through to the player.</summary>
     public bool AutoChosen => _model.AutoChosen is not null;
 
-    public SourcesView(SourcesModel model, LastSourceStore? store, Action back, Action<PlayingItem>? play = null)
+    public SourcesView(SourcesModel model, LastSourceStore? store, Action back, Action<PlayingItem>? play = null, Func<ArcTV.Core.Details.MetaDetail, Task<string?>>? logoLookup = null)
     {
         InitializeComponent();
         _model = model;
@@ -35,6 +35,7 @@ public partial class SourcesView : UserControl
         _play = play;
         _back = back;
         ShowTitle();
+        if (logoLookup is not null && string.IsNullOrEmpty(model.Target.Title.Logo)) _ = ShowLogoAsync(logoLookup);
         ListScroll.PreviewMouseWheel += (_, e) => (_smooth ??= new SmoothScroller(ListScroll, 1.1)).Wheel(e);
         InfoScroll.PreviewMouseWheel += (_, e) => (_smoothInfo ??= new SmoothScroller(InfoScroll, 1.1)).Wheel(e); // the title's column has no scroll bar; the wheel moves it when the window is short
 
@@ -96,6 +97,12 @@ public partial class SourcesView : UserControl
         var about = Text.HtmlDecoded(detail.Description);
         DescriptionText.Text = about;
         DescriptionText.Visibility = about.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>The title came without a logo: it is looked up, and shown in place of the words when it arrives.</summary>
+    private async Task ShowLogoAsync(Func<ArcTV.Core.Details.MetaDetail, Task<string?>> lookup)
+    {
+        if (await lookup(_model.Target.Title) is { Length: > 0 } logo) LogoImage.Url = logo;
     }
 
     private void OnLogoShown(object? sender, EventArgs e) => TitleText.Visibility = Visibility.Hidden;

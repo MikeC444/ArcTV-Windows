@@ -34,7 +34,7 @@ public partial class PlayerOverlay : Window
     private bool? _flashedPaused;
     private readonly Action? _playNext;
 
-    public PlayerOverlay(PlayerModel model, PlayingItem item, Action back, Action toggleFullscreen, Func<bool> isFullscreen, Func<Key, bool> handleKey, EpisodeInfo? next = null, Action? playNext = null)
+    public PlayerOverlay(PlayerModel model, PlayingItem item, Action back, Action toggleFullscreen, Func<bool> isFullscreen, Func<Key, bool> handleKey, EpisodeInfo? next = null, Action? playNext = null, Func<MetaDetail, Task<string?>>? logoLookup = null)
     {
         InitializeComponent();
         _next = next;
@@ -53,6 +53,7 @@ public partial class PlayerOverlay : Window
         CoverName.Text = title.Name;
         TitleLogo.Url = title.Logo;
         TitleName.Text = title.Name;
+        if (string.IsNullOrEmpty(title.Logo) && logoLookup is not null) _ = ShowLogoAsync(title, logoLookup);
         if (item.Target.EpisodeTitle is { } episode)
         {
             EpisodeText.Text = episode;
@@ -83,6 +84,14 @@ public partial class PlayerOverlay : Window
             _model.PropertyChanged -= OnModelChanged;
         };
         Refresh();
+    }
+
+    /// <summary>The title came without a logo (from Continue Watching, say): it is looked up, and replaces the words on the cover and at the top right when it arrives.</summary>
+    private async Task ShowLogoAsync(MetaDetail title, Func<MetaDetail, Task<string?>> lookup)
+    {
+        if (await lookup(title) is not { Length: > 0 } logo || !IsLoaded) return;
+        CoverLogo.Url = logo;
+        TitleLogo.Url = logo;
     }
 
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
