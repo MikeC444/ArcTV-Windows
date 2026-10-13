@@ -34,7 +34,6 @@ public sealed class TorrentStreamer : ITorrentStarter
 {
     private static readonly TimeSpan MetadataWait = TimeSpan.FromSeconds(120);
     private static readonly TimeSpan BufferWait = TimeSpan.FromSeconds(180);
-    private static readonly TimeSpan NoDataWait = TimeSpan.FromSeconds(20);
 
     public static TorrentStreamer Shared { get; } = new();
 
@@ -148,28 +147,37 @@ public sealed class TorrentStreamer : ITorrentStarter
             }
 
             var provider = manager.StreamProvider ?? throw new TorrentException("The torrent could not be streamed. Try another source.");
-            // not the library's own wait for the first and last parts of the file (the last part of a big file can be the rarest, and holds up the start for nothing): the start is waited for
-            // here, as much of it as the Torrent buffer setting says, the way the Mac app does
+            // not the library's own wait for the first and last parts of the file (the last part of a big file can be the rarest, and holds up the start for nothing). The stream is made without it,
+            // and the start is read through the stream's own address: reading is what makes the torrent fetch those parts first (left alone it fetches parts from all over the file), and the read
+            // finishes when as much of the start as the Torrent buffer setting says has arrived, the way the Mac app does
             var stream = await provider.CreateHttpStreamAsync(file, false, cancel).ConfigureAwait(false);
             _stream = stream;
-            var pieces = (int)Math.Min(file.BitField.Length, (TorrentBuffers.From(local.TorrentBuffer).StartBytes() + manager.Torrent!.PieceLength - 1) / manager.Torrent.PieceLength + 1);
+            var wanted = Math.Min(file.Length, TorrentBuffers.From(local.TorrentBuffer).StartBytes());
+            long got = 0;
+            using var http = new HttpClient(new HttpClientHandler { UseProxy = false }) { Timeout = Timeout.InfiniteTimeSpan };
+            var reading = Task.Run(async () =>
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, stream.FullUri);
+                request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(0, wanted - 1);
+                using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancel).ConfigureAwait(false);
+                response.EnsureSuccessStatusCode();
+                await using var body = await response.Content.ReadAsStreamAsync(cancel).ConfigureAwait(false);
+                var buffer = new byte[81920];
+                int count;
+                while ((count = await body.ReadAsync(buffer, cancel).ConfigureAwait(false)) > 0) Interlocked.Add(ref got, count);
+            }, cancel);
             started = DateTime.UtcNow;
-            var anyData = false;
-            while (true)
+            while (!reading.IsCompleted)
             {
                 cancel.ThrowIfCancellationRequested();
-                var have = 0;
-                while (have < pieces && file.BitField[have]) have++;
-                if (have >= pieces) break;
-                anyData |= have > 0;
-                var waited = DateTime.UtcNow - started;
-                if (waited > BufferWait) throw new TorrentException("The video did not start downloading in time. It may have too few people sharing it. Try another source.");
-                // if nothing has arrived for a while the player's own first read is what gets the download going: hand it over rather than wait for ever
-                if (!anyData && waited > NoDataWait) break;
+                if (DateTime.UtcNow - started > BufferWait) throw new TorrentException("The video did not start downloading in time. It may have too few people sharing it. Try another source.");
                 Note(manager, "start of video");
-                progress(new TorrentProgress("Getting the start of the video…", $"{manager.OpenConnections} connected, {manager.Monitor.DownloadRate / 1_000_000.0:0.0} MB/s, {have * 100 / pieces}% of the start"));
-                await Task.Delay(500, cancel).ConfigureAwait(false);
+                progress(new TorrentProgress("Getting the start of the video…", $"{manager.OpenConnections} connected, {manager.Monitor.DownloadRate / 1_000_000.0:0.0} MB/s, {Interlocked.Read(ref got) * 100 / Math.Max(1, wanted)}% of the start"));
+                await Task.WhenAny(reading, Task.Delay(500, cancel)).ConfigureAwait(false);
             }
+
+            await reading.ConfigureAwait(false);
+            PlayerLog.Write($"torrent: the first {wanted / 1_048_576.0:0.#} MB arrived after {(DateTime.UtcNow - started).TotalSeconds:0} s");
 
             return new TorrentStart(new Uri(stream.FullUri), () => _ = StopAsync());
         }
