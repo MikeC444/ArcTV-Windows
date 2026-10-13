@@ -318,8 +318,8 @@
 
   <!-- the round arrow at the end of a row: out of sight until the pointer is over the row -->
   <Style x:Key="RowArrow" TargetType="Button">
-    <Setter Property="Width" Value="44" />
-    <Setter Property="Height" Value="44" />
+    <Setter Property="Width" Value="60" />
+    <Setter Property="Height" Value="60" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="Opacity" Value="0" />
     <Setter Property="IsHitTestVisible" Value="False" />
@@ -351,7 +351,7 @@
           <Grid x:Name="Root" Background="Transparent">
             <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" CanContentScroll="{TemplateBinding CanContentScroll}" Margin="{TemplateBinding Padding}" />
             <Button x:Name="RowLeft" Style="{StaticResource RowArrow}" HorizontalAlignment="Left" Focusable="False" Visibility="{Binding HorizontalOffset, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource PastStartVisibility}}">
-              <TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="16" />
+              <TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="24" />
             </Button>
             <Button x:Name="RowRight" Style="{StaticResource RowArrow}" HorizontalAlignment="Right" Focusable="False">
               <Button.Visibility>
@@ -360,7 +360,7 @@
                   <Binding Path="ScrollableWidth" RelativeSource="{RelativeSource TemplatedParent}" />
                 </MultiBinding>
               </Button.Visibility>
-              <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="16" />
+              <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="24" />
             </Button>
           </Grid>
           <ControlTemplate.Triggers>
