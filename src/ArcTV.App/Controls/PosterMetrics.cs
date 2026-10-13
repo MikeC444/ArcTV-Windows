@@ -15,7 +15,8 @@ public sealed class PosterMetrics : INotifyPropertyChanged
     public const double ReferenceWidth = 1700;
 
     public const double Smallest = 0.6;
-    public const double Largest = 1.5;
+    /// <summary>The most a poster is ever drawn at: 0.9 of its designed 288 x 432, however big the window or screen.</summary>
+    public const double Largest = 0.9;
 
     public static PosterMetrics Instance { get; } = new();
 

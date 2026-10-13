@@ -555,3 +555,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: the source list too long; start it half way across the screen).** The source page's two columns are now equal halves (the title on the left, was 40 percent; the list on the right, was 60 percent), so the list begins at the middle of the window and its rows are about a third shorter. Not seen on screen.
 
+**Follow-up (owner: posters need a maximum size, much smaller than they got).** The poster scale (window width over 1700) was allowed up to 1.5, which made posters 432 pixels wide on a big window. It now stops at 0.9 (259 x 389 pixels), reached at a window about 1530 pixels wide; a smaller window still draws them smaller (down to 0.6). More posters fit across a big window instead of bigger ones. The value is `PosterMetrics.Largest`. Not seen on screen.
+
