@@ -166,7 +166,6 @@
         <Grid Margin="24,28,24,0">
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
             <Button x:Name="PlayButton" Content="&#x25B6;  Play" Style="{StaticResource PrimaryButton}" Height="60" FontSize="18" Padding="34,0" IsEnabled="False" Margin="0,0,16,0" Click="OnPlay" />
-            <Button x:Name="SourcesButton" Content="Sources" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" IsEnabled="False" ToolTip="Choose which source to play from" Click="OnSources" />
             <Button x:Name="TrailerButton" Content="Trailer" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" IsEnabled="False" ToolTip="Looking for a trailer…" Click="OnTrailer" />
             <Button x:Name="ListButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" Click="OnList" />
             <Button x:Name="WatchedButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" Click="OnWatched" />

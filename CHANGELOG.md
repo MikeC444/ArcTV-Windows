@@ -547,3 +547,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: the right-click card menu a bit bigger).** The menu panel is drawn 1.3 times its old size (a layout transform on the whole panel, so the picture, buttons and words all grow together); in a window too small for that it shrinks to fit (not below 0.6), and its height is limited to the window's. Not seen on screen.
 
+**Follow-up (owner: remove the Sources button from the title page).** The button was added with the remembered-source Play so the list could still be forced; it is removed (and its code). Choose source remains in the right-click card menu, and the player has its own Sources button. Play on the title page still uses the remembered or smart source. Not seen on screen.
+

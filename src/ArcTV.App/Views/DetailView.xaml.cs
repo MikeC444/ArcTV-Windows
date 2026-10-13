@@ -159,7 +159,6 @@ public partial class DetailView : UserControl
     {
         var target = MainTarget();
         PlayButton.IsEnabled = _play is not null && target is not null;
-        SourcesButton.IsEnabled = PlayButton.IsEnabled;
         var resuming = target is { StartAt: > 0 };
         PlayButton.Content = target is { Season: { } season, Episode: { } episode } ? $"\u25B6  {(resuming ? "Resume" : "Play")} S{season}E{episode}" : resuming ? "\u25B6  Resume" : "\u25B6  Play";
         PlayButton.ToolTip = _play is null ? "Playing is coming soon to Arc TV for Windows." : target is null ? "Looking for episodes…" : null;
@@ -168,12 +167,6 @@ public partial class DetailView : UserControl
     private void OnPlay(object sender, RoutedEventArgs e)
     {
         if (_play is not null && MainTarget() is { } target) _play(target);
-    }
-
-    /// <summary>Choose which source to play from: the list is shown even when a source was used before.</summary>
-    private void OnSources(object sender, RoutedEventArgs e)
-    {
-        if (_play is not null && MainTarget() is { } target) _play(target with { ChooseSource = true });
     }
 
     /// <summary>A click on an episode's card plays it; a click on the tick on its picture marks it watched or not watched.</summary>
