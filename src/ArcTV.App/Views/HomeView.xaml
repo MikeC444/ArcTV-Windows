@@ -15,8 +15,9 @@
         <ItemsControl ItemsSource="{Binding Items}" VirtualizingPanel.ScrollUnit="Pixel" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollBarVisibility="Disabled">
           <ItemsControl.Template>
             <ControlTemplate TargetType="ItemsControl">
-              <c:ArrowScrollViewer CanContentScroll="True" Padding="24,0,0,0" ArrowCenter="154">
-                <ItemsPresenter />
+              <!-- the row starts 24 in from the edge, but the posters slide on out under the window's own edge (as they do on the right), not under an invisible line 24 in -->
+              <c:ArrowScrollViewer CanContentScroll="True" ArrowCenter="154">
+                <ItemsPresenter Margin="24,0,0,0" />
               </c:ArrowScrollViewer>
             </ControlTemplate>
           </ItemsControl.Template>

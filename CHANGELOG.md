@@ -269,3 +269,6 @@ middle sits): episodes use the middle of the 158-high picture, the cast the midd
 
 **Follow-up (owner: the empty space on the left of the app).** Pages started 44 pixels in from the left (and ended 44 from the right), which looks like a wide empty strip, most of all in a narrow window. The side gutter is now 24 pixels on every page (Home, Movies, TV Shows, Search, My List, title and the banner's text), the
 top bar sits 24 in from each side (it was 36), rows that ended 28 from the right now end 24 from it, and the poster grid's width sums count the smaller gutter. Posters per line may go up by one in some window widths.
+
+**Follow-up (owner: make Home's rows come out of the left side as they do on the right).** A Home row had its left gutter as padding on the scroll viewer, so posters scrolled along were cut off at an invisible line 24 pixels in. The gutter is now space at the start of the row itself (on the items), so the row starts 24 in
+and the posters slide on out under the window's left edge, as they already do off the right. (Title-page rows already worked this way.)
