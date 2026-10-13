@@ -161,7 +161,7 @@
 
         <!-- a show's seasons and episodes -->
         <StackPanel x:Name="SeasonsPanel" Margin="0,34,0,0" Visibility="Collapsed">
-          <TextBlock Text="Seasons" FontSize="22" FontWeight="Bold" Margin="24,0,24,14" />
+          <TextBlock Text="Seasons" FontSize="30" FontWeight="Bold" Margin="24,0,24,14" />
           <c:ArrowScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
             <StackPanel x:Name="SeasonButtons" Orientation="Horizontal" Margin="24,0" />
           </c:ArrowScrollViewer>
@@ -180,7 +180,7 @@
 
         <!-- the cast -->
         <StackPanel x:Name="CastPanel" Margin="0,30,0,0" Visibility="Collapsed">
-          <TextBlock Text="Cast" FontSize="22" FontWeight="Bold" Margin="24,0,24,12" />
+          <TextBlock Text="Cast" FontSize="30" FontWeight="Bold" Margin="24,0,24,12" />
           <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ArrowCenter="52">
             <ItemsControl x:Name="CastList" Margin="24,0,24,10">
               <ItemsControl.ItemsPanel>
@@ -194,7 +194,7 @@
 
         <!-- a movie's page ends with other titles to try -->
         <StackPanel x:Name="SimilarPanel" Grid.Row="1" VerticalAlignment="Bottom" Margin="0,30,0,0" Visibility="Collapsed">
-          <TextBlock Text="You May Also Like" FontSize="22" FontWeight="Bold" Margin="24,0,24,12" />
+          <TextBlock Text="You May Also Like" FontSize="30" FontWeight="Bold" Margin="24,0,24,12" />
           <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ArrowCenter="95">
             <ItemsControl x:Name="SimilarList" ItemTemplate="{StaticResource WideCard}" Margin="24,0,24,10">
               <ItemsControl.ItemsPanel>

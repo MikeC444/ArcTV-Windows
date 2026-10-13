@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Section headings on a title's page (Seasons, Cast, You May Also Like) are bigger.
 - The top of a title's page is bigger: the name or logo, the details, the description and the buttons.
 - "You May Also Like" now always sits at the bottom of a title's page.
 - Like and Not for me on a title are now a thumbs up and a thumbs down.
