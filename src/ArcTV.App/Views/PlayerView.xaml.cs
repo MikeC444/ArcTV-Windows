@@ -28,6 +28,8 @@ public partial class PlayerView : UserControl
     private bool _leaving;
     private readonly Action<PlayTarget>? _chooseSource;
     private DispatcherTimer? _startWatch;
+    private CancellationTokenSource? _prepareRun;
+    private Action? _release;
     private DispatcherTimer? _resizeDone;
     private bool _resizing;
     private readonly Func<Core.Details.MetaDetail, Task<string?>>? _logoLookup;
@@ -99,7 +101,7 @@ public partial class PlayerView : UserControl
             if (Video.WindowHandle == IntPtr.Zero && ++tries < 100) return;
             _waitForVideoWindow?.Stop();
             if (Video.WindowHandle == IntPtr.Zero) model.OnFailed("The video window could not be made.");
-            else engine.Start(Video.WindowHandle, _item.Url, _item.Target.StartAt);
+            else _ = BeginAsync(engine, model);
         };
         _waitForVideoWindow.Start();
 
@@ -108,6 +110,44 @@ public partial class PlayerView : UserControl
         _reportTimer.Tick += (_, _) => ReportProgress();
         _reportTimer.Start();
 
+    }
+
+    /// <summary>
+    /// Starts the video. A source that needs getting ready first (a torrent) is got ready here, behind the loading cover, with what is going on written under the loading symbol; when that fails the
+    /// player says why and offers another source.
+    /// </summary>
+    private async Task BeginAsync(IVideoEngine engine, PlayerModel model)
+    {
+        var url = _item.Url;
+        if (_item.Prepare is { } prepare)
+        {
+            var run = _prepareRun = new CancellationTokenSource();
+            try
+            {
+                var ready = await prepare(text => Dispatcher.BeginInvoke(new Action(() => _overlay?.ShowStatus(text))), run.Token);
+                _release = ready.Release;
+                if (_engine is null || run.IsCancellationRequested)
+                {
+                    ready.Release(); // the player was closed while it was getting ready
+                    return;
+                }
+
+                url = ready.Url;
+                PlayerLog.Write("prepared: ready to play");
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                PlayerLog.Write($"preparing failed: {ex.Message}");
+                if (!run.IsCancellationRequested) model.OnFailed(ex is TorrentException ? ex.Message : "This source could not be started. Try another source.");
+                return;
+            }
+        }
+
+        _overlay?.ShowStatus("");
         // a source that never starts must not leave the loading symbol turning for ever: after a while the player says so and offers another source
         _startWatch = new DispatcherTimer { Interval = StartTimeout };
         _startWatch.Tick += (_, _) =>
@@ -117,6 +157,7 @@ public partial class PlayerView : UserControl
             if (_model is { HasStarted: false, Failure: null } waiting) waiting.OnFailed("This source isn't starting. It may be slow, or the link may have stopped working. Try another source.");
         };
         _startWatch.Start();
+        engine.Start(Video.WindowHandle, url, _item.Target.StartAt);
     }
 
     /// <summary>How long a source gets to show its first picture.</summary>
@@ -153,7 +194,10 @@ public partial class PlayerView : UserControl
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        _item.OnClose?.Invoke(); // a torrent streamed for this video stops with it
+        _item.OnClose?.Invoke();
+        _prepareRun?.Cancel(); // (a torrent still being got ready is dropped)
+        _release?.Invoke(); // a torrent streamed for this video stops with it
+        _release = null;
         _waitForVideoWindow?.Stop();
         _resizeDone?.Stop();
         _startWatch?.Stop();

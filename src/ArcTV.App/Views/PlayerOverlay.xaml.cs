@@ -100,6 +100,13 @@ public partial class PlayerOverlay : Window
         TitleLogo.Url = logo;
     }
 
+    /// <summary>What is going on while a source (a torrent) is being got ready, under the loading symbol; empty hides it.</summary>
+    public void ShowStatus(string text)
+    {
+        CoverStatus.Text = text;
+        CoverStatus.Visibility = string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible;
+    }
+
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
 
     public void Refresh()

@@ -40,6 +40,7 @@
           <c:RemoteImage x:Name="CoverLogo" Stretch="Uniform" StretchDirection="DownOnly" MaxWidth="460" MaxHeight="150" DecodeWidth="920" Shown="OnCoverLogoShown" />
         </Grid>
         <c:Spinner Margin="0,28,0,0" HorizontalAlignment="Center" />
+        <TextBlock x:Name="CoverStatus" FontSize="18" FontWeight="Medium" Foreground="{StaticResource Text2Brush}" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="620" Margin="0,18,0,0" Visibility="Collapsed" />
       </StackPanel>
     </Grid>
 

@@ -578,3 +578,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Issues fixed:** None yet.
 
+**Follow-up (owner: when a torrent source is clicked, open the player at once and load it inside the player).** The source page no longer waits for the torrent: it opens the player straight away (`PlayingItem.Prepare`), which shows its loading cover (the title's logo and the loading symbol) and gets the torrent ready itself, with what is going on written under the symbol (finding people, the file list, buffering with peers and speed). If it fails the player says why and offers "Choose another source"; closing the player while it is getting ready drops the torrent. The 45-second wait for a first picture now starts once the torrent is ready, not before. Not seen on screen.
+

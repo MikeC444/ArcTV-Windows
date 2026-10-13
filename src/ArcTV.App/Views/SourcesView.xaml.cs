@@ -23,7 +23,6 @@ public partial class SourcesView : UserControl
     private CancellationTokenSource? _run;
     private bool _started;
     private readonly ITorrentStarter? _torrents;
-    private CancellationTokenSource? _torrentRun;
     private SmoothScroller? _smooth;
     private SmoothScroller? _smoothInfo;
 
@@ -59,7 +58,6 @@ public partial class SourcesView : UserControl
             _model.PropertyChanged -= OnModelChanged;
             _model.AutoChose -= OnAutoChose;
             _run?.Cancel();
-            _torrentRun?.Cancel(); // (a torrent already playing is not touched: it stops with its player)
             _smooth?.Stop();
             _smoothInfo?.Stop();
         };
@@ -218,7 +216,7 @@ public partial class SourcesView : UserControl
         _store?.Set(LastSource.From(item), target.Title.Id, target.Season, target.Episode);
         if (item.PlayUrl is not { } url)
         {
-            if (_torrents is not null && _play is not null) _ = StartTorrentAsync(item);
+            if (_torrents is not null && _play is not null) StartTorrent(item);
             return;
         }
 
@@ -231,46 +229,22 @@ public partial class SourcesView : UserControl
         CopyLink(url);
     }
 
-    /// <summary>Gets a torrent ready (finding its people and the start of its video, with what is going on shown), then plays it from its local address; it stops when the player is closed.</summary>
-    private async Task StartTorrentAsync(SourceItem item)
+    /// <summary>
+    /// A torrent: the player opens at once and gets it ready itself (finding its people and the start of its video, with what is going on under its loading symbol), then plays it from its local
+    /// address. The torrent stops when the player is closed.
+    /// </summary>
+    private void StartTorrent(SourceItem item)
     {
-        _torrentRun?.Cancel();
-        var run = _torrentRun = new CancellationTokenSource();
         var target = _model.Target;
-        void Show(TorrentProgress progress) => Dispatcher.BeginInvoke(new Action(() =>
+        var torrents = _torrents!;
+        _play!(new PlayingItem(new Uri("about:blank"), target.Heading, item.AddonName, target, item.Stream.BehaviorHints?.Filename)
         {
-            if (run.IsCancellationRequested) return;
-            var text = progress.Detail is { } detail ? $"{progress.Message}  ({detail})" : progress.Message;
-            NoticeText.Text = text;
-            NoticeBox.Visibility = Visibility.Visible;
-            LoadingText.Text = text;
-        }));
-
-        Show(new TorrentProgress("Getting the torrent ready…"));
-        try
-        {
-            var start = await _torrents!.StartAsync(item, target, Show, run.Token);
-            if (run.IsCancellationRequested)
+            Prepare = async (report, cancel) =>
             {
-                start.Release();
-                return;
-            }
-
-            PlayerLog.Write("torrent ready");
-            _play!(new PlayingItem(start.Url, target.Heading, item.AddonName, target, item.Stream.BehaviorHints?.Filename) { OnClose = start.Release });
-        }
-        catch (OperationCanceledException)
-        {
-            // another source was chosen, or this page was left
-        }
-        catch (Exception ex)
-        {
-            PlayerLog.Write($"torrent failed: {ex.Message}");
-            if (run.IsCancellationRequested) return;
-            NoticeText.Text = ex is TorrentException ? ex.Message : "The torrent could not be started. Try another source.";
-            NoticeBox.Visibility = Visibility.Visible;
-            ListScroll.ScrollToTop();
-        }
+                var start = await torrents.StartAsync(item, target, progress => report(progress.Detail is { } detail ? $"{progress.Message}  ({detail})" : progress.Message), cancel);
+                return (start.Url, start.Release);
+            },
+        });
     }
 
     private void CopyLink(Uri url)
