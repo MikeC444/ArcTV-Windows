@@ -45,7 +45,7 @@ public sealed class ProfilePickerView : UserControl
     private static T Res<T>(string key) => (T)Application.Current.FindResource(key);
 
     /// <summary>A profile's picture, drawn round.</summary>
-    public static FrameworkElement Avatar(string id, double size)
+    public static FrameworkElement Avatar(string id, double size, double? corner = null)
     {
         var name = Avatars.Resolve(id);
         if (!Pictures.TryGetValue(name, out var source))
@@ -62,7 +62,7 @@ public sealed class ProfilePickerView : UserControl
 
         return new Border
         {
-            Width = size, Height = size, CornerRadius = new CornerRadius(size / 2), Background = new ImageBrush(source) { Stretch = Stretch.UniformToFill },
+            Width = size, Height = size, CornerRadius = new CornerRadius(corner ?? size / 2), Background = new ImageBrush(source) { Stretch = Stretch.UniformToFill },
         };
     }
 
@@ -74,8 +74,12 @@ public sealed class ProfilePickerView : UserControl
     private void ShowList()
     {
         State = "list";
+        // laid out like the Mac app's: the logo, then the words, then the pictures
         var stack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
-        stack.Children.Add(Text(_manage ? "Manage Profiles" : "Who's watching?", 44, FontWeights.ExtraBold));
+        stack.Children.Add(new Image { Source = new BitmapImage(new Uri("pack://application:,,,/ArcTV;component/Assets/logo.png")), Height = 48, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 26) });
+        stack.Children.Add(Text(_manage ? "Manage profiles." : "Welcome back to ArcTV.", 36, FontWeights.ExtraBold));
+        stack.Children.Add(new ContentControl { Margin = new Thickness(0, 10, 0, 0), Content = Text(_manage ? "Choose a profile to change." : "Who's watching today?", 24, FontWeights.SemiBold) });
+        stack.Children.Add(new ContentControl { Margin = new Thickness(0, 10, 0, 0), Content = Text(_manage ? "Rename it, change its picture, lock it with a PIN or remove it." : "Choose your profile to pick up where you left off.", 15, brush: Res<Brush>("Text2Brush")) });
         var wrap = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 36, 0, 28), MaxWidth = 1100 };
         foreach (var profile in _model.Profiles) wrap.Children.Add(Card(profile));
         if (_manage && _model.CanAdd) wrap.Children.Add(AddCard());
@@ -100,11 +104,12 @@ public sealed class ProfilePickerView : UserControl
 
     private Button Card(Profile profile)
     {
-        var picture = new Grid { Width = 156, Height = 156, HorizontalAlignment = HorizontalAlignment.Center };
+        var picture = new Grid { Width = 150, Height = 150, HorizontalAlignment = HorizontalAlignment.Center };
         var current = profile.Id == _currentId && !_manage;
-        picture.Children.Add(new Border { CornerRadius = new CornerRadius(78), BorderThickness = new Thickness(3), BorderBrush = current ? Res<Brush>("AccentBrush") : new SolidColorBrush(Color.FromArgb(0x33, 255, 255, 255)), Child = Avatar(profile.Avatar, 150) });
-        if (_manage) picture.Children.Add(Badge("")); // a pencil
-        else if (profile.HasPin) picture.Children.Add(Badge("")); // a padlock
+        picture.Children.Add(Avatar(profile.Avatar, 150, 14)); // a rounded square, with a white ring round the one in use
+        if (current) picture.Children.Add(new Border { CornerRadius = new CornerRadius(14), BorderThickness = new Thickness(3), BorderBrush = new SolidColorBrush(Color.FromArgb(0xE6, 255, 255, 255)) });
+        if (_manage) picture.Children.Add(Badge("\uE70F", VerticalAlignment.Top)); // a pencil
+        if (profile.HasPin) picture.Children.Add(Badge("\uE72E", VerticalAlignment.Bottom)); // a padlock
 
         var column = new StackPanel { Width = 190, Margin = new Thickness(8, 6, 8, 6), Background = Brushes.Transparent };
         column.Children.Add(picture);
@@ -126,11 +131,11 @@ public sealed class ProfilePickerView : UserControl
     {
         var circle = new Border
         {
-            Width = 150, Height = 150, CornerRadius = new CornerRadius(75), Background = Res<Brush>("SurfaceBrush"), BorderThickness = new Thickness(3), BorderBrush = new SolidColorBrush(Color.FromArgb(0x33, 255, 255, 255)),
+            Width = 150, Height = 150, CornerRadius = new CornerRadius(14), Background = Res<Brush>("SurfaceBrush"),
             Child = new TextBlock { Text = "+", FontSize = 64, FontWeight = FontWeights.Light, Foreground = Res<Brush>("TextBrush"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, -8, 0, 0) },
         };
         var column = new StackPanel { Width = 190, Margin = new Thickness(8, 6, 8, 6), Background = Brushes.Transparent };
-        column.Children.Add(new Grid { Width = 156, Height = 156, HorizontalAlignment = HorizontalAlignment.Center, Children = { circle } });
+        column.Children.Add(new Grid { Width = 150, Height = 150, HorizontalAlignment = HorizontalAlignment.Center, Children = { circle } });
         column.Children.Add(Text("Add profile", 18, FontWeights.SemiBold));
         HoverLift.Attach(column, 1.07);
         var button = new Button { Style = Res<Style>("PosterButton"), Content = column, Tag = "add", ToolTip = "Add a profile" };
@@ -138,11 +143,11 @@ public sealed class ProfilePickerView : UserControl
         return button;
     }
 
-    private static Border Badge(string glyph) => new()
+    private static Border Badge(string glyph, VerticalAlignment where) => new()
     {
-        Width = 40, Height = 40, CornerRadius = new CornerRadius(20), Background = new SolidColorBrush(Color.FromArgb(0xCC, 0, 0, 0)), BorderBrush = new SolidColorBrush(Color.FromArgb(0x55, 255, 255, 255)), BorderThickness = new Thickness(1),
-        HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 4, 4),
-        Child = new TextBlock { Text = glyph, FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 16, Foreground = Brushes.White, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
+        Width = 30, Height = 30, CornerRadius = new CornerRadius(15), Background = new SolidColorBrush(Color.FromArgb(0xA6, 0, 0, 0)),
+        HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = where, Margin = new Thickness(0, 8, 8, 8),
+        Child = new TextBlock { Text = glyph, FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 13, Foreground = Brushes.White, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
     };
 
     // ---- a profile with a PIN ----

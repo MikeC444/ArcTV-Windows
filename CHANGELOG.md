@@ -584,3 +584,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: leaving the player while a torrent is still loading must stop it at once).** Leaving the player cancels the torrent's start; the streamer now stops the torrent the moment that cancel arrives (it used to notice at its next half-second look, and not at all while the engine was still adding it). Not run on a screen.
 
+**Follow-up (owner: make Who's watching match the Mac).** Logo, heading and two lines of words above, rounded-square pictures (150, corner 14) with a white ring on the one in use, small round lock/pencil badges (lock bottom right, pencil top right) as on the Mac. Added tile stays in Manage only (the Mac shows it for Plus accounts; the Windows model does not check Plus here). Built by CI only; not seen on screen.
+

@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- "Who's watching?" looks like the Mac app's: the logo, a welcome, and rounded square pictures.
 - Torrent sources now play: choose one and Arc TV finds the video in it and streams it while it downloads (what is going on is shown while it gets ready). Its files are deleted when you close the player.
 - The row titles on Home and the titles under the posters are bigger again.
 - Posters never grow past a set size, however big the window is.
