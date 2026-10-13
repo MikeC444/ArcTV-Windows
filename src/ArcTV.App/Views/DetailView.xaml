@@ -114,7 +114,13 @@
     </Grid>
 
     <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" CanContentScroll="False">
-      <StackPanel Margin="0,0,0,48">
+      <!-- as tall as the window at least, so "You May Also Like" sits at the bottom of the window on a short page and follows the content on a long one -->
+      <Grid x:Name="PageBody" Margin="0,0,0,48">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0">
         <Button x:Name="BackButton" Content="&#x2039;  Back" Style="{StaticResource ChoicePill}" HorizontalAlignment="Left" Margin="24,104,0,0" Click="OnBack" />
 
         <!-- the title (or its logo), facts, genres and a few lines about it -->
@@ -184,8 +190,10 @@
           </c:ArrowScrollViewer>
         </StackPanel>
 
+        </StackPanel>
+
         <!-- a movie's page ends with other titles to try -->
-        <StackPanel x:Name="SimilarPanel" Margin="0,30,0,0" Visibility="Collapsed">
+        <StackPanel x:Name="SimilarPanel" Grid.Row="1" VerticalAlignment="Bottom" Margin="0,30,0,0" Visibility="Collapsed">
           <TextBlock Text="You May Also Like" FontSize="22" FontWeight="Bold" Margin="24,0,24,12" />
           <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ArrowCenter="95">
             <ItemsControl x:Name="SimilarList" ItemTemplate="{StaticResource WideCard}" Margin="24,0,24,10">
@@ -195,7 +203,7 @@
             </ItemsControl>
           </c:ArrowScrollViewer>
         </StackPanel>
-      </StackPanel>
+      </Grid>
     </ScrollViewer>
   </Grid>
 </UserControl>

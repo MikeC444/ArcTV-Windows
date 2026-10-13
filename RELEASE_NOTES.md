@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- "You May Also Like" now always sits at the bottom of a title's page.
 - Like and Not for me on a title are now a thumbs up and a thumbs down.
 - The arrows that scroll a row sideways are bigger.
 - Row titles on Home are bigger and easier to read.

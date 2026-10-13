@@ -36,6 +36,8 @@ public partial class DetailView : UserControl
         _plus = plus;
         _continue = cont;
         InitializeComponent();
+        // the page is at least as tall as the window (less the space under it), so "You May Also Like" sits at the bottom of the window when the page is short
+        PageScroll.SizeChanged += (_, e) => PageBody.MinHeight = Math.Max(0, e.NewSize.Height - 48);
         _model = model;
         _list = list;
         _back = back;
