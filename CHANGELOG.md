@@ -507,3 +507,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: the player's controls now sit right at the bottom; bring them up a bit).** With the controls finally at the bottom of the window, the gap under the pills went from 8 to 32 pixels. Not seen on screen.
 
+**Follow-up (owner: a bigger top bar).** The bar is 124 pixels tall (was 96): the logo 52 (was 38), the menu buttons' words 19 (was 15) with more room round them, the profile button 58 tall with a 46-pixel picture and 18-point name (was 44, 36 and 15). Every page that starts below the bar moved down the same 28 pixels (Home without a banner, a title's page, the source list, Movies and TV Shows, Search, My List, Settings, and the banner's own words) so nothing sits under it. The Home rows still start where they did under the banner. Not seen on screen.
+

@@ -148,14 +148,14 @@ public partial class ShellView : UserControl
     private void BuildAccountButton(AccountUser user, Profile? profile)
     {
         var name = profile?.Name ?? (string.IsNullOrWhiteSpace(user.DisplayName) ? user.Email : user.DisplayName!);
-        FrameworkElement initial = profile is not null ? ProfilePickerView.Avatar(profile.Avatar, 36) : new Border
+        FrameworkElement initial = profile is not null ? ProfilePickerView.Avatar(profile.Avatar, 46) : new Border
         {
-            Width = 36, Height = 36, CornerRadius = new CornerRadius(18), Margin = new Thickness(4, 0, 10, 0),
+            Width = 46, Height = 46, CornerRadius = new CornerRadius(23), Margin = new Thickness(4, 0, 10, 0),
             Background = (Brush)FindResource("BrandGradient"),
             Child = new TextBlock { Text = name[..1].ToUpperInvariant(), FontWeight = FontWeights.Bold, Foreground = Brushes.Black, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
         };
         initial.Margin = new Thickness(4, 0, 10, 0);
-        var label = new TextBlock { Text = name, MaxWidth = 150, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 14, 0), FontWeight = FontWeights.SemiBold };
+        var label = new TextBlock { Text = name, MaxWidth = 180, FontSize = 18, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 16, 0), FontWeight = FontWeights.SemiBold };
         AccountButton.Content = new StackPanel { Orientation = Orientation.Horizontal, Children = { initial, label } };
 
         var email = new MenuItem { Header = new TextBlock { Text = user.Email, Foreground = (Brush)FindResource("Text2Brush") }, IsEnabled = false, Style = (Style)FindResource("DarkMenuItem") };

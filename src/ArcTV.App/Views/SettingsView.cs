@@ -62,7 +62,7 @@ public sealed class SettingsView : UserControl
         _current = open;
         Background = Ui.Res("BgBrush");
 
-        _body = new Grid { Margin = new Thickness(24, 96, 24, 24), VerticalAlignment = VerticalAlignment.Top };
+        _body = new Grid { Margin = new Thickness(24, 124, 24, 24), VerticalAlignment = VerticalAlignment.Top };
         _body.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(280) });
         _body.ColumnDefinitions.Add(new ColumnDefinition());
         _body.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });

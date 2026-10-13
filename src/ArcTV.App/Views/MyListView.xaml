@@ -9,7 +9,7 @@
     </Grid.RowDefinitions>
 
     <StackPanel Grid.Row="0">
-      <TextBlock Text="My List" FontSize="34" FontWeight="ExtraBold" Margin="24,96,24,12" />
+      <TextBlock Text="My List" FontSize="34" FontWeight="ExtraBold" Margin="24,124,24,12" />
 
       <!-- All / Watched on the left, the sort on the right -->
       <Grid x:Name="ListControls" Margin="24,0,24,18" Visibility="Collapsed">

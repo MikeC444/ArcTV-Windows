@@ -147,7 +147,7 @@
           <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0">
-        <Button x:Name="BackButton" Content="&#x2039;  Back" Style="{StaticResource ChoicePill}" HorizontalAlignment="Left" Margin="24,104,0,0" Click="OnBack" />
+        <Button x:Name="BackButton" Content="&#x2039;  Back" Style="{StaticResource ChoicePill}" HorizontalAlignment="Left" Margin="24,132,0,0" Click="OnBack" />
 
         <!-- the title (or its logo), facts, genres and a few lines about it -->
         <StackPanel MaxWidth="1000" HorizontalAlignment="Left" Margin="24,22,24,0">

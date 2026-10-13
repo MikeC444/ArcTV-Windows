@@ -188,7 +188,7 @@ public sealed class HeroBanner : Grid
             },
         });
 
-        var details = new StackPanel { Margin = new Thickness(24, 120, 24, 0), VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 600 }; // top left, under the top bar
+        var details = new StackPanel { Margin = new Thickness(24, 148, 24, 0), VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 600 }; // top left, under the top bar
         // every part has a fixed height whatever it holds (a tall or short logo, no genres, a one-line description), so the buttons are in exactly the same place on every slide
         var heading = new Grid { Height = 110, HorizontalAlignment = HorizontalAlignment.Left };
         if (!string.IsNullOrEmpty(item.Logo))
@@ -211,7 +211,7 @@ public sealed class HeroBanner : Grid
         {
             var shown = e.NewSize.Height - FadeExtra; // the part with words on it
             scale.ScaleX = scale.ScaleY = Math.Clamp(Math.Min(e.NewSize.Width / 1300.0, shown / 560.0), 0.7, 1.6);
-            details.Margin = new Thickness(24, Math.Max(104, shown * 0.2), 24, 0);
+            details.Margin = new Thickness(24, Math.Max(132, shown * 0.2), 24, 0);
         };
         grid.Children.Add(details);
         RefreshListButton();

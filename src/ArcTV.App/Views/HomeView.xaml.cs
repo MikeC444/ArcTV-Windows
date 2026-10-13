@@ -126,7 +126,7 @@ public partial class HomeView : UserControl
             HeroHost.Children.Clear();
             _hero?.Stop();
             _hero = null;
-            RowsHost.Margin = new Thickness(0, 90, 0, 8);
+            RowsHost.Margin = new Thickness(0, 118, 0, 8);
         }
         else if (_hero is null || !_hero.Shows(hero))
         {

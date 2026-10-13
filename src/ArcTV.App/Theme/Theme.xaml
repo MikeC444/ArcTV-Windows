@@ -130,14 +130,14 @@
   <!-- a place in the top bar; the one you are on is brighter with the brand line under it (the button's Tag is "selected") -->
   <Style x:Key="NavPill" TargetType="Button">
     <Setter Property="Foreground" Value="{StaticResource Text2Brush}" />
-    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontSize" Value="19" />
     <Setter Property="FontWeight" Value="Medium" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
           <Grid>
-            <Border x:Name="Box" CornerRadius="18" Background="Transparent" Padding="20,8">
+            <Border x:Name="Box" CornerRadius="24" Background="Transparent" Padding="26,11">
               <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
             <Border x:Name="Line" Height="2" Width="22" CornerRadius="1" Background="{StaticResource BrandGradient}" VerticalAlignment="Bottom" Margin="0,0,0,3" Visibility="Collapsed" />

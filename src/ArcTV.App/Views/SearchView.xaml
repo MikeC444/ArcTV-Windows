@@ -9,7 +9,7 @@
     </Grid.RowDefinitions>
 
     <StackPanel Grid.Row="0">
-      <TextBlock Text="Search" FontSize="34" FontWeight="ExtraBold" Margin="24,96,24,0" />
+      <TextBlock Text="Search" FontSize="34" FontWeight="ExtraBold" Margin="24,124,24,0" />
 
       <!-- the round search box -->
       <Grid Margin="24,20,24,12">

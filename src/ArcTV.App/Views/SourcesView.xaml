@@ -25,7 +25,7 @@
 
       <!-- the title: poster, year, logo, genres and length, description -->
       <ScrollViewer Grid.Column="0" x:Name="InfoScroll" VerticalScrollBarVisibility="Hidden">
-        <StackPanel Margin="28,104,16,24">
+        <StackPanel Margin="28,132,16,24">
           <Button Content="&#x2039;  Back" Style="{StaticResource ChoicePill}" HorizontalAlignment="Left" Click="OnBack" />
           <c:RoundedBorder Width="240" Height="360" CornerRadius="18" Margin="0,18,0,0" HorizontalAlignment="Left" Background="{StaticResource SurfaceBrush}" BorderBrush="#24FFFFFF" BorderThickness="1">
             <c:RemoteImage x:Name="PosterImage" DecodeWidth="520" Stretch="UniformToFill" />
@@ -49,7 +49,7 @@
 
       <!-- the sources -->
       <ScrollViewer Grid.Column="1" x:Name="ListScroll" VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="0,104,28,48">
+        <StackPanel Margin="0,132,28,48">
           <TextBlock Text="Select a source" FontSize="30" FontWeight="ExtraBold" />
           <TextBlock Text="Choose the best quality and server for your stream." FontSize="15" Foreground="{StaticResource Text2Brush}" Margin="0,4,0,14" />
 

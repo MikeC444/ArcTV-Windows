@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- The top bar is bigger: a larger logo, bigger menu buttons and a bigger profile button.
 - A slow or unreachable server no longer closes the app.
 - The player's controls now sit at the very bottom of the picture on every screen, and clicking the Audio, Subtitles or Speed button again closes its list.
 - A source that does not start no longer leaves the player loading for ever: after a while it says so, and a new Sources button in the player (and on that message) takes you to the list to pick another.
