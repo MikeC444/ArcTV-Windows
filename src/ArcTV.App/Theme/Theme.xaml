@@ -246,6 +246,31 @@
   </Style>
 
   <!-- the menus that drop down from a button (the account menu): dark, rounded, lit under the pointer -->
+  <!-- an on/off switch: grey when off, the brand blue-to-purple when on, with a round knob -->
+  <Style x:Key="SwitchToggle" TargetType="ToggleButton">
+    <Setter Property="Width" Value="46" />
+    <Setter Property="Height" Value="26" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ToggleButton">
+          <Border x:Name="Track" Background="#3A3A42" CornerRadius="13">
+            <Ellipse x:Name="Knob" Width="20" Height="20" Fill="#F6F6F8" HorizontalAlignment="Left" Margin="3,0,0,0" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Track" Property="Background" Value="{StaticResource PillGradient}" />
+              <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right" />
+              <Setter TargetName="Knob" Property="Margin" Value="0,0,3,0" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Track" Property="Opacity" Value="0.5" /></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <Style x:Key="DarkMenu" TargetType="ContextMenu">
     <Setter Property="HasDropShadow" Value="False" />
     <Setter Property="Template">

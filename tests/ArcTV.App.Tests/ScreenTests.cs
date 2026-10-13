@@ -277,6 +277,31 @@ public class ScreenTests
         await Settle();
     });
 
+    private sealed class OneAddonStore : IAddonStore
+    {
+        public Task<IReadOnlyList<SyncedAddon>> ListAsync(CancellationToken cancel = default) =>
+            Task.FromResult<IReadOnlyList<SyncedAddon>>([new SyncedAddon("https://t.test/manifest.json", "t", "Torrentio", true, 0, new AddonManifest("t", "Torrentio", "0.1", "Streams from torrents", null, null, null, [new AddonResource("stream")])) { RawManifest = "{}" }]);
+
+        public Task SaveAsync(string manifestUrl, string addonId, string name, string rawManifest, bool enabled, int sortOrder, CancellationToken cancel = default) => Task.CompletedTask;
+
+        public Task RemoveAsync(string manifestUrl, CancellationToken cancel = default) => Task.CompletedTask;
+    }
+
+    [Fact]
+    public void SettingsScreenListsAddons() => OnUiThread(async () =>
+    {
+        var model = new AddonsModel(new OneAddonStore(), (link, _) => Task.FromResult(AddonInstall.Parse(link, "{}")));
+        var view = new SettingsView(model);
+        var window = Host(view);
+        await Settle();
+        await Task.Delay(300);
+        await Settle();
+        Assert.True(model.Loaded);
+        Assert.Single(model.Items);
+        Assert.True(view.ActualHeight > 0);
+        window.Close();
+    });
+
     [Fact]
     public void ShellOpensWithItsTopBar() => OnUiThread(async () =>
     {

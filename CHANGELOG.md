@@ -313,3 +313,22 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Open:** torrents (MonoTorrent), Resume / Continue Watching and reporting progress to the account, next-episode, the Episodes / Player / Sources pills, subtitle styling, a placeholder-slate prompt flow, picture-in-picture.
 
+## 10 -- Settings > Addons
+
+**Status:** Written without a compiler here (no .NET SDK in the sandbox); built and tested by the Windows build server only (see the run for this commit). Not run or seen on screen.
+
+**Context:** The sources page said "No sources found" because the account's only addons were Cinemeta and OpenSubtitles, and Windows had no page to add a stream addon. Ported from the Mac app's Settings > Addons.
+
+**Changes:**
+- Core: `SyncedAddon.RawManifest` (the manifest exactly as stored, read in a second pass), `AddonsApi.SaveAddonAsync` / `RemoveAddonAsync` / `SaveBody` (POST and DELETE `/user/addons`), `AddonInstall` (fetch and check a pasted link), `IAddonStore` + `AccountAddonStore`, and `AddonsModel` (list, install, switch on/off, remove, messages, "Provides: ...").
+- App: `SettingsView` (Settings now opens it instead of "coming soon"): add-by-link box, a card for each addon with version, description, what it provides, an on/off switch (`SwitchToggle` style) and an inline "Remove from every device?" confirmation. Changing addons clears the cached sources and browse pages and reloads Home.
+- Tests: `AddonsTests` (install order and place, bad link, switching keeps the manifest, remove, a failing account, save body, provides text) and a screen test for the page.
+
+**Tests performed:** see the build run.
+
+**Issues discovered:** the Settings page holds only Addons so far.
+
+**Issues fixed:** n/a.
+
+**Open:** the other Settings sections (profiles, blocked genres, subtitles, account, version), reordering addons, an install confirmation that shows what the addon offers first.
+

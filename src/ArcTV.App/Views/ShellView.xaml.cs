@@ -27,6 +27,7 @@ public partial class ShellView : UserControl
     private readonly HomeModel _home;
     private readonly Dictionary<string, BrowseModel> _browse = [];
     private MyListModel? _myList;
+    private AddonsModel? _addonsModel;
     private readonly IDetailExtras _extras;
     private readonly Stack<(UIElement Page, string Place)> _history = [];
     private readonly AddonClient _addonClient = new();
@@ -158,6 +159,20 @@ public partial class ShellView : UserControl
             return true;
         }));
 
+    /// <summary>One model for the session. When addons change, what Home, Movies and TV Shows read from them is fetched again.</summary>
+    private AddonsModel AddonsFor()
+    {
+        if (_addonsModel is not null) return _addonsModel;
+        _addonsModel = new AddonsModel(new AccountAddonStore(_account), (link, cancel) => AddonInstall.FetchAsync(link, null, cancel));
+        _addonsModel.Changed += () =>
+        {
+            _sources = [];
+            _browse.Clear();
+            _ = _home.LoadAsync();
+        };
+        return _addonsModel;
+    }
+
     private void OnTitleClick(object sender, RoutedEventArgs e)
     {
         if (e.OriginalSource is Button { DataContext: MetaPreview item }) OpenTitle(item);
@@ -209,6 +224,7 @@ public partial class ShellView : UserControl
             "Movies" => new BrowseView("Movies", BrowseFor("movie")),
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
             "My List" => new MyListView(MyListFor()),
+            "Settings" => new SettingsView(AddonsFor()),
             "Search" => new SearchView(new SearchModel(_account.Session!.User.Id, SourcesAsync, new RecentSearchStore(Path.Combine(AppPaths.DataFolder(), "recent-searches.json")), _addonClient)),
             _ => new ComingSoonView(place),
         };

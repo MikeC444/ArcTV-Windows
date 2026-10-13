@@ -105,6 +105,11 @@ public sealed record MetaPreview(
 internal sealed record CatalogResponse(List<MetaPreview>? Metas);
 
 /// <summary>An addon on the account, as <c>/user/addons</c> lists it.</summary>
-public sealed record SyncedAddon(string ManifestUrl, string AddonId, string Name, bool Enabled, int SortOrder, AddonManifest? ManifestJson);
+public sealed record SyncedAddon(string ManifestUrl, string AddonId, string Name, bool Enabled, int SortOrder, AddonManifest? ManifestJson)
+{
+    /// <summary>The addon's manifest exactly as the account stores it (kept so a change can send it back untouched). Not part of what the server's list is read into.</summary>
+    [JsonIgnore]
+    public string? RawManifest { get; init; }
+}
 
 internal sealed record SyncedAddonsResponse(List<SyncedAddon> Items);
