@@ -30,6 +30,9 @@ public sealed class RemoteImage : Image
 
     private CancellationTokenSource? _cancel;
 
+    /// <summary>The address the picture on show actually came from (it can be the fallback), or null while nothing is shown.</summary>
+    public Uri? LoadedFrom { get; private set; }
+
     public string? Url { get => (string?)GetValue(UrlProperty); set => SetValue(UrlProperty, value); }
 
     /// <summary>Tried when <see cref="Url"/> is not there or never loads (for a bigger picture that may not exist for every title).</summary>
@@ -51,6 +54,7 @@ public sealed class RemoteImage : Image
     {
         _cancel?.Cancel();
         Source = null;
+        LoadedFrom = null;
         var addresses = new[] { Url, FallbackUrl }
             .Select(text => Uri.TryCreate(text, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https" ? uri : null)
             .OfType<Uri>()
@@ -67,6 +71,7 @@ public sealed class RemoteImage : Image
             {
                 BeginAnimation(OpacityProperty, null);
                 Source = hit;
+                LoadedFrom = uri;
                 return;
             }
 
@@ -78,6 +83,7 @@ public sealed class RemoteImage : Image
                     if (cancel.IsCancellationRequested) return;
                     Keep(key, picture);
                     Source = picture;
+                    LoadedFrom = uri;
                     BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)));
                     return;
                 }

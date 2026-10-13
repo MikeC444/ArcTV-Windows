@@ -59,7 +59,13 @@ public sealed class HeroBanner : Grid
     private static UIElement Slide(MetaPreview item)
     {
         var grid = new Grid();
-        grid.Children.Add(new RemoteImage { Url = BiggerBackground(item.Background) ?? item.Poster, FallbackUrl = item.Background ?? item.Poster, DecodeWidth = 0, Stretch = Stretch.UniformToFill, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top });
+        var picture = new RemoteImage { Url = BiggerBackground(item.Background) ?? item.Poster, FallbackUrl = item.Background ?? item.Poster, DecodeWidth = 0, Stretch = Stretch.UniformToFill, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top };
+        grid.Children.Add(picture);
+        // temporary: hover the banner to see where its picture came from and how big it is (to chase a blurry banner)
+        grid.ToolTip = "Picture details";
+        grid.ToolTipOpening += (_, _) => grid.ToolTip = picture.Source is System.Windows.Media.Imaging.BitmapSource shown
+            ? $"{picture.LoadedFrom}\n{shown.PixelWidth} x {shown.PixelHeight} pixels (listed: {item.Background})"
+            : "Picture not loaded";
         // fades into the page at the bottom, and darkens the left so the words can be read
         grid.Children.Add(new System.Windows.Shapes.Rectangle { Fill = new LinearGradientBrush(Colors.Transparent, (Color)Application.Current.FindResource("BgColor"), 90) { GradientStops = { new GradientStop(Colors.Transparent, 0.45) } } });
         grid.Children.Add(new System.Windows.Shapes.Rectangle { Fill = new LinearGradientBrush(Color.FromArgb(0xD9, 8, 8, 10), Colors.Transparent, 0) { GradientStops = { new GradientStop(Colors.Transparent, 0.6) } } });
