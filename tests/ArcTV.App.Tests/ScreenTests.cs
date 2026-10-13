@@ -9,6 +9,7 @@ using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Browse;
 using ArcTV.Core.Home;
+using ArcTV.Core.MyList;
 using ArcTV.Core.Search;
 using ArcTV.Core.Storage;
 using Xunit;
@@ -83,7 +84,7 @@ public class ScreenTests
     [Fact]
     public void ThemeStylesAllLoad() => OnUiThread(() =>
     {
-        foreach (var key in new[] { "PrimaryButton", "GhostButton", "LinkButton", "Field", "PasswordField", "FieldLabel", "NavPill", "ChoicePill", "DotButton" })
+        foreach (var key in new[] { "PrimaryButton", "GhostButton", "LinkButton", "Field", "PasswordField", "FieldLabel", "NavPill", "ChoicePill", "SuggestionRow", "DotButton" })
             Assert.NotNull(Application.Current.TryFindResource(key));
         return Task.CompletedTask;
     });
@@ -149,6 +150,24 @@ public class ScreenTests
     });
 
     private const string SearchManifest = """{"id":"x","name":"Cool","catalogs":[{"type":"movie","id":"all","extra":[{"name":"search"}]}]}""";
+
+    [Fact]
+    public void MyListScreenShowsSavedTitlesAndTheirTicks() => OnUiThread(async () =>
+    {
+        var items = new List<WatchlistItem>
+        {
+            new("p", "tt1", "MOVIE", "Alpha", Year: 2020, Rating: 7.5, Watched: true, UpdatedAt: "2026-01-01T00:00:00.000Z"),
+            new("p", "tt2", "TV_SHOW", "Beta", UpdatedAt: "2026-01-02T00:00:00.000Z"),
+        };
+        var model = new MyListModel(_ => Task.FromResult(items));
+        var view = new MyListView(model);
+        var window = Host(view);
+        await model.LoadAsync();
+        await Settle();
+        Assert.Equal(2, model.Items!.Count);
+        Assert.True(view.ActualHeight > 0);
+        window.Close();
+    });
 
     [Fact]
     public void ShellOpensWithItsTopBar() => OnUiThread(async () =>

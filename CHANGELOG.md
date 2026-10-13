@@ -144,3 +144,24 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
 **Issues fixed:** the missing `using` was added. Layout fix from a screenshot: the search box was centred on the page (a bordered box with a maximum width centres itself) and "Clear" sat right beside "Recent searches"; the box and the recent searches now start at the page's left edge like the title, up to 900 wide, with "Clear" at the far end of its row.
 
 **Open:** choosing a suggestion searches for its title (opening a title needs title details); posters do not open anything yet; searches are not filtered by blocked genres on purpose (as on the Mac).
+
+## 6 -- My List
+
+**Status:** Written without a compiler here (no .NET SDK in the sandbox); built and tested by the Windows build server only (see the run for this commit). Not run or seen on screen.
+
+**Context:** Next place after Search. Ported from the Mac app's `MyListView`, `MyListSort` and `Watchlist`.
+
+**Changes:**
+- `ArcTV.Core/MyList`: `WatchlistItem` (GET `/user/watchlist`, shown as a poster card; MOVIE / TV_SHOW become movie / series), `ListSort` (Recently Added, A-Z,
+  Highest Rated, Newest; every order starts from newest-added so ties keep that order) and `MyListModel` (the list, kept while it is fetched again, or why it could not be).
+- `MyListView`: All / Watched pills, a sort list, the poster grid, and the empty / error / loading states. The list is fetched each time the page opens.
+- A watched title shows a green tick on its poster (`MetaPreview.Watched`, set only for My List; the poster card is shared).
+- The row style used for Search suggestions moved to the theme (`SuggestionRow`) so the sort list can use it too.
+
+**Tests performed:** see the build run. New: `MyListTests` (the Mac sort tests, decoding, load / failure) and a screen test.
+
+**Issues discovered:** none yet.
+
+**Issues fixed:** none yet.
+
+**Open:** adding and removing titles (needs title details); the saved list is not cached on this PC.

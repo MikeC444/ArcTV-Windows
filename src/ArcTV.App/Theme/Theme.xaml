@@ -175,6 +175,26 @@
     </Setter>
   </Style>
 
+    <!-- a row in the suggestion list; lit under the pointer and when it is the one the arrow keys are on (Tag is "selected") -->
+    <Style x:Key="SuggestionRow" TargetType="Button">
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Box" CornerRadius="10" MinHeight="44" Padding="12,8" Background="Transparent">
+              <ContentPresenter VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="Background" Value="{StaticResource SurfaceHighBrush}" /></Trigger>
+              <Trigger Property="Tag" Value="selected"><Setter TargetName="Box" Property="Background" Value="{StaticResource SurfaceHighBrush}" /></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
   <Style x:Key="DotButton" TargetType="Button">
     <Setter Property="Width" Value="18" />
     <Setter Property="Height" Value="24" />

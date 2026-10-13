@@ -7,6 +7,7 @@ using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Browse;
 using ArcTV.Core.Home;
+using ArcTV.Core.MyList;
 using ArcTV.Core.Search;
 using ArcTV.Core.Storage;
 
@@ -20,6 +21,7 @@ public partial class ShellView : UserControl
     private readonly AccountModel _account;
     private readonly HomeModel _home;
     private readonly Dictionary<string, BrowseModel> _browse = [];
+    private MyListModel? _myList;
     private readonly AddonClient _addonClient = new();
     private IReadOnlyList<HomeSource> _sources = [];
     private string _place = "";
@@ -93,6 +95,9 @@ public partial class ShellView : UserControl
         return model;
     }
 
+    /// <summary>One model for the session: coming back to My List shows what was there while it is fetched again.</summary>
+    private MyListModel MyListFor() => _myList ??= new MyListModel(cancel => _account.AuthorizedAsync((client, token) => client.WatchlistAsync(token, cancel)));
+
     private void Open(string place)
     {
         if (place == _place) return;
@@ -103,6 +108,7 @@ public partial class ShellView : UserControl
             "Home" => new HomeView(_home),
             "Movies" => new BrowseView("Movies", BrowseFor("movie")),
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
+            "My List" => new MyListView(MyListFor()),
             "Search" => new SearchView(new SearchModel(_account.Session!.User.Id, SourcesAsync, new RecentSearchStore(Path.Combine(AppPaths.DataFolder(), "recent-searches.json")), _addonClient)),
             _ => new ComingSoonView(place),
         };

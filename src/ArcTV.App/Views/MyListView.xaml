@@ -1,0 +1,39 @@
+<UserControl x:Class="ArcTV.App.Views.MyListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="clr-namespace:ArcTV.App.Views">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <StackPanel Grid.Row="0">
+      <TextBlock Text="My List" FontSize="34" FontWeight="ExtraBold" Margin="44,96,44,12" />
+
+      <!-- All / Watched on the left, the sort on the right -->
+      <Grid x:Name="ListControls" Margin="44,0,44,18" Visibility="Collapsed">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+          <Button x:Name="AllPill" Content="All" Style="{StaticResource ChoicePill}" Margin="0,0,10,0" Click="OnAll" />
+          <Button x:Name="WatchedPill" Content="Watched" Style="{StaticResource ChoicePill}" Click="OnWatched" />
+        </StackPanel>
+        <Button x:Name="SortButton" Style="{StaticResource ChoicePill}" HorizontalAlignment="Right" Click="OnSortButton" />
+        <Popup x:Name="SortPopup" PlacementTarget="{Binding ElementName=SortButton}" Placement="Bottom" VerticalOffset="6" StaysOpen="False" AllowsTransparency="True" Closed="OnSortClosed" />
+      </Grid>
+
+      <StackPanel x:Name="LoadingPanel" Margin="44,12,44,0" HorizontalAlignment="Left">
+        <TextBlock Text="Getting your list…" FontSize="16" Foreground="{StaticResource Text2Brush}" />
+        <ProgressBar IsIndeterminate="True" Height="3" Width="220" Margin="0,14,0,0" HorizontalAlignment="Left" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
+      </StackPanel>
+
+      <StackPanel x:Name="ErrorPanel" Margin="44,12,44,0" HorizontalAlignment="Left" Visibility="Collapsed">
+        <TextBlock x:Name="ErrorText" FontSize="15" TextWrapping="Wrap" Foreground="{StaticResource Text2Brush}" />
+        <Button Content="Try again" Style="{StaticResource GhostButton}" Width="160" HorizontalAlignment="Left" Margin="0,12,0,0" Click="OnRetry" />
+      </StackPanel>
+
+      <TextBlock x:Name="Message" Margin="44,12,44,0" FontSize="15" TextWrapping="Wrap" Foreground="{StaticResource Text2Brush}" Visibility="Collapsed" />
+    </StackPanel>
+
+    <v:PosterGrid x:Name="Posters" Grid.Row="1" Visibility="Hidden" />
+  </Grid>
+</UserControl>
