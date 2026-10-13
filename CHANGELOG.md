@@ -70,7 +70,7 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
 
 ## 4 -- Movies and TV Shows: browse by genre
 
-**Status:** Written without a compiler (the sandbox could not download the .NET SDK); checked only by the Windows build server. Not run or seen on screen.
+**Status:** Written without a compiler (the sandbox could not download the .NET SDK). The Windows build server then built it, ran all tests (including the new ones and the Movies screen test) and published the app: green. Not run or seen on screen by a person.
 
 **Context:** First of the places after Home. Ported from the Mac app's `Browse.swift`, `BrowseView.swift` and `HomeSource.browsePage`.
 
@@ -81,10 +81,10 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
 - `BrowseView`: title, genre pill with a two-column list, sort pills, poster grid that loads more near the bottom. The poster card moved to
   `PosterTemplate.xaml` so Home and Browse share it. New `ChoicePill` style.
 
-**Tests performed:** see the build run for this commit. New: `BrowseTests` (sorting, year, genre filtering, paging, cache) and a screen test that opens the Movies page.
+**Tests performed:** the Windows build server (build, test, publish all passed). New: `BrowseTests` (sorting, year, genre filtering, paging, cache) and a screen test that opens the Movies page.
 
-**Issues discovered:** none yet.
+**Issues discovered:** the first build failed: a second `Genres` class clashed with the one Home already had (ambiguous in the tests).
 
-**Issues fixed:** none yet.
+**Issues fixed:** the duplicate was removed; Browse uses the existing lists.
 
 **Open:** blocked genres (needs profiles/settings), loading skeletons, a virtualised grid (the grid lays out every loaded poster), opening a title (needs title details).
