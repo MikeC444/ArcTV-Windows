@@ -124,6 +124,12 @@ public static class PlusApi
         }
     }
 
+    /// <summary>Likes (or marks Not for me) a title, or changes an earlier rating of it.</summary>
+    public static Task SetFeedbackAsync(this AuthClient client, string accessToken, FeedbackItem item, CancellationToken cancel = default) =>
+        client.SendJsonAsync(HttpMethod.Post, "/user/feedback", null,
+            JsonSerializer.Serialize(new { profileId = client.ProfileId ?? item.ProfileId, providerId = item.ProviderId, contentId = item.ContentId, contentType = item.ContentType, title = item.Title, feedback = item.Feedback, updatedAt = item.UpdatedAt }),
+            accessToken, cancel: cancel);
+
     public static Task ClearFeedbackAsync(this AuthClient client, string accessToken, FeedbackItem item, CancellationToken cancel = default) =>
         client.SendJsonAsync(HttpMethod.Delete, "/user/feedback",
             new Dictionary<string, string>

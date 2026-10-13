@@ -377,3 +377,22 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: show the Liked and Not for me lists as posters, in a row, with the picture).** The two lists were plain rows with a letter. They are now a sideways-scrolling row of the same poster cards Home uses (a click opens the title), with a small cross on each to take the rating off. The account keeps the rating but not the picture, so `PlusModel.LoadPostersAsync` looks up each rated title's poster from Cinemeta (four at a time, announced together when done; a title whose lookup fails keeps its name on the card). Also fixes the CI build: `PlusPane.Tag` hid `FrameworkElement.Tag` (warning CS0108, an error on the build server), renamed `Chip`. Not seen on screen.
 
+## 13 -- Like and Not for me
+
+**Status:** Written without a compiler here; built and tested by the Windows build server only (see the run for this commit). Not run or seen on screen, and not tried against a real account.
+
+**Context:** First of three requested together (Like / Not for me, Continue Watching and Resume, Picked for you). Ported from the Mac app's `AppModel.rate`.
+
+**Changes:**
+- Core: `PlusApi.SetFeedbackAsync` (POST `/user/feedback`), `IPlusStore.SetFeedbackAsync`, and `PlusModel.RateAsync` / `RatingOf` (only with Plus; the same rating again takes it off, the other one changes it; shown at once and put back if the account could not be reached; the poster is kept for the Recommendations page).
+- App: `DetailView` has Like and Not for me buttons next to My List and Mark as watched, shown once the account has Plus, ticked for what the title already has.
+- Tests: rating, un-rating, switching, rollback, and no Plus.
+
+**Tests performed:** see the build run.
+
+**Issues discovered:** none yet.
+
+**Issues fixed:** n/a.
+
+**Open:** the same buttons on a poster's menu (the Mac has a three-dot menu); Picked for you (uses these ratings).
+

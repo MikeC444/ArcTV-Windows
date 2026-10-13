@@ -14,6 +14,8 @@ public interface IPlusStore
 
     Task<IReadOnlyList<FeedbackItem>> FeedbackAsync(CancellationToken cancel = default);
 
+    Task SetFeedbackAsync(FeedbackItem item, CancellationToken cancel = default);
+
     Task ClearFeedbackAsync(FeedbackItem item, CancellationToken cancel = default);
 
     Task<(IReadOnlyList<HistoryItem> Items, bool Truncated)> HistoryAsync(CancellationToken cancel = default);
@@ -28,6 +30,13 @@ public sealed class AccountPlusStore(AccountModel account) : IPlusStore
     public Task<PlusStatus> CancelAsync(CancellationToken cancel = default) => account.AuthorizedAsync((c, t) => c.CancelSubscriptionAsync(t, cancel));
 
     public async Task<IReadOnlyList<FeedbackItem>> FeedbackAsync(CancellationToken cancel = default) => await account.AuthorizedAsync((c, t) => c.FeedbackAsync(t, cancel)).ConfigureAwait(false);
+
+    public Task SetFeedbackAsync(FeedbackItem item, CancellationToken cancel = default) =>
+        account.AuthorizedAsync(async (c, t) =>
+        {
+            await c.SetFeedbackAsync(t, item, cancel).ConfigureAwait(false);
+            return true;
+        });
 
     public Task ClearFeedbackAsync(FeedbackItem item, CancellationToken cancel = default) =>
         account.AuthorizedAsync(async (c, t) =>
@@ -148,6 +157,55 @@ public sealed class PlusModel(IPlusStore store, Func<DateTime>? now = null, Time
         var all = Posters.ToDictionary(p => p.Key, p => p.Value);
         foreach (var (id, url) in found) all[id] = url;
         Posters = all;
+    }
+
+    /// <summary>The rating the account holds for a title, or null.</summary>
+    public Rating? RatingOf(string id) => Ratings.TryGetValue(id, out var item) ? item.Rating : null;
+
+    /// <summary>
+    /// Likes (or marks Not for me) a title; doing the same again takes the rating off, and the other one changes it. Only with Plus. Shown at once; put back if the account could not be
+    /// reached.
+    /// </summary>
+    public async Task RateAsync(string id, string type, string title, string? poster, Rating rating, CancellationToken cancel = default)
+    {
+        if (!Active) return;
+        var beforeRatings = Ratings;
+        var beforePosters = Posters;
+        if (Ratings.TryGetValue(id, out var existing) && existing.Rating == rating)
+        {
+            Ratings = beforeRatings.Where(p => p.Key != id).ToDictionary(p => p.Key, p => p.Value);
+            try
+            {
+                await store.ClearFeedbackAsync(existing, cancel).ConfigureAwait(true);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                Ratings = beforeRatings;
+            }
+
+            return;
+        }
+
+        var entry = new FeedbackItem("main", AppInfo.CinemetaProviderId, id, type == "movie" ? "MOVIE" : "TV_SHOW", title, rating == Rating.Like ? "like" : "dislike", IsoDate.Now());
+        var next = beforeRatings.ToDictionary(p => p.Key, p => p.Value);
+        next[id] = entry;
+        Ratings = next;
+        if (!string.IsNullOrEmpty(poster))
+        {
+            var posters = beforePosters.ToDictionary(p => p.Key, p => p.Value);
+            posters[id] = poster;
+            Posters = posters;
+        }
+
+        try
+        {
+            await store.SetFeedbackAsync(entry, cancel).ConfigureAwait(true);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Ratings = beforeRatings;
+            Posters = beforePosters;
+        }
     }
 
     /// <summary>Takes the rating off one title. Shown at once; put back if the account could not be reached.</summary>

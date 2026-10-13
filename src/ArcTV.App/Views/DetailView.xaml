@@ -136,7 +136,9 @@
             <Button x:Name="PlayButton" Content="&#x25B6;  Play" Style="{StaticResource PrimaryButton}" Height="48" Padding="28,0" IsEnabled="False" Margin="0,0,14,0" Click="OnPlay" />
             <Button x:Name="TrailerButton" Content="Trailer" Style="{StaticResource ChoicePill}" Height="48" Margin="0,0,14,0" IsEnabled="False" ToolTip="Looking for a trailer…" Click="OnTrailer" />
             <Button x:Name="ListButton" Style="{StaticResource ChoicePill}" Height="48" Margin="0,0,14,0" Click="OnList" />
-            <Button x:Name="WatchedButton" Style="{StaticResource ChoicePill}" Height="48" Click="OnWatched" />
+            <Button x:Name="WatchedButton" Style="{StaticResource ChoicePill}" Height="48" Margin="0,0,14,0" Click="OnWatched" />
+            <Button x:Name="LikeButton" Style="{StaticResource ChoicePill}" Height="48" Margin="0,0,14,0" Visibility="Collapsed" Click="OnLike" />
+            <Button x:Name="DislikeButton" Style="{StaticResource ChoicePill}" Height="48" Visibility="Collapsed" Click="OnDislike" />
           </StackPanel>
           <Border x:Name="RatingBox" HorizontalAlignment="Right" CornerRadius="12" Background="#73000000" Padding="18,8" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal">

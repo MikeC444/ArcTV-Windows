@@ -227,7 +227,7 @@ public partial class ShellView : UserControl
     private void OpenTitle(MetaPreview item)
     {
         if (Page.Content is UIElement current) _history.Push((current, _place));
-        Page.Content = new DetailView(new DetailModel(item, _addonClient, _extras), MyListFor(), GoBack, () => _home.AllRows.SelectMany(row => row.Items).ToList(), OpenSources);
+        Page.Content = new DetailView(new DetailModel(item, _addonClient, _extras), MyListFor(), GoBack, () => _home.AllRows.SelectMany(row => row.Items).ToList(), OpenSources, _plus);
     }
 
     /// <summary>The source list for a movie or an episode, over the page that asked for it; Back returns to that page.</summary>

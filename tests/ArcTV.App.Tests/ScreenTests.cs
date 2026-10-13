@@ -307,6 +307,8 @@ public class ScreenTests
         public Task<IReadOnlyList<FeedbackItem>> FeedbackAsync(CancellationToken cancel = default) =>
             Task.FromResult<IReadOnlyList<FeedbackItem>>([new FeedbackItem("main", "c", "tt1", "MOVIE", "A Film", "like", "2026-10-01T00:00:00.000Z")]);
 
+        public Task SetFeedbackAsync(FeedbackItem item, CancellationToken cancel = default) => Task.CompletedTask;
+
         public Task ClearFeedbackAsync(FeedbackItem item, CancellationToken cancel = default) => Task.CompletedTask;
 
         public Task<(IReadOnlyList<HistoryItem> Items, bool Truncated)> HistoryAsync(CancellationToken cancel = default) =>

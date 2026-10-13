@@ -7,6 +7,7 @@ using ArcTV.Core;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Details;
 using ArcTV.Core.MyList;
+using ArcTV.Core.Plus;
 using ArcTV.Core.Sources;
 
 namespace ArcTV.App.Views;
@@ -19,6 +20,7 @@ public partial class DetailView : UserControl
 {
     private readonly DetailModel _model;
     private readonly MyListModel _list;
+    private readonly PlusModel? _plus;
     private readonly Action _back;
     private readonly Func<IReadOnlyList<MetaPreview>>? _similarPool;
     private readonly Action<PlayTarget>? _play;
@@ -27,8 +29,9 @@ public partial class DetailView : UserControl
     private CancellationTokenSource? _run;
     private IReadOnlyList<int> _seasonsShown = [];
 
-    public DetailView(DetailModel model, MyListModel list, Action back, Func<IReadOnlyList<MetaPreview>>? similarPool = null, Action<PlayTarget>? play = null)
+    public DetailView(DetailModel model, MyListModel list, Action back, Func<IReadOnlyList<MetaPreview>>? similarPool = null, Action<PlayTarget>? play = null, PlusModel? plus = null)
     {
+        _plus = plus;
         InitializeComponent();
         _model = model;
         _list = list;
@@ -47,6 +50,13 @@ public partial class DetailView : UserControl
             var run = _run = new CancellationTokenSource();
             if (!_model.Loaded) await _model.LoadAsync(run.Token);
             if (_list.Items is null) await _list.LoadAsync(run.Token); // so the My List button knows whether this title is already on it
+            if (_plus is not null)
+            {
+                _plus.PropertyChanged -= OnListChanged;
+                _plus.PropertyChanged += OnListChanged;
+                await _plus.LoadStatusAsync(run.Token);
+                if (_plus.Active && !_plus.RatingsLoaded) await _plus.LoadRatingsAsync(run.Token); // so Like and Not for me show what this title already has
+            }
         };
         PageScroll.PreviewMouseWheel += (_, e) =>
         {
@@ -57,6 +67,7 @@ public partial class DetailView : UserControl
             _smooth?.Stop();
             _model.PropertyChanged -= OnModelChanged;
             _list.PropertyChanged -= OnListChanged;
+            if (_plus is not null) _plus.PropertyChanged -= OnListChanged;
             _run?.Cancel();
         };
     }
@@ -162,6 +173,15 @@ public partial class DetailView : UserControl
         ListButton.Tag = saved ? "selected" : "";
         WatchedButton.Content = watched ? "✓  Watched" : "Mark as watched";
         WatchedButton.Tag = watched ? "selected" : "";
+
+        // Like and Not for me belong to Arc TV Plus: they show once the account has it
+        var rating = _plus?.RatingOf(id);
+        var visible = _plus is { Active: true } ? Visibility.Visible : Visibility.Collapsed;
+        LikeButton.Visibility = DislikeButton.Visibility = visible;
+        LikeButton.Content = rating == Rating.Like ? "✓  Liked" : "Like";
+        LikeButton.Tag = rating == Rating.Like ? "selected" : "";
+        DislikeButton.Content = rating == Rating.Dislike ? "✓  Not for me" : "Not for me";
+        DislikeButton.Tag = rating == Rating.Dislike ? "selected" : "";
     }
 
     private void RefreshSeasons()
@@ -201,6 +221,17 @@ public partial class DetailView : UserControl
     private async void OnList(object sender, RoutedEventArgs e) => await _list.ToggleSavedAsync(_model.Detail);
 
     private async void OnWatched(object sender, RoutedEventArgs e) => await _list.ToggleWatchedAsync(_model.Detail);
+
+    private async void OnLike(object sender, RoutedEventArgs e) => await Rate(Rating.Like);
+
+    private async void OnDislike(object sender, RoutedEventArgs e) => await Rate(Rating.Dislike);
+
+    private async Task Rate(Rating rating)
+    {
+        if (_plus is null) return;
+        var d = _model.Detail;
+        await _plus.RateAsync(d.Id, d.Type, d.Name, d.Poster, rating);
+    }
 
     /// <summary>The title shows instead of the logo until the logo has loaded (a title with no logo, or one that never loads, keeps its words).</summary>
     private void OnLogoShown(object? sender, EventArgs e) => TitleText.Visibility = Visibility.Hidden;

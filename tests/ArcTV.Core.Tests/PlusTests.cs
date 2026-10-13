@@ -30,6 +30,14 @@ public class PlusTests
 
         public Task<IReadOnlyList<FeedbackItem>> FeedbackAsync(CancellationToken cancel = default) => Task.FromResult<IReadOnlyList<FeedbackItem>>(Feedback);
 
+        public Task SetFeedbackAsync(FeedbackItem item, CancellationToken cancel = default)
+        {
+            if (Fail) throw new HttpRequestException("down");
+            Feedback.RemoveAll(f => f.ContentId == item.ContentId);
+            Feedback.Add(item);
+            return Task.CompletedTask;
+        }
+
         public Task ClearFeedbackAsync(FeedbackItem item, CancellationToken cancel = default)
         {
             if (Fail) throw new HttpRequestException("down");
@@ -225,6 +233,49 @@ public class PlusTests
         await model.RemoveRatingAsync(model.Ratings["a"]);
         Assert.Empty(model.Ratings);
         Assert.Empty(store.Feedback);
+    }
+
+    [Fact]
+    public async Task LikingATitleSavesItAndTheSameAgainTakesItOff()
+    {
+        var store = new FakeStore();
+        var model = new PlusModel(store);
+        await model.LoadStatusAsync();
+        await model.RateAsync("tt1", "movie", "A Film", "https://img.test/a.jpg", Rating.Like);
+        Assert.Equal(Rating.Like, model.RatingOf("tt1"));
+        Assert.Equal("MOVIE", store.Feedback.Single().ContentType);
+        Assert.Equal("like", store.Feedback.Single().Feedback);
+        Assert.Equal("https://img.test/a.jpg", model.Posters["tt1"]);
+        await model.RateAsync("tt1", "movie", "A Film", null, Rating.Like);
+        Assert.Null(model.RatingOf("tt1"));
+        Assert.Empty(store.Feedback);
+    }
+
+    [Fact]
+    public async Task ChoosingTheOtherRatingChangesIt()
+    {
+        var store = new FakeStore();
+        var model = new PlusModel(store);
+        await model.LoadStatusAsync();
+        await model.RateAsync("tt2", "series", "A Show", null, Rating.Like);
+        await model.RateAsync("tt2", "series", "A Show", null, Rating.Dislike);
+        Assert.Equal(Rating.Dislike, model.RatingOf("tt2"));
+        Assert.Equal("TV_SHOW", store.Feedback.Single().ContentType);
+        Assert.Equal("dislike", store.Feedback.Single().Feedback);
+    }
+
+    [Fact]
+    public async Task ARatingThatDoesNotSaveIsPutBackAndWithoutPlusNothingHappens()
+    {
+        var store = new FakeStore { Fail = false };
+        var model = new PlusModel(store);
+        await model.RateAsync("tt1", "movie", "A Film", null, Rating.Like); // status not read yet: no Plus
+        Assert.Null(model.RatingOf("tt1"));
+        await model.LoadStatusAsync();
+        store.Fail = true;
+        await model.RateAsync("tt1", "movie", "A Film", "https://img.test/a.jpg", Rating.Like);
+        Assert.Null(model.RatingOf("tt1"));
+        Assert.Empty(model.Posters);
     }
 
     [Fact]
