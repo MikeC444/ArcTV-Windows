@@ -131,6 +131,27 @@ public class AuthClientTests
     }
 
     [Fact]
+    public async Task ATimeoutIsAFailureAndAnAskedForCancellationStaysACancellation()
+    {
+        // a server that never answers: the request is stopped by the time limit, which must look like a failed request, not like someone cancelling
+        await Assert.ThrowsAsync<HttpRequestException>(() => ApiHttp.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://x.test/a"), new HttpClient(new HangingHandler()), TimeSpan.FromMilliseconds(50)));
+
+        using var stop = new CancellationTokenSource();
+        var pending = ApiHttp.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://x.test/a"), new HttpClient(new HangingHandler()), TimeSpan.FromSeconds(30), stop.Token);
+        stop.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+    }
+
+    private sealed class HangingHandler : HttpMessageHandler
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            await Task.Delay(Timeout.Infinite, cancellationToken);
+            return new HttpResponseMessage();
+        }
+    }
+
+    [Fact]
     public async Task MainProfileSendsNoProfileHeader()
     {
         var handler = new FakeHandler((_, _) => (HttpStatusCode.OK, "{}"));

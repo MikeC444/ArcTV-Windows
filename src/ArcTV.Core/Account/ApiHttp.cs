@@ -16,10 +16,19 @@ internal static class ApiHttp
     {
         using var limit = CancellationTokenSource.CreateLinkedTokenSource(cancel);
         limit.CancelAfter(timeout ?? DefaultTimeout);
-        using var response = await (client ?? Shared).SendAsync(request, limit.Token).ConfigureAwait(false);
-        var body = await response.Content.ReadAsStringAsync(limit.Token).ConfigureAwait(false);
-        if (!response.IsSuccessStatusCode) throw ApiException.Server((int)response.StatusCode, ErrorMessage(body));
-        return body;
+        try
+        {
+            using var response = await (client ?? Shared).SendAsync(request, limit.Token).ConfigureAwait(false);
+            var body = await response.Content.ReadAsStringAsync(limit.Token).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode) throw ApiException.Server((int)response.StatusCode, ErrorMessage(body));
+            return body;
+        }
+        catch (OperationCanceledException) when (!cancel.IsCancellationRequested)
+        {
+            // the time limit ran out, which is a failed request, not someone choosing to stop: callers treat a cancellation as "ignore this" and a failure as "say so", and a
+            // timeout that looked like a cancellation went all the way up unhandled and closed the app
+            throw new HttpRequestException("The server took too long to answer.");
+        }
     }
 
     /// <summary>The backend answers errors as {"error": "..."} (a few places use {"error": {"message": "..."}}).</summary>
