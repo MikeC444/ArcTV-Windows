@@ -10,7 +10,7 @@
         <ResourceDictionary Source="PosterTemplate.xaml" />
       </ResourceDictionary.MergedDictionaries>
     <DataTemplate DataType="{x:Type home:HomeSection}">
-      <StackPanel Margin="0,0,0,16">
+      <StackPanel Margin="0,0,0,44">
         <TextBlock Text="{Binding Title}" FontSize="26" FontWeight="Bold" Margin="24,0,0,0" />
         <ItemsControl ItemsSource="{Binding Items}" VirtualizingPanel.ScrollUnit="Pixel" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollBarVisibility="Disabled">
           <ItemsControl.Template>

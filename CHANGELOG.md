@@ -515,3 +515,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: remove Copy link from the source list).** The small "Copy link" button on each source row is gone, and a click on a row (which was only told apart from a click on that button) plays it directly. The link is still copied when the page has no player to play it. Not seen on screen.
 
+**Follow-up (owner: more space between Home's rows; bigger title text under the posters).** The gap under each row is 44 pixels (was 16) for the addon rows, Continue Watching and Picked for you. The title under a poster is 17 (was 13) on every poster (the shared poster design, so Movies, TV Shows, Search and My List too) and under Continue Watching's and Picked for you's cards; the reason line under a Picked for you card is 14 (was 11). Not seen on screen.
+
