@@ -4,4 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>ArcTV.Core</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+  </ItemGroup>
 </Project>

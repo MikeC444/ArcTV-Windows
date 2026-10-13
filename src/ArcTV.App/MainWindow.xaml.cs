@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Controls;
+using ArcTV.App.Views;
 using ArcTV.Core;
 
 namespace ArcTV.App;
@@ -9,6 +11,12 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         VersionLabel.Text = $"Arc TV for Windows · {AppInfo.Version}";
-        Status.Text = "The foundations are in place. Sign-in and Home come next.";
+        App.Account.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(Core.Account.AccountModel.IsSignedIn)) Dispatcher.Invoke(ShowCurrent);
+        };
+        ShowCurrent();
     }
+
+    private void ShowCurrent() => Host.Content = App.Account.IsSignedIn ? new SignedInPlaceholder(App.Account) : new SignInView();
 }

@@ -1,0 +1,71 @@
+<UserControl x:Class="ArcTV.App.Views.SignInView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Grid Background="{StaticResource BgBrush}">
+    <!-- the hero photo fills the right side and fades into the page -->
+    <Image Source="/Assets/auth-hero.jpg" Stretch="UniformToFill" HorizontalAlignment="Right" />
+    <Rectangle>
+      <Rectangle.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+          <GradientStop Color="#FF08080A" Offset="0.30" />
+          <GradientStop Color="#CC08080A" Offset="0.45" />
+          <GradientStop Color="#3308080A" Offset="0.85" />
+          <GradientStop Color="#1A08080A" Offset="1" />
+        </LinearGradientBrush>
+      </Rectangle.Fill>
+    </Rectangle>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalAlignment="Left" Width="520" Padding="64,0">
+      <StackPanel VerticalAlignment="Center" Margin="0,48">
+        <Image Source="/Assets/logo.png" Width="190" HorizontalAlignment="Left" MouseLeftButtonDown="OnLogoClick" />
+        <TextBlock x:Name="Heading" Text="Your Entertainment, Your Way" FontSize="30" FontWeight="Bold" TextWrapping="Wrap" Margin="0,26,0,6" MouseLeftButtonDown="OnHeadingClick" />
+        <TextBlock x:Name="Sub" Text="Movies, shows and live TV from the addons you choose." FontSize="14" Foreground="{StaticResource Text2Brush}" TextWrapping="Wrap" Margin="0,0,0,26" />
+
+        <!-- step 1: start -->
+        <StackPanel x:Name="StartStep">
+          <Button x:Name="LogInButton" Content="Log In" Style="{StaticResource PrimaryButton}" Click="OnStartLogIn" />
+          <Button Content="Sign Up" Style="{StaticResource GhostButton}" Margin="0,12,0,0" Click="OnStartSignUp" />
+          <Button Content="Sign in with your phone (QR code)" Style="{StaticResource LinkButton}" Margin="0,18,0,0" HorizontalAlignment="Left" Click="OnStartQr" />
+        </StackPanel>
+
+        <!-- step 2: email and password -->
+        <StackPanel x:Name="FormStep" Visibility="Collapsed">
+          <StackPanel x:Name="NamePanel" Visibility="Collapsed" Margin="0,0,0,12"><TextBlock Text="Display name (optional)" Style="{StaticResource FieldLabel}" /><TextBox x:Name="NameBox" Style="{StaticResource Field}" /></StackPanel>
+          <TextBlock Text="Email" Style="{StaticResource FieldLabel}" /><TextBox x:Name="EmailBox" Style="{StaticResource Field}" Margin="0,0,0,12" />
+          <TextBlock Text="Password" Style="{StaticResource FieldLabel}" />
+          <Grid>
+            <PasswordBox x:Name="PasswordHidden" Style="{StaticResource PasswordField}" PasswordChanged="OnPasswordChanged" />
+            <TextBox x:Name="PasswordShown" Style="{StaticResource Field}" Visibility="Collapsed" TextChanged="OnPasswordShownChanged" />
+          </Grid>
+          <CheckBox x:Name="ShowPassword" Content="Show password" Foreground="{StaticResource Text2Brush}" Margin="0,10,0,0" Checked="OnShowPassword" Unchecked="OnShowPassword" />
+          <TextBlock x:Name="ErrorText" Foreground="#FF6B6B" FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0" Visibility="Collapsed" />
+          <Button x:Name="SubmitButton" Style="{StaticResource PrimaryButton}" Margin="0,18,0,0" IsDefault="True" Click="OnSubmit" />
+          <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+            <TextBlock x:Name="ToggleLabel" Foreground="{StaticResource Text2Brush}" FontSize="13" VerticalAlignment="Center" />
+            <Button x:Name="ToggleButton" Style="{StaticResource LinkButton}" Margin="6,0,0,0" Click="OnToggleMode" />
+          </StackPanel>
+          <Button Content="Back" Style="{StaticResource LinkButton}" Margin="0,14,0,0" HorizontalAlignment="Left" Click="OnBack" />
+        </StackPanel>
+
+        <!-- step 3: QR -->
+        <StackPanel x:Name="QrStep" Visibility="Collapsed">
+          <Border Width="240" Height="240" Background="White" CornerRadius="12" Padding="10" HorizontalAlignment="Left">
+            <Grid>
+              <Image x:Name="QrImage" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+              <TextBlock x:Name="QrMessage" Foreground="#222" FontSize="14" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" Margin="12" />
+            </Grid>
+          </Border>
+          <TextBlock Text="Scan this with your phone's camera and finish signing in there." Foreground="{StaticResource Text2Brush}" FontSize="13" TextWrapping="Wrap" Margin="0,14,0,0" />
+          <Button x:Name="NewCodeButton" Content="Make a new code" Style="{StaticResource GhostButton}" Margin="0,14,0,0" Visibility="Collapsed" Click="OnStartQr" />
+          <Button Content="Back" Style="{StaticResource LinkButton}" Margin="0,16,0,0" HorizontalAlignment="Left" Click="OnBack" />
+        </StackPanel>
+
+        <!-- hidden: a different server (Ctrl-click the heading) -->
+        <StackPanel x:Name="ServerStep" Visibility="Collapsed" Margin="0,26,0,0">
+          <TextBlock Text="Server address" Foreground="{StaticResource Text2Brush}" FontSize="12" Margin="0,0,0,6" />
+          <TextBox x:Name="ServerBox" Style="{StaticResource Field}" LostFocus="OnServerChanged" />
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

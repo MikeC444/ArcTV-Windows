@@ -7,6 +7,7 @@
     <AssemblyName>ArcTV</AssemblyName>
     <RootNamespace>ArcTV.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\ArcTV.ico</ApplicationIcon>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <!-- a PC with only a newer .NET desktop runtime can still run a build made without the runtime bundled (Visual Studio's F5) -->
     <RollForward>Major</RollForward>
@@ -17,6 +18,12 @@
       <_Parameter1>ArcTVApiBaseUrl</_Parameter1>
       <_Parameter2>$(ArcTVApiBaseUrl)</_Parameter2>
     </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+    <Resource Include="Assets\auth-hero.jpg" />
+    <Resource Include="Assets\logo.png" />
+    <Resource Include="Assets\ArcTV.ico" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ArcTV.Core\ArcTV.Core.csproj" />
