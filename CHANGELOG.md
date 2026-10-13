@@ -190,3 +190,7 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
 **Issues fixed:** none yet.
 
 **Open:** Play, sources, Trailer, Download; release date, trailer and cast photos from the account's server; the episode watched ticks; "You May Also Like"; the three-dot "more" menu and Like / Not for me (Plus).
+
+**Follow-up (screenshot): pills.** The chosen pill (e.g. "Featured") was white with near-white text: pill text takes its colour from the app's TextBlock style, not from the button, so
+the black text the style asked for never applied. Every chosen pill is now the logo's blue running into its purple (`PillGradient`) with light text: the Movies / TV Shows / My List / Search
+choice pills, the top bar's current place, and the chosen season circle. An unchosen choice pill gets a gradient outline under the pointer.
