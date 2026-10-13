@@ -1,8 +1,10 @@
 using System.IO;
+using System.Windows.Interop;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using ArcTV.App.Controls;
 using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Browse;
@@ -59,7 +61,37 @@ public partial class ShellView : UserControl
             if (e.Key == Key.Escape && _history.Count > 0 && Keyboard.FocusedElement is not TextBox) GoBack();
         };
         Open("Home");
-        Loaded += async (_, _) => await _home.LoadAsync();
+        Loaded += async (_, _) =>
+        {
+            if (PresentationSource.FromVisual(this) is HwndSource source) source.AddHook(OnWindowMessage);
+            await _home.LoadAsync();
+        };
+        Unloaded += (_, _) =>
+        {
+            if (PresentationSource.FromVisual(this) is HwndSource source) source.RemoveHook(OnWindowMessage);
+        };
+    }
+
+    private const int WmMouseHWheel = 0x020E;
+
+    /// <summary>
+    /// WPF has no event for a sideways swipe on a touchpad (or a tilt wheel), so the window's own message is listened for: it moves the row the pointer is over.
+    /// </summary>
+    private IntPtr OnWindowMessage(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (message != WmMouseHWheel) return IntPtr.Zero;
+        var delta = (short)((wParam.ToInt64() >> 16) & 0xFFFF);
+        var x = (short)(lParam.ToInt64() & 0xFFFF);
+        var y = (short)((lParam.ToInt64() >> 16) & 0xFFFF);
+        DependencyObject? hit = InputHitTest(PointFromScreen(new Point(x, y))) as DependencyObject;
+        while (hit is not null and not ArrowScrollViewer) hit = hit is Visual or System.Windows.Media.Media3D.Visual3D ? System.Windows.Media.VisualTreeHelper.GetParent(hit) : LogicalTreeHelper.GetParent(hit);
+        if (hit is ArrowScrollViewer row)
+        {
+            row.Swipe(delta);
+            handled = true;
+        }
+
+        return IntPtr.Zero;
     }
 
     private void BuildAccountButton(AccountUser user)

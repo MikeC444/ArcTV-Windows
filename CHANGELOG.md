@@ -228,3 +228,7 @@ The first build of this failed (one missing `using` in `PosterGrid`; Visual Stud
 `ArrowScrollViewer` (the "ArrowRowScroll" style) puts a round arrow at each end of a row while the pointer is over it, only the one that leads somewhere (left once scrolled along, right while there is more), each
 click glides about 80% of the row's width; Shift plus the wheel now glides along the row too. `SmoothScroller` gained a sideways mode for this. Home's rows scroll in pixels (not whole posters) so the glide is smooth.
 Not done: sideways swipes on a touchpad (WPF does not report them without more work).
+
+**Follow-up (owner: a smoother horizontal swipe).** Two changes: the glide along a row is gentler (it eased a quarter of the way per frame; now an eighth), and the glide of every scroller is now worked out from the time since the
+last frame instead of assuming 60 frames a second, so it feels the same on a fast screen. Two-finger sideways swipes on a touchpad (and a tilt wheel) now move the row under the pointer: WPF has no event for them, so the
+window's own `WM_MOUSEHWHEEL` message is listened for. Not tested on a touchpad (none here): how far a swipe goes may need tuning.

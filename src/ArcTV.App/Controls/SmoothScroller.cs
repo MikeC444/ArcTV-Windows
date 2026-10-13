@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -10,8 +11,10 @@ namespace ArcTV.App.Controls;
 /// </summary>
 public sealed class SmoothScroller(ScrollViewer scroll, double step = 1.3, double glide = 0.3, bool horizontal = false)
 {
+    private readonly Stopwatch _clock = new();
     private double _target;
     private bool _gliding;
+    private double _lastSeconds;
 
     private double Offset => horizontal ? scroll.HorizontalOffset : scroll.VerticalOffset;
 
@@ -34,6 +37,8 @@ public sealed class SmoothScroller(ScrollViewer scroll, double step = 1.3, doubl
         if (!_gliding)
         {
             _gliding = true;
+            _clock.Restart();
+            _lastSeconds = 0;
             CompositionTarget.Rendering += OnFrame;
         }
     }
@@ -47,8 +52,13 @@ public sealed class SmoothScroller(ScrollViewer scroll, double step = 1.3, doubl
 
     private void OnFrame(object? sender, EventArgs e)
     {
+        // glide is the share of the way covered per frame at 60 frames a second; working from the time since the last frame keeps the speed the same on a 144 Hz screen or a slow frame
+        var now = _clock.Elapsed.TotalSeconds;
+        var elapsed = Math.Clamp(now - _lastSeconds, 0.001, 0.1);
+        _lastSeconds = now;
+        var share = 1 - Math.Pow(1 - glide, elapsed * 60);
         var current = Offset;
-        var next = current + (_target - current) * glide;
+        var next = current + (_target - current) * share;
         if (Math.Abs(_target - next) < 0.5)
         {
             next = _target;

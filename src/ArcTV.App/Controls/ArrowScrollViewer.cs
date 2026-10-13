@@ -19,7 +19,7 @@ public class ArrowScrollViewer : ScrollViewer
         SetResourceReference(StyleProperty, "ArrowRowScroll");
     }
 
-    private SmoothScroller Smooth => _smooth ??= new SmoothScroller(this, 1.1, 0.25, horizontal: true);
+    private SmoothScroller Smooth => _smooth ??= new SmoothScroller(this, 1.1, 0.12, horizontal: true);
 
     public override void OnApplyTemplate()
     {
@@ -27,6 +27,9 @@ public class ArrowScrollViewer : ScrollViewer
         if (GetTemplateChild("RowLeft") is Button left) left.Click += (_, _) => Smooth.By(-ViewportWidth * 0.8);
         if (GetTemplateChild("RowRight") is Button right) right.Click += (_, _) => Smooth.By(ViewportWidth * 0.8);
     }
+
+    /// <summary>A sideways swipe (two fingers on a touchpad, a tilt wheel): <paramref name="delta"/> is positive towards the right, 120 for a notch.</summary>
+    public void Swipe(int delta) => Smooth.By(delta * 1.4);
 
     /// <summary>Shift plus the wheel moves along the row; a plain wheel is left for the page to scroll.</summary>
     protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
