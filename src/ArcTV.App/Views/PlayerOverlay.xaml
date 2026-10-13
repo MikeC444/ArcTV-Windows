@@ -84,7 +84,7 @@
       </StackPanel>
 
       <!-- the bottom: play / pause, the time played, the timeline, the time left, volume and full screen, then a centred row of pills -->
-      <StackPanel Grid.Row="2" Margin="40,0,40,8">
+      <StackPanel Grid.Row="2" VerticalAlignment="Bottom" Margin="40,0,40,8">
         <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
