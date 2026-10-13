@@ -31,6 +31,7 @@ public partial class PlayerOverlay : Window
     private bool _menuOpen;
     private double _volumeBeforeMute = 100;
     private readonly EpisodeInfo? _next;
+    private bool? _flashedPaused;
     private readonly Action? _playNext;
 
     public PlayerOverlay(PlayerModel model, PlayingItem item, Action back, Action toggleFullscreen, Func<bool> isFullscreen, Func<Key, bool> handleKey, EpisodeInfo? next = null, Action? playNext = null)
@@ -99,6 +100,13 @@ public partial class PlayerOverlay : Window
         TitleEnd.Visibility = started ? Visibility.Visible : Visibility.Collapsed;
         Busy.Visibility = started && _model.Loading ? Visibility.Visible : Visibility.Collapsed;
 
+        // pausing or playing from now on (not the start of the video) shows its symbol in the middle for a couple of seconds
+        if (started)
+        {
+            if (_flashedPaused is { } before && before != _model.Paused) ShowFlash(_model.Paused);
+            _flashedPaused = _model.Paused;
+        }
+
         PlayGlyph.Text = _model.Paused ? "" : "";
         PlayedText.Text = PlayerModel.Clock(_model.Position);
         LeftText.Text = _model.Duration > 0 ? "−" + PlayerModel.Clock(Math.Max(0, _model.Duration - _model.Position)) : "";
@@ -113,6 +121,17 @@ public partial class PlayerOverlay : Window
         FailurePanel.Visibility = _model.Failure is null ? Visibility.Collapsed : Visibility.Visible;
         FailureText.Text = _model.Failure ?? "";
         if (_model.Failure is not null) SetControls(true);
+    }
+
+    /// <summary>The pause symbol after pausing, the play symbol after playing: it shows at once, stays about two seconds and fades.</summary>
+    private void ShowFlash(bool paused)
+    {
+        FlashGlyph.Text = paused ? "\uE769" : "\uE768";
+        var animation = new System.Windows.Media.Animation.DoubleAnimationUsingKeyFrames();
+        animation.KeyFrames.Add(new System.Windows.Media.Animation.LinearDoubleKeyFrame(1, TimeSpan.FromMilliseconds(80)));
+        animation.KeyFrames.Add(new System.Windows.Media.Animation.LinearDoubleKeyFrame(1, TimeSpan.FromMilliseconds(2000)));
+        animation.KeyFrames.Add(new System.Windows.Media.Animation.LinearDoubleKeyFrame(0, TimeSpan.FromMilliseconds(2500)));
+        Flash.BeginAnimation(OpacityProperty, animation);
     }
 
     // ---- showing and hiding the controls ----

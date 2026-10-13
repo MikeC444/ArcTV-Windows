@@ -33,7 +33,14 @@ public sealed record ContinueItem(
 
     /// <summary>What the sources page and the player need to start it: from where it was left.</summary>
     public PlayTarget ToTarget() => new(new MetaDetail(ContentId, IsMovie ? "movie" : "series", Title, PosterUrl, BackdropUrl), SeasonNumber, EpisodeNumber,
-        EpisodeLabel is { } label ? $"{label} {(string.IsNullOrWhiteSpace(EpisodeTitle) ? "" : EpisodeTitle)}".TrimEnd() : null, NearlyDone ? 0 : PositionSeconds);
+        EpisodeHeading, NearlyDone ? 0 : PositionSeconds);
+
+    /// <summary>"S1 E3 Name" for an episode. What was reported can already be that whole line (the player reports it so), so the label is only added in front of a bare name.</summary>
+    private string? EpisodeHeading =>
+        EpisodeLabel is not { } label ? null
+        : string.IsNullOrWhiteSpace(EpisodeTitle) ? label
+        : EpisodeTitle.StartsWith(label, StringComparison.OrdinalIgnoreCase) ? EpisodeTitle
+        : $"{label} {EpisodeTitle}";
 }
 
 internal sealed record ContinueResponse(List<ContinueItem>? Items);

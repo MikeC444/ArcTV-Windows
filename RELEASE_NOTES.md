@@ -5,6 +5,8 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- The player has bigger controls: a larger pause / play button, bigger back and 10-second skip buttons, and a much bigger title logo. Everything along the bottom sits lower, and the volume bar is no longer cut off. Pausing or playing shows its symbol in the middle of the picture for a moment.
+- Resuming an episode no longer shows its number twice.
 - Profiles (Arc TV Plus): "Who's watching?" appears when you sign in, with pictures to choose from and a PIN for profiles that have one. Manage Profiles adds, edits and removes them, and "Switch profile" in the account menu comes back to it. Each profile keeps its own list, ratings, Continue Watching and settings, and a kids profile hides mature genres.
 - The app no longer starts over by itself when your sign-in is renewed in the background.
 - Play carries on with the source you used last time, without asking again. A new "Sources" button on a title lets you pick a different one.

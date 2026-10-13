@@ -11,7 +11,9 @@ namespace ArcTV.App.Controls;
 /// </summary>
 public sealed class Timeline : Grid
 {
-    private readonly Border _fill = new() { Height = 4, CornerRadius = new CornerRadius(2), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center, Width = 0 };
+    private const double Inset = 7; // the handle is 14 wide: the bar starts and ends this far in, so the handle is never cut off at either end
+
+    private readonly Border _fill = new() { Height = 4, CornerRadius = new CornerRadius(2), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center, Width = 0, Margin = new Thickness(Inset, 0, 0, 0) };
     private readonly Border _handle = new() { Width = 14, Height = 14, CornerRadius = new CornerRadius(7), Background = Brushes.White, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(-7, 0, 0, 0), IsHitTestVisible = false };
     private double _value;
     private double _total;
@@ -28,7 +30,7 @@ public sealed class Timeline : Grid
         Height = 24;
         Cursor = Cursors.Hand;
         Background = Brushes.Transparent; // so the whole height can be clicked
-        Children.Add(new Border { Height = 4, CornerRadius = new CornerRadius(2), Background = new SolidColorBrush(Color.FromArgb(0x4D, 255, 255, 255)), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false });
+        Children.Add(new Border { Height = 4, CornerRadius = new CornerRadius(2), Background = new SolidColorBrush(Color.FromArgb(0x4D, 255, 255, 255)), VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false, Margin = new Thickness(Inset, 0, Inset, 0) });
         _fill.Background = (Brush)Application.Current.FindResource("PillGradient");
         _fill.IsHitTestVisible = false;
         Children.Add(_fill);
@@ -60,12 +62,12 @@ public sealed class Timeline : Grid
     private void Layout()
     {
         var fraction = _total > 0 ? Math.Clamp(_value / _total, 0, 1) : 0;
-        var width = ActualWidth * fraction;
+        var width = Math.Max(0, ActualWidth - 2 * Inset) * fraction;
         _fill.Width = width;
-        _handle.Margin = new Thickness(width - 7, 0, 0, 0);
+        _handle.Margin = new Thickness(width, 0, 0, 0);
     }
 
-    private double At(MouseEventArgs e) => ActualWidth <= 0 ? 0 : Math.Clamp(e.GetPosition(this).X / ActualWidth, 0, 1) * _total;
+    private double At(MouseEventArgs e) => ActualWidth <= 2 * Inset ? 0 : Math.Clamp((e.GetPosition(this).X - Inset) / (ActualWidth - 2 * Inset), 0, 1) * _total;
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {

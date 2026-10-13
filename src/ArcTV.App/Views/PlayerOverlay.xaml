@@ -46,10 +46,10 @@
     <!-- once playing: the title's logo at the top right (and the episode under it) -->
     <StackPanel x:Name="TitleEnd" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="40,28" IsHitTestVisible="False" Visibility="Collapsed">
       <Grid HorizontalAlignment="Right">
-        <TextBlock x:Name="TitleName" FontSize="22" FontWeight="ExtraBold" TextAlignment="Right" TextWrapping="Wrap" MaxWidth="360" />
-        <c:RemoteImage x:Name="TitleLogo" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Right" MaxWidth="280" MaxHeight="56" DecodeWidth="560" Shown="OnTitleLogoShown" />
+        <TextBlock x:Name="TitleName" FontSize="40" FontWeight="ExtraBold" TextAlignment="Right" TextWrapping="Wrap" MaxWidth="640" />
+        <c:RemoteImage x:Name="TitleLogo" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Right" MaxWidth="560" MaxHeight="150" DecodeWidth="1120" Shown="OnTitleLogoShown" />
       </Grid>
-      <TextBlock x:Name="EpisodeText" FontSize="13" Foreground="{StaticResource Text2Brush}" TextAlignment="Right" HorizontalAlignment="Right" Margin="0,4,0,0" Visibility="Collapsed" />
+      <TextBlock x:Name="EpisodeText" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource Text2Brush}" TextAlignment="Right" HorizontalAlignment="Right" Margin="0,8,0,0" Visibility="Collapsed" />
     </StackPanel>
 
     <!-- the controls: they fade away a few seconds after the pointer stops moving -->
@@ -78,13 +78,13 @@
 
       <!-- top left: back and the 10-second jumps -->
       <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,28,0,0">
-        <Button Style="{StaticResource PlayerRound}" ToolTip="Back" Click="OnBack" Margin="0,0,10,0"><TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="16" /></Button>
-        <Button Style="{StaticResource PlayerRound}" ToolTip="Back 10 seconds" Click="OnBack10" Content="&#x2212;10" Margin="0,0,10,0" />
-        <Button Style="{StaticResource PlayerRound}" ToolTip="Forward 10 seconds" Click="OnForward10" Content="+10" />
+        <Button Style="{StaticResource PlayerRound}" Width="64" Height="64" ToolTip="Back" Click="OnBack" Margin="0,0,14,0"><TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="26" /></Button>
+        <Button Style="{StaticResource PlayerRound}" Width="64" Height="64" FontSize="19" ToolTip="Back 10 seconds" Click="OnBack10" Content="&#x2212;10" Margin="0,0,14,0" />
+        <Button Style="{StaticResource PlayerRound}" Width="64" Height="64" FontSize="19" ToolTip="Forward 10 seconds" Click="OnForward10" Content="+10" />
       </StackPanel>
 
       <!-- the bottom: play / pause, the time played, the timeline, the time left, volume and full screen, then a centred row of pills -->
-      <StackPanel Grid.Row="2" Margin="40,0,40,28">
+      <StackPanel Grid.Row="2" Margin="40,0,40,8">
         <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
@@ -95,21 +95,26 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <Button x:Name="PlayButton" Grid.Column="0" Style="{StaticResource PlayerRound}" Click="OnPlayPause" Margin="0,0,14,0"><TextBlock x:Name="PlayGlyph" Text="&#xE769;" FontFamily="Segoe MDL2 Assets" FontSize="16" /></Button>
+          <Button x:Name="PlayButton" Grid.Column="0" Style="{StaticResource PlayerRound}" Width="68" Height="68" Click="OnPlayPause" Margin="0,0,16,0"><TextBlock x:Name="PlayGlyph" Text="&#xE769;" FontFamily="Segoe MDL2 Assets" FontSize="30" /></Button>
           <TextBlock x:Name="PlayedText" Grid.Column="1" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" Margin="0,0,12,0" />
           <c:Timeline x:Name="Bar" Grid.Column="2" VerticalAlignment="Center" />
           <TextBlock x:Name="LeftText" Grid.Column="3" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" Margin="12,0,18,0" />
           <Button x:Name="MuteButton" Grid.Column="4" Style="{StaticResource PlayerRound}" ToolTip="Mute" Click="OnMute" Width="38" Height="38"><TextBlock x:Name="MuteGlyph" Text="&#xE767;" FontFamily="Segoe MDL2 Assets" FontSize="15" /></Button>
-          <c:Timeline x:Name="VolumeBar" Grid.Column="5" Width="90" VerticalAlignment="Center" Margin="6,0,14,0" />
+          <c:Timeline x:Name="VolumeBar" Grid.Column="5" Width="104" VerticalAlignment="Center" Margin="4,0,12,0" />
           <Button x:Name="FullscreenButton" Grid.Column="6" Style="{StaticResource PlayerRound}" ToolTip="Full screen (F)" Click="OnFullscreen" Width="38" Height="38"><TextBlock x:Name="FullscreenGlyph" Text="&#xE740;" FontFamily="Segoe MDL2 Assets" FontSize="15" /></Button>
         </Grid>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
           <Button x:Name="AudioButton" Content="Audio" Style="{StaticResource ChoicePill}" Margin="0,0,10,0" Click="OnAudio" Focusable="False" />
           <Button x:Name="SubtitlesButton" Content="Subtitles" Style="{StaticResource ChoicePill}" Margin="0,0,10,0" Click="OnSubtitles" Focusable="False" />
           <Button x:Name="SpeedButton" Style="{StaticResource ChoicePill}" Click="OnSpeed" Focusable="False" />
         </StackPanel>
       </StackPanel>
     </Grid>
+
+    <!-- after pausing or playing: the symbol for what just happened, in the middle of the picture for a couple of seconds -->
+    <Border x:Name="Flash" Width="132" Height="132" CornerRadius="66" Background="#99000000" BorderBrush="#40FFFFFF" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" Opacity="0">
+      <TextBlock x:Name="FlashGlyph" Text="&#xE769;" FontFamily="Segoe MDL2 Assets" FontSize="60" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+    </Border>
 
     <!-- the last minute of an episode: the next one, one click away (it stays up when the controls have faded) -->
     <Button x:Name="NextButton" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,40,150" Visibility="Collapsed" Cursor="Hand" Focusable="False" Click="OnNextEpisode">
