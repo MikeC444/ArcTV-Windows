@@ -48,6 +48,8 @@ public sealed class PickedRowView : StackPanel
         if (entry.Reason is { Length: > 0 } reason)
             card.Children.Add(new TextBlock { Text = reason, Margin = new Thickness(2, 2, 2, 0), FontSize = 11, Foreground = Res("Text2Brush"), TextWrapping = TextWrapping.Wrap, MaxHeight = 30, TextTrimming = TextTrimming.CharacterEllipsis });
 
+        HoverLift.Attach(card);
+
         // the button stands for the title: DataContext is what the shell looks for to open it
         var open = new Button { Style = (Style)Application.Current.FindResource("PosterButton"), Content = card, DataContext = entry.Item };
 

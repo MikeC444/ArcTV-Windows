@@ -436,3 +436,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Open:** profiles (each profile has its own picks), the card menu, a loading skeleton for the row.
 
+**Follow-up (owner: horizontal pictures for Continue Watching; the Picked for you posters did not lift under the pointer like the other rows).** Continue Watching cards are now wide (320 x 180) and show the title's landscape artwork (its poster when there is none); the progress line, episode label and cross are as before. The cards `ContinueRow` and `PickedRowView` make in code did not have the small lift the poster template gives the other rows: `HoverLift` (a 6 percent grow on entering, settling back on leaving, with the same easing and timings) is now on both. Not seen on screen.
+

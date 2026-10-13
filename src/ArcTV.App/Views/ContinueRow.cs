@@ -10,7 +10,9 @@ namespace ArcTV.App.Views;
 /// <summary>The "Continue Watching" row at the top of Home: each card is a poster with how far in you got, the episode if it is a show, and a small cross to take it off. A click plays it from where you left it.</summary>
 public sealed class ContinueRow : StackPanel
 {
-    private const double CardWidth = 192;
+    // a wide picture (16:9), the title's landscape artwork
+    private const double CardWidth = 320;
+    private const double PictureHeight = 180;
     private readonly ContinueModel _model;
     private readonly Action<PlayTarget> _play;
 
@@ -31,7 +33,7 @@ public sealed class ContinueRow : StackPanel
         Children.Add(new TextBlock { Text = "Continue Watching", FontSize = 20, FontWeight = FontWeights.Bold, Margin = new Thickness(24, 0, 0, 0) });
         var strip = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(24, 0, 0, 0) };
         foreach (var item in items) strip.Children.Add(Card(item));
-        Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 154, Content = strip });
+        Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 100, Content = strip });
     }
 
     private static Brush Res(string key) => (Brush)Application.Current.FindResource(key);
@@ -40,7 +42,7 @@ public sealed class ContinueRow : StackPanel
     {
         var picture = new Grid();
         picture.Children.Add(new TextBlock { Text = item.Title, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12), Foreground = Res("Text3Brush"), FontSize = 13 });
-        picture.Children.Add(new RemoteImage { Url = item.PosterUrl ?? item.BackdropUrl, DecodeWidth = 400, Stretch = Stretch.UniformToFill });
+        picture.Children.Add(new RemoteImage { Url = item.BackdropUrl ?? item.PosterUrl, FallbackUrl = item.PosterUrl, DecodeWidth = 700, Stretch = Stretch.UniformToFill });
         if (item.EpisodeLabel is { } label)
             picture.Children.Add(new Border
             {
@@ -56,8 +58,10 @@ public sealed class ContinueRow : StackPanel
         picture.Children.Add(bar);
 
         var card = new StackPanel { Width = CardWidth, Margin = new Thickness(0, 10, 16, 10), Background = Brushes.Transparent, Cursor = System.Windows.Input.Cursors.Hand };
-        card.Children.Add(new RoundedBorder { Width = CardWidth, Height = 288, CornerRadius = new CornerRadius(16), Background = Res("SurfaceBrush"), BorderBrush = new SolidColorBrush(Color.FromArgb(0x24, 255, 255, 255)), BorderThickness = new Thickness(1), Child = picture });
+        card.Children.Add(new RoundedBorder { Width = CardWidth, Height = PictureHeight, CornerRadius = new CornerRadius(16), Background = Res("SurfaceBrush"), BorderBrush = new SolidColorBrush(Color.FromArgb(0x24, 255, 255, 255)), BorderThickness = new Thickness(1), Child = picture });
         card.Children.Add(new TextBlock { Text = item.Title, Margin = new Thickness(2, 8, 2, 0), FontSize = 13, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
+
+        HoverLift.Attach(card);
 
         var play = new Button { Style = (Style)Application.Current.FindResource("PosterButton"), Content = card, ToolTip = item.IsMovie ? "Continue watching" : $"Continue {item.EpisodeLabel}" };
         play.Click += (_, _) => _play(item.ToTarget());
