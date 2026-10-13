@@ -272,3 +272,6 @@ top bar sits 24 in from each side (it was 36), rows that ended 28 from the right
 
 **Follow-up (owner: make Home's rows come out of the left side as they do on the right).** A Home row had its left gutter as padding on the scroll viewer, so posters scrolled along were cut off at an invisible line 24 pixels in. The gutter is now space at the start of the row itself (on the items), so the row starts 24 in
 and the posters slide on out under the window's left edge, as they already do off the right. (Title-page rows already worked this way.)
+
+**Follow-up (owner: the positioning of the Home banner's info).** The info block (title, facts, description, buttons) had 70 pixels under it, but Home's first row overlaps the bottom of the banner by 60, so the buttons almost touched the "Popular" heading: it now has 112. It also had no space on the right, so in a narrow window the description ran off the edge instead of wrapping:
+it now keeps 24 pixels from the right edge (and still holds to 600 wide when there is room).
