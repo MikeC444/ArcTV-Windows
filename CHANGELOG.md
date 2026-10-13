@@ -87,4 +87,10 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
 
 **Issues fixed:** the duplicate was removed; Browse uses the existing lists.
 
+**Follow-up (from a screenshot on the owner's PC):** posters loaded slowly and the selected sort pill ("Featured") had white text on white.
+- Slow: the grid was a plain wrap panel, so every loaded poster (100 per page, more as you scroll) was created and started its download at once. The posters
+  are now lines in a virtualised list (as many per line as fit), so only the lines on screen exist and only their pictures are fetched. The title, genre and
+  sort pills now stay put above the grid instead of scrolling away with it. This is a diagnosis from reading the code; load times were not measured.
+- Pill text: the pill's content now takes its colour from the button, so the selected pill's black text applies.
+
 **Open:** blocked genres (needs profiles/settings), loading skeletons, a virtualised grid (the grid lays out every loaded poster), opening a title (needs title details).

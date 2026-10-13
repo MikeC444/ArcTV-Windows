@@ -63,7 +63,7 @@
       <Setter.Value>
         <ControlTemplate TargetType="Button">
           <Border x:Name="Box" Background="#14FFFFFF" BorderBrush="#22FFFFFF" BorderThickness="1" CornerRadius="10" Padding="22,0">
-            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="Background" Value="#26FFFFFF" /></Trigger>

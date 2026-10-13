@@ -10,6 +10,9 @@ using ArcTV.Core.Home;
 
 namespace ArcTV.App.Views;
 
+/// <summary>One line of the poster grid.</summary>
+internal sealed record PosterRow(IReadOnlyList<MetaPreview> Items);
+
 /// <summary>
 /// Movies or TV Shows, laid out like the web app's: the title with a genre picker beside it, Featured / Highest Rated / Newest, then a poster grid that
 /// keeps loading as you scroll.
@@ -20,7 +23,11 @@ public partial class BrowseView : UserControl
 
     private readonly string _title;
     private readonly BrowseModel _model;
-    private readonly ObservableCollection<MetaPreview> _shown = [];
+    private const double TileWidth = 172;
+
+    private readonly ObservableCollection<PosterRow> _rows = [];
+    private List<MetaPreview> _items = [];
+    private int _perRow;
     private readonly Dictionary<BrowseSort, Button> _sortButtons = [];
     private BrowseSort _sort = BrowseSort.Featured;
     private string? _genre;
@@ -33,7 +40,8 @@ public partial class BrowseView : UserControl
         _title = title;
         _model = model;
         TitleText.Text = title;
-        Posters.ItemsSource = _shown;
+        Rows.ItemsSource = _rows;
+        SizeChanged += (_, _) => { if (PerRow() != _perRow) Sync(); };
 
         foreach (var sort in BrowseSorts.All)
         {
@@ -93,20 +101,33 @@ public partial class BrowseView : UserControl
         Message.Visibility = message is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
-    /// <summary>Brings the grid in line with the model: new pages are added to the end without rebuilding what is already on screen.</summary>
+    private int PerRow() => Math.Max(1, (int)((ActualWidth - 44 - 28) / TileWidth));
+
+    /// <summary>
+    /// Brings the grid in line with the model. The posters sit in lines (as many as fit across); a new page only adds lines at the end, so the lines
+    /// already on screen are left alone.
+    /// </summary>
     private void Sync()
     {
         var target = _sort.Apply(_model.Items);
-        var appended = target.Count >= _shown.Count;
-        for (var i = 0; appended && i < _shown.Count; i++) appended = ReferenceEquals(_shown[i], target[i]);
-        if (!appended)
+        var perRow = PerRow();
+        var appended = perRow == _perRow && target.Count >= _items.Count;
+        for (var i = 0; appended && i < _items.Count; i++) appended = ReferenceEquals(_items[i], target[i]);
+
+        var from = 0;
+        if (appended)
         {
-            _shown.Clear();
-            foreach (var item in target) _shown.Add(item);
-            return;
+            from = _items.Count / perRow;
+            while (_rows.Count > from) _rows.RemoveAt(_rows.Count - 1);
+        }
+        else
+        {
+            _rows.Clear();
         }
 
-        for (var i = _shown.Count; i < target.Count; i++) _shown.Add(target[i]);
+        for (var start = from * perRow; start < target.Count; start += perRow) _rows.Add(new PosterRow(target.Skip(start).Take(perRow).ToList()));
+        _items = target;
+        _perRow = perRow;
     }
 
     private void ChooseSort(BrowseSort sort)
@@ -119,7 +140,7 @@ public partial class BrowseView : UserControl
     private void OnScrollChanged(object sender, ScrollChangedEventArgs e)
     {
         if (e.VerticalChange == 0 && e.ExtentHeightChange == 0 && e.ViewportHeightChange == 0) return;
-        if (PageScroll.ScrollableHeight - PageScroll.VerticalOffset < LoadMoreWithin) _ = LoadMoreAsync();
+        if (e.OriginalSource is ScrollViewer scroll && scroll.ScrollableHeight - scroll.VerticalOffset < LoadMoreWithin) _ = LoadMoreAsync();
     }
 
     private async Task LoadMoreAsync()
@@ -204,7 +225,8 @@ public partial class BrowseView : UserControl
         if (string.Equals(genre, _genre, StringComparison.Ordinal)) return;
         _genre = genre;
         BuildGenrePicker();
-        PageScroll.ScrollToTop();
+        Rows.ApplyTemplate();
+        (Rows.Template.FindName("PageScroll", Rows) as ScrollViewer)?.ScrollToTop();
         await ReloadAsync();
     }
 }
