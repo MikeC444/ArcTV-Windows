@@ -519,3 +519,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: Settings > Addons in two columns, not one).** The addons are in a two-column grid (messages such as "Loading your addons…" and "No addons yet" still take the full width), and the Addons page is allowed to be wider than the other settings pages (1180, the others stay 700) so each card keeps about the width it had. Not seen on screen: a narrow window gives each card less room for its description, which is trimmed to two lines.
 
+**Follow-up (owner: Continue Watching still did not play; start the recommended source, only for Continue Watching).** A click on a Continue Watching card now asks for the best source that plays (the one marked Recommended in the list: the page's `AutoPick` rule, the same one the next episode uses) and starts it from where it was left, without looking for the source used last time. Everywhere else (a title's Play button, an episode, Resume on a title's page) the remembered source and the list behave as before. If no source can play, the list is shown. Not seen on screen.
+
