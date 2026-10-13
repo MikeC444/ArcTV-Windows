@@ -172,8 +172,8 @@ public sealed class HeroBanner : Grid
                 StartPoint = new Point(0, 0), EndPoint = new Point(0, 1),
                 GradientStops =
                 {
-                    new GradientStop(Page(0), 0.26), new GradientStop(Page(35), 0.44), new GradientStop(Page(95), 0.60), new GradientStop(Page(170), 0.74),
-                    new GradientStop(Page(225), 0.85), new GradientStop(Page(252), 0.93), new GradientStop(Page(255), 0.97),
+                    new GradientStop(Page(0), 0.58), new GradientStop(Page(30), 0.68), new GradientStop(Page(90), 0.77), new GradientStop(Page(165), 0.85),
+                    new GradientStop(Page(225), 0.92), new GradientStop(Page(252), 0.97), new GradientStop(Page(255), 0.995),
                 },
             },
         });
