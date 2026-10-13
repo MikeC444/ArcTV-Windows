@@ -8,6 +8,7 @@ using ArcTV.App.Controls;
 using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Player;
+using ArcTV.Core.Plus;
 using ArcTV.Core.Settings;
 using ArcTV.Core.Browse;
 using ArcTV.Core.Details;
@@ -31,6 +32,7 @@ public partial class ShellView : UserControl
     private MyListModel? _myList;
     private AddonsModel? _addonsModel;
     private readonly SettingsModel _settingsModel;
+    private readonly PlusModel _plus;
     private readonly LocalSettings _local = new(Path.Combine(AppPaths.DataFolder(), "settings.json"));
     private readonly AccountUser _user;
     private string _blockedKey = "";
@@ -51,6 +53,7 @@ public partial class ShellView : UserControl
         _home = new HomeModel(AccountAddonsAsync, user.Id);
         _settingsModel = new SettingsModel(new AccountSettingsStore(account));
         _settingsModel.Changed += ApplySettings;
+        _plus = new PlusModel(new AccountPlusStore(account));
 
         foreach (var place in Places)
         {
@@ -253,7 +256,7 @@ public partial class ShellView : UserControl
             "Movies" => new BrowseView("Movies", BrowseFor("movie")),
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
             "My List" => new MyListView(MyListFor()),
-            "Settings" => new SettingsView(_settingsModel, AddonsFor(), _home, _user, _local, () => _ = _home.LoadAsync(), () => _ = _account.SignOutAsync()),
+            "Settings" => new SettingsView(_settingsModel, AddonsFor(), _home, _user, _local, _plus, MyListFor(), OpenTitle, () => _ = _home.LoadAsync(), () => _ = _account.SignOutAsync()),
             "Search" => new SearchView(new SearchModel(_account.Session!.User.Id, SourcesAsync, new RecentSearchStore(Path.Combine(AppPaths.DataFolder(), "recent-searches.json")), _addonClient) { Blocked = _settingsModel.Blocked }),
             _ => new ComingSoonView(place),
         };

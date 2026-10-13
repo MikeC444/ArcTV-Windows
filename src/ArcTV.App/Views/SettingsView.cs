@@ -3,6 +3,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
+using ArcTV.Core.MyList;
+using ArcTV.Core.Plus;
 using ArcTV.Core.Home;
 using ArcTV.Core.Settings;
 using ArcTV.Core.Storage;
@@ -12,11 +14,11 @@ namespace ArcTV.App.Views;
 /// <summary>Settings laid out like the web app's: grouped places down the left, the chosen one on the right.</summary>
 public sealed class SettingsView : UserControl
 {
-    private sealed record Place(string Name, string Subtitle, string Glyph, bool Soon = false);
+    private sealed record Place(string Name, string Subtitle, string Glyph, bool PlusOnly = false);
 
     private static readonly (string Group, Place[] Places)[] Groups =
     [
-        ("You", [new("Account", "Manage your Arc TV account", "\uE77B"), new("Arc TV Plus", "Extra features for supporters", "\uE734", true), new("Plus settings", "Switches for your Plus features", "\uE713", true),
+        ("You", [new("Account", "Manage your Arc TV account", "\uE77B"), new("Arc TV Plus", "Extra features for supporters", "\uE734"), new("Plus settings", "Switches for your Plus features", "\uE713", true),
             new("Recommendations", "What shapes your Picked for you row", "\uE735", true), new("Your stats", "How much you watch, at a glance", "\uE9D2", true)]),
         ("Content", [new("Addons", "Manage installed content providers", "\uEA86"), new("Home Rows", "Choose which rows show up on Home", "\uF0E2"), new("Blocked Genres", "Hide genres you don't want to see", "\uE711")]),
         ("Playback", [new("Player", "Choose how video plays", "\uE714"), new("Subtitles", "Look and language", "\uED1E"), new("Audio", "Preferred audio language", "\uE767")]),
@@ -39,15 +41,22 @@ public sealed class SettingsView : UserControl
     private bool _arranged;
     private readonly TextBlock _title = new() { FontSize = 28, FontWeight = FontWeights.ExtraBold, Margin = new Thickness(0, 0, 0, 18) };
     private readonly Dictionary<string, Border> _rows = [];
+    private readonly Dictionary<string, (TextBlock Tag, Border Row)> _tags = [];
+    private readonly PlusModel _plus;
+    private readonly MyListModel _list;
+    private readonly Action<MetaPreview> _openTitle;
     private string _current = "Account";
 
-    public SettingsView(SettingsModel settings, AddonsModel addons, HomeModel home, AccountUser user, LocalSettings local, Action refreshHome, Action signOut, string open = "Account")
+    public SettingsView(SettingsModel settings, AddonsModel addons, HomeModel home, AccountUser user, LocalSettings local, PlusModel plus, MyListModel list, Action<MetaPreview> openTitle, Action refreshHome, Action signOut, string open = "Account")
     {
         _settings = settings;
         _addons = addons;
         _home = home;
         _user = user;
         _local = local;
+        _plus = plus;
+        _list = list;
+        _openTitle = openTitle;
         _refreshHome = refreshHome;
         _signOut = signOut;
         _current = open;
@@ -82,6 +91,14 @@ public sealed class SettingsView : UserControl
         _body.LayoutTransform = _scale;
         Content = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Content = _body };
         SizeChanged += (_, e) => Fit(e.NewSize);
+        Loaded += async (_, _) =>
+        {
+            _plus.PropertyChanged -= OnPlusChanged;
+            _plus.PropertyChanged += OnPlusChanged;
+            UpdateTags();
+            await _plus.LoadStatusAsync();
+        };
+        Unloaded += (_, _) => _plus.PropertyChanged -= OnPlusChanged;
         PlaceParts(false);
         Show(_current);
     }
@@ -113,6 +130,21 @@ public sealed class SettingsView : UserControl
         _right.HorizontalAlignment = stacked ? HorizontalAlignment.Stretch : HorizontalAlignment.Left;
     }
 
+    private TextBlock? _tagFor;
+
+    private void OnPlusChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => Dispatcher.BeginInvoke(UpdateTags);
+
+    /// <summary>The Plus-only places show a "Plus" tag, and are dimmed, until the account has Plus.</summary>
+    private void UpdateTags()
+    {
+        var locked = _plus.StatusKnown && !_plus.Active;
+        foreach (var (tag, row) in _tags.Values)
+        {
+            tag.Visibility = locked ? Visibility.Visible : Visibility.Collapsed;
+            row.Opacity = locked ? 0.7 : 1;
+        }
+    }
+
     private Border Row(Place place)
     {
         var icon = new Border
@@ -126,15 +158,18 @@ public sealed class SettingsView : UserControl
         var line = new DockPanel();
         DockPanel.SetDock(icon, Dock.Left);
         line.Children.Add(icon);
-        if (place.Soon)
+        if (place.PlusOnly)
         {
-            var tag = new TextBlock { Text = "Soon", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = Ui.Res("AccentBrush"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
+            var tag = new TextBlock { Text = "Plus", Visibility = Visibility.Collapsed, FontSize = 11, FontWeight = FontWeights.Bold, Foreground = Ui.Res("AccentBrush"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
             DockPanel.SetDock(tag, Dock.Right);
             line.Children.Add(tag);
+            _tagFor = tag;
         }
 
         line.Children.Add(text);
-        var row = new Border { Child = line, Padding = new Thickness(8, 6, 8, 6), CornerRadius = new CornerRadius(10), Background = Brushes.Transparent, Cursor = System.Windows.Input.Cursors.Hand, Opacity = place.Soon ? 0.7 : 1 };
+        var row = new Border { Child = line, Padding = new Thickness(8, 6, 8, 6), CornerRadius = new CornerRadius(10), Background = Brushes.Transparent, Cursor = System.Windows.Input.Cursors.Hand };
+        if (place.PlusOnly && _tagFor is not null) _tags[place.Name] = (_tagFor, row);
+        _tagFor = null;
         row.MouseEnter += (_, _) => { if (_current != place.Name) row.Background = new SolidColorBrush(Color.FromArgb(0x0D, 255, 255, 255)); };
         row.MouseLeave += (_, _) => { if (_current != place.Name) row.Background = Brushes.Transparent; };
         row.MouseLeftButtonUp += (_, _) => Show(place.Name);
@@ -157,6 +192,10 @@ public sealed class SettingsView : UserControl
             "Subtitles" => new SubtitlesPane(_settings, _local),
             "Audio" => new AudioPane(_settings),
             "Updates" => new UpdatesPane(_settings),
+            "Arc TV Plus" => new ArcTvPlusPane(_settings, _plus),
+            "Plus settings" => new PlusSettingsPane(_settings, _plus, _local, () => Show("Arc TV Plus")),
+            "Recommendations" => new RecommendationsPane(_settings, _plus, _list, _openTitle, () => Show("Arc TV Plus")),
+            "Your stats" => new StatsPane(_settings, _plus, () => Show("Arc TV Plus")),
             _ => new ComingSoonPane(name),
         };
     }

@@ -355,3 +355,23 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: scale Settings as the window size changes).** In a narrow window the list of places filled the whole width and the chosen page was out of sight. `SettingsView` now scales with the window (the smaller of its width against 1300 and its height against 800, between 0.6 and 1.6, as the Home banner does), and when the window is narrow (under about 760 once scaled) the list of places goes above the page instead of beside it. The page scrolls as one. Not seen on screen.
 
+## 12 -- The Plus pages
+
+**Status:** Written without a compiler here; built and tested by the Windows build server only (see the run for this commit). Not run or seen on screen, and nothing was tried against a real Plus account or Stripe.
+
+**Context:** "Build the Plus pages": the four Plus places in Settings (Arc TV Plus, Plus settings, Recommendations, Your stats), ported from the Mac app's `PlusViews`, `RecommendationsPane` and `ArcTVCore` (`PlusAccount`, `Feedback`, `WatchStats`, `RecommendSummary`).
+
+**Changes:**
+- Core (`ArcTV.Core/Plus`): `PlusStatus` (tolerant read), `PlusPlan`, `PlusCopy`, `CheckoutLink`, `FeedbackItem` / `Rating`, `PlusApi` (GET `/user/plus`, POST `/user/plus/checkout`, POST `/user/plus/cancel`, GET and DELETE `/user/feedback`), `RecommendConfig`, `RecommendationSummary` (points as the engine counts them), `WatchStats` and `HistoryApi` (GET `/user/history`, paged, up to 5,000 rows), and `PlusModel` (status, ratings, stats, checkout that only opens an https address and then asks every 4 seconds for up to 10 minutes until Plus is on, cancel, remove and reset ratings with put-back on failure).
+- App: `ArcTvPlusPane` (status, renewal and cancel with an inline confirmation, what Plus adds, plan cards, steps), `PlusSettingsPane` (Smart source picking, kept on this PC), `RecommendationsPane` (Liked / Not for me lists with View and Remove, what shapes your picks, how it works, reset), `StatsPane` (total, tiles, movies-or-shows bar, 13-week map, busiest day). Without Plus the three Plus-only pages show a lock note and their sidebar rows are tagged "Plus"; with the paywall off everyone is active, as on the other apps.
+- `LocalSettings` keeps the Smart picking switch.
+- Tests: `PlusTests` (status read, summary points, stats from a fixed history, durations, week change, activity grid, ratings, put-back, checkout watch, cancel) and a screen test that opens all four pages.
+
+**Tests performed:** see the build run.
+
+**Issues discovered:** the Plus pages are only half of Plus: Like / Not for me buttons on titles, the Picked for you row (the recommendation engine), profiles, smart source picking itself and the Plus popups are not built. Recommendations lists ratings made on other devices (and Remove works), but ratings cannot yet be made from Windows. The rated-title list shows an initial, not a poster.
+
+**Issues fixed:** n/a.
+
+**Open:** Like / Not for me, the Picked for you engine and row, profiles, smart source picking, Download, the Plus popups.
+

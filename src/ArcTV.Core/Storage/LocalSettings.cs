@@ -5,7 +5,7 @@ namespace ArcTV.Core.Storage;
 /// <summary>Small per-PC choices kept in settings.json (not secret).</summary>
 public sealed class LocalSettings(string path)
 {
-    private sealed record Data(string? ServerUrl, string? SubtitleSize = null, string? SubtitleColor = null);
+    private sealed record Data(string? ServerUrl, string? SubtitleSize = null, string? SubtitleColor = null, bool SmartPicking = false);
 
     public string? ServerUrl
     {
@@ -24,6 +24,13 @@ public sealed class LocalSettings(string path)
     {
         get => Read().SubtitleColor;
         set => Write(Read() with { SubtitleColor = value });
+    }
+
+    /// <summary>Plus: start the best source by itself instead of showing the list (kept on this PC).</summary>
+    public bool SmartPicking
+    {
+        get => Read().SmartPicking;
+        set => Write(Read() with { SmartPicking = value });
     }
 
     private Data Read()

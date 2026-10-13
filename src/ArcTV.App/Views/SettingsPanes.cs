@@ -98,7 +98,8 @@ internal abstract class ModelPane : UserControl
             }
 
             Rebuild();
-            if (_settings.Current is null) await _settings.LoadAsync();
+            if (NeedsSettings && _settings.Current is null) await _settings.LoadAsync();
+            await ShownAsync();
         };
         Unloaded += (_, _) =>
         {
@@ -107,6 +108,12 @@ internal abstract class ModelPane : UserControl
     }
 
     protected SettingsModel Settings => _settings;
+
+    /// <summary>Plus pages do not need the account's settings, only Plus.</summary>
+    protected virtual bool NeedsSettings => true;
+
+    /// <summary>Called once the pane is on screen: where a pane asks for what it shows.</summary>
+    protected virtual Task ShownAsync() => Task.CompletedTask;
 
     private void OnChanged(object? sender, PropertyChangedEventArgs e) => Dispatcher.BeginInvoke(Rebuild);
 

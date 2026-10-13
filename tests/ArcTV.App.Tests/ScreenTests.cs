@@ -13,6 +13,7 @@ using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
 using ArcTV.Core.Search;
+using ArcTV.Core.Plus;
 using ArcTV.Core.Settings;
 using ArcTV.Core.Sources;
 using ArcTV.Core.Storage;
@@ -295,6 +296,23 @@ public class ScreenTests
         public Task<AccountSettings> SaveAsync(AccountSettings settings, CancellationToken cancel = default) => Task.FromResult(settings);
     }
 
+    private sealed class FakePlusStore : IPlusStore
+    {
+        public Task<PlusStatus> StatusAsync(CancellationToken cancel = default) => Task.FromResult(new PlusStatus(true, "yearly", "2027-01-01T00:00:00.000Z", true, false, 7));
+
+        public Task<CheckoutLink> StartCheckoutAsync(string plan, CancellationToken cancel = default) => Task.FromResult(new CheckoutLink("https://x.test/"));
+
+        public Task<PlusStatus> CancelAsync(CancellationToken cancel = default) => Task.FromResult(PlusStatus.None);
+
+        public Task<IReadOnlyList<FeedbackItem>> FeedbackAsync(CancellationToken cancel = default) =>
+            Task.FromResult<IReadOnlyList<FeedbackItem>>([new FeedbackItem("main", "c", "tt1", "MOVIE", "A Film", "like", "2026-10-01T00:00:00.000Z")]);
+
+        public Task ClearFeedbackAsync(FeedbackItem item, CancellationToken cancel = default) => Task.CompletedTask;
+
+        public Task<(IReadOnlyList<HistoryItem> Items, bool Truncated)> HistoryAsync(CancellationToken cancel = default) =>
+            Task.FromResult<(IReadOnlyList<HistoryItem>, bool)>(([new HistoryItem("p", "tt1", "MOVIE", "A Film", 0, 7_200_000, true, IsoDate.Now())], false));
+    }
+
     [Fact]
     public void SettingsScreenOpensEveryPlace() => OnUiThread(async () =>
     {
@@ -303,9 +321,10 @@ public class ScreenTests
         var home = new HomeModel(_ => Task.FromResult<IReadOnlyList<SyncedAddon>>([]), "u1");
         var folder = Path.Combine(Path.GetTempPath(), "arctv-ui-" + Guid.NewGuid());
         var local = new LocalSettings(Path.Combine(folder, "settings.json"));
-        foreach (var place in new[] { "Account", "Addons", "Home Rows", "Blocked Genres", "Player", "Subtitles", "Audio", "Updates", "Arc TV Plus" })
+        var plus = new PlusModel(new FakePlusStore());
+        foreach (var place in new[] { "Account", "Addons", "Home Rows", "Blocked Genres", "Player", "Subtitles", "Audio", "Updates", "Arc TV Plus", "Plus settings", "Recommendations", "Your stats" })
         {
-            var view = new SettingsView(settings, addons, home, new AccountUser("u1", "me@x.test", "Me"), local, () => { }, () => { }, place);
+            var view = new SettingsView(settings, addons, home, new AccountUser("u1", "me@x.test", "Me"), local, plus, new MyListModel(_ => Task.FromResult(new List<WatchlistItem>())), _ => { }, () => { }, () => { }, place);
             var window = Host(view);
             await Settle();
             await Task.Delay(150);

@@ -14,3 +14,5 @@ under its version automatically.
 - Playing is here: choose a source and the video plays inside Arc TV, with the Arc TV logo top right, a loading screen with the artwork and a spinner, play/pause, skip 10 seconds, a timeline, volume, audio and subtitle choices, speed, and full screen (F, or double-click). Direct links play now; torrents are coming.
 - Settings is here, laid out like the web app: Account (sign out, refresh Home), Addons, Home Rows (switch rows on or off and move them), Blocked Genres (hidden everywhere), Player, Subtitles (on or off, size, colour with a preview, language), Audio language, and Updates (check for a new version). The Plus pages show "Soon".
 - Settings > Addons is here: see the addons on your account, switch each on or off, remove one, or add one by pasting its link (Torrentio, for example). Home, Movies and TV Shows update straight away.
+- The Plus pages are here: Arc TV Plus (what you get, your plan, cancel, and subscribe on Stripe's secure page), Plus settings, Recommendations (what you've liked or marked Not for me, and what shapes your picks) and Your stats (hours watched, streak, a 13-week map and your busiest day).
+
