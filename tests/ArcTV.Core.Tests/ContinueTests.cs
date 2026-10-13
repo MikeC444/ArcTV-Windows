@@ -57,6 +57,8 @@ public class ContinueTests
         // the player reports "S1 E3 Name" as the episode's title, so that is what the account hands back
         var reported = new ContinueItem("p", "tt1", "TV_SHOW", "Show", 1000, 2000, "2026-10-01T00:00:00.000Z", 1, 3, "S1 E3 Sir John Franklin");
         Assert.Equal("S1 E3 Sir John Franklin", reported.ToTarget().EpisodeTitle);
+        // the account may already hold the number twice (an earlier version sent that back): it comes out once
+        Assert.Equal("S1 E3 Sir John Franklin", new ContinueItem("p", "tt1", "TV_SHOW", "Show", 1000, 2000, "x", 1, 3, "S1 E3 S1 E3 Sir John Franklin").ToTarget().EpisodeTitle);
         Assert.Equal("S1 E3", new ContinueItem("p", "tt1", "TV_SHOW", "Show", 1000, 2000, "x", 1, 3).ToTarget().EpisodeTitle);
         Assert.Equal("S2 E5 Pilot", Episode("tt1", 2, 5, 900_000).ToTarget().EpisodeTitle);
     }

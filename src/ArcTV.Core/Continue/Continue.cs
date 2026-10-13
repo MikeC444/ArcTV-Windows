@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Text.Json.Serialization;
 using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
@@ -36,11 +37,19 @@ public sealed record ContinueItem(
         EpisodeHeading, NearlyDone ? 0 : PositionSeconds);
 
     /// <summary>"S1 E3 Name" for an episode. What was reported can already be that whole line (the player reports it so), so the label is only added in front of a bare name.</summary>
-    private string? EpisodeHeading =>
-        EpisodeLabel is not { } label ? null
-        : string.IsNullOrWhiteSpace(EpisodeTitle) ? label
-        : EpisodeTitle.StartsWith(label, StringComparison.OrdinalIgnoreCase) ? EpisodeTitle
-        : $"{label} {EpisodeTitle}";
+    private string? EpisodeHeading
+    {
+        get
+        {
+            if (EpisodeLabel is not { } label) return null;
+            // what the account holds can already start with the number, even twice or more (an earlier version put it in front of a line that already had it, and that was sent back
+            // and kept): every number at the front is dropped and the one true label is put on
+            var name = string.IsNullOrWhiteSpace(EpisodeTitle) ? "" : LeadingNumbers.Replace(EpisodeTitle, "").Trim();
+            return name.Length == 0 ? label : $"{label} {name}";
+        }
+    }
+
+    private static readonly Regex LeadingNumbers = new(@"^(\s*S\d+\s*E\d+\b\s*)+", RegexOptions.IgnoreCase);
 }
 
 internal sealed record ContinueResponse(List<ContinueItem>? Items);

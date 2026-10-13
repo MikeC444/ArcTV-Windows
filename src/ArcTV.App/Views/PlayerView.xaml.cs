@@ -28,6 +28,8 @@ public partial class PlayerView : UserControl
     private bool _leaving;
     private readonly Action<PlayTarget>? _chooseSource;
     private DispatcherTimer? _startWatch;
+    private DispatcherTimer? _resizeDone;
+    private bool _resizing;
     private readonly Func<Core.Details.MetaDetail, Task<string?>>? _logoLookup;
     private DispatcherTimer? _reportTimer;
     private PlayerOverlay? _overlay;
@@ -84,6 +86,8 @@ public partial class PlayerView : UserControl
         if (_window is not null)
         {
             _window.PreviewKeyDown += OnWindowKey;
+            _window.SizeChanged += OnWindowSized;
+            _window.LocationChanged += OnWindowMoved;
             _window.Closed += OnWindowClosed; // the page is not always told it is unloaded when its whole window closes, and the overlay is a window of its own
         }
 
@@ -149,12 +153,15 @@ public partial class PlayerView : UserControl
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         _waitForVideoWindow?.Stop();
+        _resizeDone?.Stop();
         _startWatch?.Stop();
         _reportTimer?.Stop();
         ReportProgress();
         if (_window is not null)
         {
             _window.PreviewKeyDown -= OnWindowKey;
+            _window.SizeChanged -= OnWindowSized;
+            _window.LocationChanged -= OnWindowMoved;
             _window.Closed -= OnWindowClosed;
         }
 
@@ -167,6 +174,34 @@ public partial class PlayerView : UserControl
     }
 
     // ---- the overlay follows the picture ----
+
+    /// <summary>
+    /// While the window is being dragged to a new size the controls step aside: a separate transparent window chasing the picture through every size it passes is what made the whole
+    /// player stutter and shake. They fade back in, laid over the picture once, a moment after the resizing stops.
+    /// </summary>
+    private void OnWindowSized(object? sender, SizeChangedEventArgs e)
+    {
+        if (_overlay is null) return;
+        _resizing = true;
+        _overlay.Opacity = 0;
+        if (_resizeDone is null)
+        {
+            _resizeDone = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(180) };
+            _resizeDone.Tick += (_, _) =>
+            {
+                _resizeDone?.Stop();
+                _resizing = false;
+                PlaceOverlay();
+                if (_overlay is not null) _overlay.Opacity = 1;
+            };
+        }
+
+        _resizeDone.Stop();
+        _resizeDone.Start();
+    }
+
+    /// <summary>Moving the window (without changing its size) moves the controls with it.</summary>
+    private void OnWindowMoved(object? sender, EventArgs e) => PlaceOverlay();
 
     [StructLayout(LayoutKind.Sequential)]
     private struct Rect
@@ -189,7 +224,7 @@ public partial class PlayerView : UserControl
     /// </summary>
     private void PlaceOverlay()
     {
-        if (_overlay is null || !_overlay.IsVisible || ActualWidth <= 0 || ActualHeight <= 0) return;
+        if (_resizing || _overlay is null || !_overlay.IsVisible || ActualWidth <= 0 || ActualHeight <= 0) return;
         var overlay = new WindowInteropHelper(_overlay).Handle;
         if (overlay == IntPtr.Zero) return;
 
