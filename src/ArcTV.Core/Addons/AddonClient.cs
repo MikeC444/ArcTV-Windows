@@ -28,6 +28,10 @@ public sealed class AddonClient(HttpClient? http = null)
     public async Task<Details.MetaDetail?> FetchMetaAsync(string manifestUrl, string type, string id, CancellationToken cancel = default) =>
         (await GetAsync<Details.MetaResponse>(AddonUrl.MetaUrl(manifestUrl, type, id), cancel).ConfigureAwait(false)).Meta;
 
+    /// <summary>The streams an addon offers for a title (or "tt:season:episode").</summary>
+    public async Task<List<Sources.AddonStream>> FetchStreamsAsync(string manifestUrl, string type, string id, CancellationToken cancel = default) =>
+        (await GetAsync<Sources.StreamResponse>(AddonUrl.StreamUrl(manifestUrl, type, id), cancel).ConfigureAwait(false)).Streams ?? [];
+
     public async Task<List<MetaPreview>> FetchCatalogAsync(string manifestUrl, string type, string catalogId, IReadOnlyDictionary<string, string>? extra = null, CancellationToken cancel = default) =>
         (await GetAsync<CatalogResponse>(AddonUrl.CatalogUrl(manifestUrl, type, catalogId, extra), cancel).ConfigureAwait(false)).Metas ?? [];
 

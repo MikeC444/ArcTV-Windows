@@ -214,3 +214,7 @@ Still not on Home: Continue Watching, Picked for you, hiding the top bar on scro
 
 **Follow-up (owner: posters look too squared off): rounded corners.** A WPF border draws round corners but does not clip what is inside it, so a picture's corners stayed square whatever the radius. `RoundedBorder` clips its contents to the rounded shape.
 Posters (every page), episode pictures, round cast photos and search-suggestion pictures use it; posters now have a 16 radius and a faint outline.
+
+**Follow-up (owner: fade the Home hero picture): banner fade.** The banner's bottom edge showed a line where the picture ended and the page began: the old fade started from "transparent black" and only
+went over the lower half in one step. It now fades in six steps from 30% down to fully the page's colour at the bottom edge (every step in the page's own colour, so it never passes through grey), and the left
+darkening is smoother too.

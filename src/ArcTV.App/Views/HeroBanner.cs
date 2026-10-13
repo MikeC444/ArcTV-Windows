@@ -140,9 +140,29 @@ public sealed class HeroBanner : Grid
         var grid = new Grid();
         var picture = new RemoteImage { Url = Artwork.Bigger(item.Background) ?? item.Poster, FallbackUrl = item.Background ?? item.Poster, DecodeWidth = 0, Stretch = Stretch.UniformToFill, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top };
         grid.Children.Add(picture);
-        // fades into the page at the bottom, and darkens the left so the words can be read
-        grid.Children.Add(new System.Windows.Shapes.Rectangle { Fill = new LinearGradientBrush(Colors.Transparent, (Color)Application.Current.FindResource("BgColor"), 90) { GradientStops = { new GradientStop(Colors.Transparent, 0.45) } } });
-        grid.Children.Add(new System.Windows.Shapes.Rectangle { Fill = new LinearGradientBrush(Color.FromArgb(0xD9, 8, 8, 10), Colors.Transparent, 0) { GradientStops = { new GradientStop(Colors.Transparent, 0.6) } } });
+        // fades into the page at the bottom, over the lower half and ending fully the page's colour, in steps so there is no visible edge; and darkens the left so the words can be read
+        var page = (Color)Application.Current.FindResource("BgColor");
+        Color Page(byte alpha) => Color.FromArgb(alpha, page.R, page.G, page.B); // the page's own colour at every step: fading from "transparent black" would pass through a grey
+        grid.Children.Add(new System.Windows.Shapes.Rectangle
+        {
+            Fill = new LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0), EndPoint = new Point(0, 1),
+                GradientStops =
+                {
+                    new GradientStop(Page(0), 0.30), new GradientStop(Page(40), 0.50), new GradientStop(Page(110), 0.68),
+                    new GradientStop(Page(190), 0.84), new GradientStop(Page(245), 0.95), new GradientStop(Page(255), 1.0),
+                },
+            },
+        });
+        grid.Children.Add(new System.Windows.Shapes.Rectangle
+        {
+            Fill = new LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0), EndPoint = new Point(1, 0),
+                GradientStops = { new GradientStop(Color.FromArgb(0xD9, page.R, page.G, page.B), 0), new GradientStop(Color.FromArgb(0x80, page.R, page.G, page.B), 0.35), new GradientStop(Page(0), 0.7) },
+            },
+        });
 
         var details = new StackPanel { Margin = new Thickness(44, 96, 0, 70), VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 600 };
         if (!string.IsNullOrEmpty(item.Logo))

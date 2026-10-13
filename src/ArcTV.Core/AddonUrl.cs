@@ -48,4 +48,7 @@ public static class AddonUrl
 
     /// <summary><c>&lt;base&gt;/meta/&lt;type&gt;/&lt;id&gt;.json</c>: one title's details.</summary>
     public static string MetaUrl(string manifestUrl, string type, string id) => $"{ResourceBase(manifestUrl)}/meta/{Encode(type)}/{EncodeId(id)}.json";
+
+    /// <summary><c>&lt;base&gt;/stream/&lt;type&gt;/&lt;id&gt;.json</c>: the streams an addon offers for a title or episode.</summary>
+    public static string StreamUrl(string manifestUrl, string type, string id) => $"{ResourceBase(manifestUrl)}/stream/{Encode(type)}/{EncodeId(id)}.json";
 }
