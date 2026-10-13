@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- The source list no longer has a Copy link button.
 - Resizing the window while a video plays is smooth now: the controls step aside while you drag and come back when you stop. They also follow the window when you move it.
 - The episode line in the player shows the season and episode once, even for titles saved earlier with it twice.
 - Continue Watching now starts the same source you used last time, or shows the list when it cannot be sure which one that was, instead of starting a different one that might not play.

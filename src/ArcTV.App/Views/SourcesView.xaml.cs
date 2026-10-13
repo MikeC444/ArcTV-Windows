@@ -196,22 +196,11 @@ public partial class SourcesView : UserControl
         if (item.SizeText is { } size) right.Children.Add(new TextBlock { Text = size, FontSize = 13, FontWeight = FontWeights.Medium, Foreground = dim, HorizontalAlignment = HorizontalAlignment.Right });
         right.Children.Add(new TextBlock { Text = item.AddonName, FontSize = 11, Foreground = faint, HorizontalAlignment = HorizontalAlignment.Right });
         right.Children.Add(new TextBlock { Text = item.IsPlayable ? (_play is null ? "Click to copy the link" : "Click to play") : item.IsTorrent ? "Needs the torrent player (coming soon)" : "Cannot be played", FontSize = 11, Foreground = item.IsPlayable ? (Brush)FindResource("AccentBrush") : faint, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 2, 0, 0) });
-        if (item.PlayUrl is { } link)
-        {
-            var copy = new Button { Content = "Copy link", Style = (Style)FindResource("LinkButton"), HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 4, 0, 0), FontSize = 11 };
-            copy.Click += (_, _) => CopyLink(link);
-            right.Children.Add(copy);
-        }
-
         Grid.SetColumn(right, 2);
         grid.Children.Add(right);
 
         var row = new Button { Style = (Style)FindResource("SourceRow"), Content = grid, IsEnabled = item.IsPlayable, Tag = recommended ? "recommended" : "" };
-        // a button inside the row (Copy link) bubbles its click up to the row as well: only a click on the row itself plays
-        row.Click += (_, e) =>
-        {
-            if (ReferenceEquals(e.OriginalSource, row)) Choose(item);
-        };
+        row.Click += (_, _) => Choose(item);
         return row;
     }
 
