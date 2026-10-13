@@ -32,10 +32,14 @@ public partial class PlayerOverlay : Window
     private double _volumeBeforeMute = 100;
     private readonly EpisodeInfo? _next;
     private bool? _flashedPaused;
+    private readonly Action? _chooseSource;
     private readonly Action? _playNext;
 
-    public PlayerOverlay(PlayerModel model, PlayingItem item, Action back, Action toggleFullscreen, Func<bool> isFullscreen, Func<Key, bool> handleKey, EpisodeInfo? next = null, Action? playNext = null, Func<MetaDetail, Task<string?>>? logoLookup = null)
+    public PlayerOverlay(PlayerModel model, PlayingItem item, Action back, Action toggleFullscreen, Func<bool> isFullscreen, Func<Key, bool> handleKey, EpisodeInfo? next = null, Action? playNext = null, Func<MetaDetail, Task<string?>>? logoLookup = null, Action? chooseSource = null)
     {
+        _chooseSource = chooseSource;
+        SourcesButton.Visibility = chooseSource is null ? Visibility.Collapsed : Visibility.Visible;
+        AnotherSourceButton.Visibility = chooseSource is null ? Visibility.Collapsed : Visibility.Visible;
         InitializeComponent();
         _next = next;
         _playNext = playNext;
@@ -171,6 +175,8 @@ public partial class PlayerOverlay : Window
     // ---- the buttons ----
 
     private void OnBack(object sender, RoutedEventArgs e) => _back();
+
+    private void OnChooseSource(object sender, RoutedEventArgs e) => _chooseSource?.Invoke();
 
     private void OnNextEpisode(object sender, RoutedEventArgs e) => _playNext?.Invoke();
 

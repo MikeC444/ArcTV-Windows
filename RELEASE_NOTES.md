@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- A source that does not start no longer leaves the player loading for ever: after a while it says so, and a new Sources button in the player (and on that message) takes you to the list to pick another.
 - The title's logo shows while a video loads (and on the source list and in the player) even when you start it from Continue Watching.
 - The player has bigger controls: a larger pause / play button, bigger back and 10-second skip buttons, and a much bigger title logo. Everything along the bottom sits lower, and the volume bar is no longer cut off. Pausing or playing shows its symbol in the middle of the picture for a moment.
 - Resuming an episode no longer shows its number twice.

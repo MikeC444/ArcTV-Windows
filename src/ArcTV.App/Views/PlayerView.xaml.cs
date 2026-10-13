@@ -24,6 +24,8 @@ public partial class PlayerView : UserControl
     private readonly Action<PlayTarget>? _playNext;
     private readonly Func<bool>? _autoplayNext;
     private bool _leaving;
+    private readonly Action<PlayTarget>? _chooseSource;
+    private DispatcherTimer? _startWatch;
     private readonly Func<Core.Details.MetaDetail, Task<string?>>? _logoLookup;
     private DispatcherTimer? _reportTimer;
     private PlayerOverlay? _overlay;
@@ -31,9 +33,10 @@ public partial class PlayerView : UserControl
     private DispatcherTimer? _waitForVideoWindow;
     private (WindowStyle Style, WindowState State, ResizeMode Resize, bool Topmost)? _beforeFullscreen;
 
-    public PlayerView(PlayingItem item, Func<IVideoEngine> makeEngine, Action back, Action<PlayTarget, double, double>? report = null, Action<PlayTarget>? playNext = null, Func<bool>? autoplayNext = null, Func<Core.Details.MetaDetail, Task<string?>>? logoLookup = null)
+    public PlayerView(PlayingItem item, Func<IVideoEngine> makeEngine, Action back, Action<PlayTarget, double, double>? report = null, Action<PlayTarget>? playNext = null, Func<bool>? autoplayNext = null, Func<Core.Details.MetaDetail, Task<string?>>? logoLookup = null, Action<PlayTarget>? chooseSource = null)
     {
         _logoLookup = logoLookup;
+        _chooseSource = chooseSource;
         _report = report;
         _playNext = playNext;
         _autoplayNext = autoplayNext;
@@ -73,7 +76,7 @@ public partial class PlayerView : UserControl
         };
         engine.Failed += model.OnFailed;
 
-        _overlay = new PlayerOverlay(model, _item, _back, ToggleFullscreen, () => IsFullscreen, HandleKey, NextEpisode(), _playNext is null ? null : (Action)PlayNext, _logoLookup) { Owner = _window };
+        _overlay = new PlayerOverlay(model, _item, _back, ToggleFullscreen, () => IsFullscreen, HandleKey, NextEpisode(), _playNext is null ? null : (Action)PlayNext, _logoLookup, _chooseSource is null ? null : (Action)ChooseAnotherSource) { Owner = _window };
         _overlay.Show();
         PlaceOverlay();
         if (_window is not null)
@@ -98,6 +101,27 @@ public partial class PlayerView : UserControl
         _reportTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
         _reportTimer.Tick += (_, _) => ReportProgress();
         _reportTimer.Start();
+
+        // a source that never starts must not leave the loading symbol turning for ever: after a while the player says so and offers another source
+        _startWatch = new DispatcherTimer { Interval = StartTimeout };
+        _startWatch.Tick += (_, _) =>
+        {
+            _startWatch?.Stop();
+            if (_model is { HasStarted: false, Failure: null } waiting) waiting.OnFailed("This source isn't starting. It may be slow, or the link may have stopped working. Try another source.");
+        };
+        _startWatch.Start();
+    }
+
+    /// <summary>How long a source gets to show its first picture.</summary>
+    public static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(45);
+
+    /// <summary>Leaves the player for this title's source list (from where it is now), so a source that hangs or is not wanted can be swapped.</summary>
+    private void ChooseAnotherSource()
+    {
+        if (_leaving || _chooseSource is null) return;
+        _leaving = true;
+        var here = _model is { HasStarted: true, Position: > 10 } model ? model.Position : _item.Target.StartAt;
+        _chooseSource(_item.Target with { StartAt = here, ChooseSource = true, AutoPick = false });
     }
 
     /// <summary>The episode after this one (a show's episode only; null for a movie or the last episode).</summary>
@@ -123,6 +147,7 @@ public partial class PlayerView : UserControl
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         _waitForVideoWindow?.Stop();
+        _startWatch?.Stop();
         _reportTimer?.Stop();
         ReportProgress();
         if (_window is not null)

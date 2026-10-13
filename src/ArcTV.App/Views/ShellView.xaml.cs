@@ -349,7 +349,15 @@ public partial class ShellView : UserControl
     {
         if (Page.Content is UIElement current && current is not SourcesView { AutoChosen: true }) _history.Push((current, _place));
         Bar.Visibility = Visibility.Collapsed;
-        Page.Content = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack, (target, position, duration) => _ = _continue.ReportAsync(target, position, duration), PlayNext, () => _settingsModel.Current?.AutoplayNextEpisode ?? true, LogoOfAsync);
+        Page.Content = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack, (target, position, duration) => _ = _continue.ReportAsync(target, position, duration), PlayNext, () => _settingsModel.Current?.AutoplayNextEpisode ?? true, LogoOfAsync, ChooseAnotherSource);
+    }
+
+    /// <summary>The player gives way to this title's source list (a source that hangs, or is not wanted, can be swapped); Back from the list goes where Back from the player would have.</summary>
+    private void ChooseAnotherSource(PlayTarget target)
+    {
+        if (_history.Count > 0 && _history.Peek().Item1 is SourcesView) _history.Pop();
+        Bar.Visibility = Visibility.Visible;
+        Page.Content = SourcesPage(target);
     }
 
     /// <summary>The next episode takes the player's place (Back from it goes where Back from this one would have).</summary>
