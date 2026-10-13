@@ -11,8 +11,8 @@ namespace ArcTV.App.Views;
 public sealed class ContinueRow : StackPanel
 {
     // a wide picture (16:9), the title's landscape artwork
-    private const double CardWidth = 320;
-    private const double PictureHeight = 180;
+    private const double CardWidth = 440;
+    private const double PictureHeight = 248;
     private readonly ContinueModel _model;
     private readonly Action<PlayTarget> _play;
 
@@ -33,7 +33,7 @@ public sealed class ContinueRow : StackPanel
         Children.Add(new TextBlock { Text = "Continue Watching", FontSize = 26, FontWeight = FontWeights.Bold, Margin = new Thickness(24, 0, 0, 0) });
         var strip = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(24, 0, 0, 0) };
         foreach (var item in items) strip.Children.Add(Card(item));
-        Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 100, Content = strip });
+        Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 134, Content = strip });
     }
 
     private static Brush Res(string key) => (Brush)Application.Current.FindResource(key);
@@ -54,7 +54,7 @@ public sealed class ContinueRow : StackPanel
             picture.Children.Add(new RemoteImage
             {
                 Url = logo, DecodeWidth = 360, Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
-                MaxWidth = 130, MaxHeight = 46, Margin = new Thickness(14, 14, 0, 0), IsHitTestVisible = false,
+                MaxWidth = 180, MaxHeight = 64, Margin = new Thickness(18, 18, 0, 0), IsHitTestVisible = false,
             });
         }
 

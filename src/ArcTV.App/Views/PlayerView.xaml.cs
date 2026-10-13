@@ -113,6 +113,7 @@ public partial class PlayerView : UserControl
         _startWatch.Tick += (_, _) =>
         {
             _startWatch?.Stop();
+            if (_model is { HasStarted: false, Failure: null }) PlayerLog.Write("gave up waiting for the first picture");
             if (_model is { HasStarted: false, Failure: null } waiting) waiting.OnFailed("This source isn't starting. It may be slow, or the link may have stopped working. Try another source.");
         };
         _startWatch.Start();

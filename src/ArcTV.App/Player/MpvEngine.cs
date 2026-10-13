@@ -79,6 +79,7 @@ public sealed class MpvEngine : IVideoEngine, IDisposable
 
     public void Start(IntPtr window, Uri url, double startAt)
     {
+        PlayerLog.Write($"start host={url.Host} startAt={startAt:0} window={window}");
         try
         {
             _handle = NativeMpv.mpv_create();
@@ -90,6 +91,8 @@ public sealed class MpvEngine : IVideoEngine, IDisposable
 
             Option("wid", ((long)window).ToString(CultureInfo.InvariantCulture));
             // our own controls, our own keys: the engine only draws the picture
+            Option("log-file", PlayerLog.MpvFile); // mpv's own account of what it is doing, for when a video will not start
+            Option("msg-level", "all=info");
             Option("osc", "no");
             Option("input-default-bindings", "no");
             Option("input-vo-keyboard", "no");
@@ -117,7 +120,9 @@ public sealed class MpvEngine : IVideoEngine, IDisposable
             if (!string.IsNullOrEmpty(_preferences.AudioLanguage)) Option("alang", _preferences.AudioLanguage);
             if (startAt > 1) Option("start", ((int)startAt).ToString(CultureInfo.InvariantCulture));
 
-            if (NativeMpv.mpv_initialize(_handle) < 0)
+            var init = NativeMpv.mpv_initialize(_handle);
+            PlayerLog.Write($"initialize rc={init}");
+            if (init < 0)
             {
                 Failed?.Invoke("The player could not be started.");
                 return;
@@ -131,7 +136,7 @@ public sealed class MpvEngine : IVideoEngine, IDisposable
 
             _events = new Thread(ReadEvents) { IsBackground = true, Name = "mpv events" };
             _events.Start();
-            Command("loadfile", url.AbsoluteUri, "replace");
+            PlayerLog.Write($"loadfile rc={Command("loadfile", url.AbsoluteUri, "replace")}");
         }
         catch (Exception ex) when (ex is DllNotFoundException or BadImageFormatException or EntryPointNotFoundException)
         {
@@ -166,10 +171,12 @@ public sealed class MpvEngine : IVideoEngine, IDisposable
                     ReadProperty(Marshal.PtrToStructure<NativeMpv.EventProperty>(ev.Data));
                     break;
                 case NativeMpv.IdFileLoaded or NativeMpv.IdPlaybackRestart:
+                    PlayerLog.Write(ev.EventId == NativeMpv.IdFileLoaded ? "file loaded" : "playback restart");
                     Report(() => Started?.Invoke());
                     break;
                 case NativeMpv.IdEndFile when ev.Data != IntPtr.Zero:
                     var end = Marshal.PtrToStructure<NativeMpv.EventEndFile>(ev.Data);
+                    PlayerLog.Write($"end of file reason={end.Reason} error={end.Error}");
                     if (end.Reason == NativeMpv.EndFileEof) Report(() => Ended?.Invoke());
                     else if (end.Reason == NativeMpv.EndFileError) Report(() => Failed?.Invoke("This source could not be played. Try another source."));
                     break;
@@ -208,23 +215,26 @@ public sealed class MpvEngine : IVideoEngine, IDisposable
 
     // ---- what it is told ----
 
-    private void Command(params string[] arguments)
+    private int Command(params string[] arguments)
     {
-        if (_handle == IntPtr.Zero) return;
+        if (_handle == IntPtr.Zero) return -1;
         var strings = new IntPtr[arguments.Length + 1];
         var list = IntPtr.Zero;
+        var rc = -1;
         try
         {
             for (var i = 0; i < arguments.Length; i++) strings[i] = Marshal.StringToCoTaskMemUTF8(arguments[i]);
             list = Marshal.AllocHGlobal(IntPtr.Size * strings.Length);
             Marshal.Copy(strings, 0, list, strings.Length);
-            NativeMpv.mpv_command(_handle, list);
+            rc = NativeMpv.mpv_command(_handle, list);
         }
         finally
         {
             foreach (var pointer in strings) if (pointer != IntPtr.Zero) Marshal.FreeCoTaskMem(pointer);
             if (list != IntPtr.Zero) Marshal.FreeHGlobal(list);
         }
+
+        return rc;
     }
 
     private void SetString(string name, string value)

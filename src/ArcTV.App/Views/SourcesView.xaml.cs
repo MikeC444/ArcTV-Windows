@@ -70,7 +70,7 @@ public partial class SourcesView : UserControl
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
 
     /// <summary>A source was picked without asking: play it at once (the list was never shown).</summary>
-    private void OnAutoChose(SourceItem item) => Choose(item);
+    private void OnAutoChose(SourceItem item) => Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ApplicationIdle, new Action(() => Choose(item)));
 
     // ---- the title on the left ----
 
@@ -209,6 +209,7 @@ public partial class SourcesView : UserControl
     {
         if (item.PlayUrl is not { } url) return;
         var target = _model.Target;
+        ArcTV.App.Player.PlayerLog.Write($"source chosen addon={item.AddonName} quality={item.Quality} auto={AutoChosen} startAt={target.StartAt:0}");
         _store?.Set(LastSource.From(item), target.Title.Id, target.Season, target.Episode);
         if (_play is not null)
         {

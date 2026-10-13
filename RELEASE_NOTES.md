@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- The Continue Watching pictures are bigger.
 - Clicking a title in Continue Watching starts the recommended source straight away, from where you left off.
 - Settings > Addons shows your addons two to a row.
 - More space between the rows on Home, and bigger titles under the posters.
