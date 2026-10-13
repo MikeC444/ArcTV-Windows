@@ -111,7 +111,7 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
   w1280 size in place of w300/w780 (that size exists for backdrops), again falling back to the address given. The actual address was never seen, so this too
   is a guess; if it is still blocky, the address itself is needed.
   Still blurry after that, so a temporary tooltip on the banner now shows the address the picture really came from and its size in pixels, to stop guessing.
-  Remove it once the cause is known.
+  The tooltip was removed once the banner was confirmed sharp.
   Cause found with it: the banner came from the "large" address but was decoded 320 x 180 pixels, the default decode width. `RemoteImage` started loading
   the moment its address was set, before the decode width (set after it in the same initializer) was in, so every picture was decoded at 320 wide however
   big it was asked to be: the banner from the start (so the size rewrites above were not what it needed), and posters at 320 instead of 400. Loading now waits
