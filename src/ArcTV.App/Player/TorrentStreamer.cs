@@ -3,6 +3,7 @@ using MonoTorrent;
 using MonoTorrent.Client;
 using ArcTV.Core.Sources;
 using ArcTV.Core.Storage;
+using TorrentFile = ArcTV.Core.Sources.TorrentFile; // (MonoTorrent has a type of that name too)
 
 namespace ArcTV.App.Player;
 
