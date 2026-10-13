@@ -12,7 +12,7 @@ namespace ArcTV.App.Views;
 /// </summary>
 public sealed class PickedRowView : StackPanel
 {
-    private const double CardWidth = 240;
+    private const double CardWidth = 288;
     private readonly PickedModel _model;
 
     public PickedRowView(PickedModel model)
@@ -31,7 +31,7 @@ public sealed class PickedRowView : StackPanel
         Children.Add(new TextBlock { Text = row.Title, FontSize = 20, FontWeight = FontWeights.Bold, Margin = new Thickness(24, 0, 0, 0) });
         var strip = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(24, 0, 0, 0) };
         foreach (var entry in row.Entries) strip.Children.Add(Card(entry));
-        Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 190, Content = strip });
+        Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 226, Content = strip });
     }
 
     private static Brush Res(string key) => (Brush)Application.Current.FindResource(key);
@@ -40,10 +40,10 @@ public sealed class PickedRowView : StackPanel
     {
         var picture = new Grid();
         picture.Children.Add(new TextBlock { Text = entry.Item.Name, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12), Foreground = Res("Text3Brush"), FontSize = 13 });
-        picture.Children.Add(new RemoteImage { Url = entry.Item.Poster, DecodeWidth = 500, Stretch = Stretch.UniformToFill });
+        picture.Children.Add(new RemoteImage { Url = entry.Item.Poster, DecodeWidth = 600, Stretch = Stretch.UniformToFill });
 
         var card = new StackPanel { Width = CardWidth, Margin = new Thickness(0, 10, 16, 10), Background = Brushes.Transparent, Cursor = System.Windows.Input.Cursors.Hand };
-        card.Children.Add(new RoundedBorder { Width = CardWidth, Height = 360, CornerRadius = new CornerRadius(16), Background = Res("SurfaceBrush"), BorderBrush = new SolidColorBrush(Color.FromArgb(0x24, 255, 255, 255)), BorderThickness = new Thickness(1), Child = picture });
+        card.Children.Add(new RoundedBorder { Width = CardWidth, Height = 432, CornerRadius = new CornerRadius(16), Background = Res("SurfaceBrush"), BorderBrush = new SolidColorBrush(Color.FromArgb(0x24, 255, 255, 255)), BorderThickness = new Thickness(1), Child = picture });
         card.Children.Add(new TextBlock { Text = entry.Item.Name, Margin = new Thickness(2, 8, 2, 0), FontSize = 13, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
         if (entry.Reason is { Length: > 0 } reason)
             card.Children.Add(new TextBlock { Text = reason, Margin = new Thickness(2, 2, 2, 0), FontSize = 11, Foreground = Res("Text2Brush"), TextWrapping = TextWrapping.Wrap, MaxHeight = 30, TextTrimming = TextTrimming.CharacterEllipsis });

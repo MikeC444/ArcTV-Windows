@@ -390,7 +390,7 @@ internal sealed class RecommendationsPane : PlusPane
             strip.Children.Add(cell);
         }
 
-        panel.Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 190, Content = strip });
+        panel.Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 226, Content = strip });
         return panel;
     }
 
