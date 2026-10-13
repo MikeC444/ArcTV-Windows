@@ -139,8 +139,8 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
 
 **Tests performed:** see the build run. New: `SearchTests` (recents, searchable vs base-only addons, slow addon, model states, recents on disk) and a screen test.
 
-**Issues discovered:** none yet.
+**Issues discovered:** the first build of this commit failed: `ShellView` used `Path` without `using System.IO` (the WPF project's implicit usings do not include it). Visual Studio showed "There were build errors" on pulling it.
 
-**Issues fixed:** none yet.
+**Issues fixed:** the missing `using` was added.
 
 **Open:** choosing a suggestion searches for its title (opening a title needs title details); posters do not open anything yet; searches are not filtered by blocked genres on purpose (as on the Mac).
