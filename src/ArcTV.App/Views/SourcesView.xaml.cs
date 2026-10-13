@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using ArcTV.App.Controls;
+using ArcTV.App.Player;
 using ArcTV.Core;
 using ArcTV.Core.Details;
 using ArcTV.Core.Sources;
@@ -213,7 +214,7 @@ public partial class SourcesView : UserControl
     {
         if (!item.CanStream) return;
         var target = _model.Target;
-        ArcTV.App.Player.PlayerLog.Write($"source chosen addon={item.AddonName} quality={item.Quality} torrent={item.IsTorrent} auto={AutoChosen} startAt={target.StartAt:0}");
+        PlayerLog.Write($"source chosen addon={item.AddonName} quality={item.Quality} torrent={item.IsTorrent} auto={AutoChosen} startAt={target.StartAt:0}");
         _store?.Set(LastSource.From(item), target.Title.Id, target.Season, target.Episode);
         if (item.PlayUrl is not { } url)
         {
@@ -255,7 +256,7 @@ public partial class SourcesView : UserControl
                 return;
             }
 
-            ArcTV.App.Player.PlayerLog.Write("torrent ready");
+            PlayerLog.Write("torrent ready");
             _play!(new PlayingItem(start.Url, target.Heading, item.AddonName, target, item.Stream.BehaviorHints?.Filename) { OnClose = start.Release });
         }
         catch (OperationCanceledException)
@@ -264,7 +265,7 @@ public partial class SourcesView : UserControl
         }
         catch (Exception ex)
         {
-            ArcTV.App.Player.PlayerLog.Write($"torrent failed: {ex.Message}");
+            PlayerLog.Write($"torrent failed: {ex.Message}");
             if (run.IsCancellationRequested) return;
             NoticeText.Text = ex is TorrentException ? ex.Message : "The torrent could not be started. Try another source.";
             NoticeBox.Visibility = Visibility.Visible;
