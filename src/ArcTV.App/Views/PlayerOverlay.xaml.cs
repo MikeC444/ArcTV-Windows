@@ -37,10 +37,10 @@ public partial class PlayerOverlay : Window
 
     public PlayerOverlay(PlayerModel model, PlayingItem item, Action back, Action toggleFullscreen, Func<bool> isFullscreen, Func<Key, bool> handleKey, EpisodeInfo? next = null, Action? playNext = null, Func<MetaDetail, Task<string?>>? logoLookup = null, Action? chooseSource = null)
     {
+        InitializeComponent();
         _chooseSource = chooseSource;
         SourcesButton.Visibility = chooseSource is null ? Visibility.Collapsed : Visibility.Visible;
         AnotherSourceButton.Visibility = chooseSource is null ? Visibility.Collapsed : Visibility.Visible;
-        InitializeComponent();
         _next = next;
         _playNext = playNext;
         if (next is not null) NextButton.Tag = $"S{next.Season ?? 0} E{next.Episode ?? 0} \u2022 {next.DisplayTitle}";
