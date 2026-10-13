@@ -249,7 +249,7 @@ public partial class DetailView : UserControl
     private async void OnWatched(object sender, RoutedEventArgs e) => await _list.ToggleWatchedAsync(_model.Detail);
 
     /// <summary>A thumbs up or down for the Like and Not for me buttons (the pill turns to the selected look when it is the title's rating).</summary>
-    private static TextBlock ThumbIcon(string glyph) => new() { Text = glyph, FontFamily = new System.Windows.Media.FontFamily("Segoe MDL2 Assets"), FontSize = 20, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+    private static TextBlock ThumbIcon(string glyph) => new() { Text = glyph, FontFamily = new System.Windows.Media.FontFamily("Segoe MDL2 Assets"), FontSize = 26, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
 
     private async void OnLike(object sender, RoutedEventArgs e) => await Rate(Rating.Like);
 

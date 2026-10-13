@@ -124,27 +124,27 @@
         <Button x:Name="BackButton" Content="&#x2039;  Back" Style="{StaticResource ChoicePill}" HorizontalAlignment="Left" Margin="24,104,0,0" Click="OnBack" />
 
         <!-- the title (or its logo), facts, genres and a few lines about it -->
-        <StackPanel MaxWidth="800" HorizontalAlignment="Left" Margin="24,22,24,0">
+        <StackPanel MaxWidth="1000" HorizontalAlignment="Left" Margin="24,22,24,0">
           <Grid HorizontalAlignment="Left">
-            <TextBlock x:Name="TitleText" FontSize="44" FontWeight="ExtraBold" TextWrapping="Wrap" MaxWidth="780">
+            <TextBlock x:Name="TitleText" FontSize="58" FontWeight="ExtraBold" TextWrapping="Wrap" MaxWidth="980">
               <TextBlock.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.6" /></TextBlock.Effect>
             </TextBlock>
-            <c:RemoteImage x:Name="LogoImage" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" MaxWidth="400" MaxHeight="110" DecodeWidth="800" Shown="OnLogoShown" />
+            <c:RemoteImage x:Name="LogoImage" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" MaxWidth="520" MaxHeight="145" DecodeWidth="1040" Shown="OnLogoShown" />
           </Grid>
-          <TextBlock x:Name="FactsText" FontSize="16" FontWeight="Medium" Margin="0,14,0,0" />
-          <TextBlock x:Name="GenresText" FontSize="13" FontWeight="Medium" Margin="0,6,0,0" />
-          <TextBlock x:Name="DescriptionText" FontSize="15" TextWrapping="Wrap" MaxWidth="640" MaxHeight="96" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" Margin="0,14,0,0" />
+          <TextBlock x:Name="FactsText" FontSize="21" FontWeight="Medium" Margin="0,18,0,0" />
+          <TextBlock x:Name="GenresText" FontSize="17" FontWeight="Medium" Margin="0,8,0,0" />
+          <TextBlock x:Name="DescriptionText" FontSize="20" TextWrapping="Wrap" MaxWidth="840" MaxHeight="130" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" Margin="0,18,0,0" />
         </StackPanel>
 
         <!-- the buttons, with the IMDb rating at the far end of the row -->
-        <Grid Margin="24,24,24,0">
+        <Grid Margin="24,28,24,0">
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-            <Button x:Name="PlayButton" Content="&#x25B6;  Play" Style="{StaticResource PrimaryButton}" Height="48" Padding="28,0" IsEnabled="False" Margin="0,0,14,0" Click="OnPlay" />
-            <Button x:Name="TrailerButton" Content="Trailer" Style="{StaticResource ChoicePill}" Height="48" Margin="0,0,14,0" IsEnabled="False" ToolTip="Looking for a trailer…" Click="OnTrailer" />
-            <Button x:Name="ListButton" Style="{StaticResource ChoicePill}" Height="48" Margin="0,0,14,0" Click="OnList" />
-            <Button x:Name="WatchedButton" Style="{StaticResource ChoicePill}" Height="48" Margin="0,0,14,0" Click="OnWatched" />
-            <Button x:Name="LikeButton" Style="{StaticResource ChoicePill}" Height="48" MinWidth="64" Margin="0,0,14,0" Visibility="Collapsed" Click="OnLike" />
-            <Button x:Name="DislikeButton" Style="{StaticResource ChoicePill}" Height="48" MinWidth="64" Visibility="Collapsed" Click="OnDislike" />
+            <Button x:Name="PlayButton" Content="&#x25B6;  Play" Style="{StaticResource PrimaryButton}" Height="60" FontSize="18" Padding="34,0" IsEnabled="False" Margin="0,0,16,0" Click="OnPlay" />
+            <Button x:Name="TrailerButton" Content="Trailer" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" IsEnabled="False" ToolTip="Looking for a trailer…" Click="OnTrailer" />
+            <Button x:Name="ListButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" Click="OnList" />
+            <Button x:Name="WatchedButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" Click="OnWatched" />
+            <Button x:Name="LikeButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" MinWidth="80" Margin="0,0,16,0" Visibility="Collapsed" Click="OnLike" />
+            <Button x:Name="DislikeButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" MinWidth="80" Visibility="Collapsed" Click="OnDislike" />
           </StackPanel>
           <Border x:Name="RatingBox" HorizontalAlignment="Right" CornerRadius="12" Background="#73000000" Padding="18,8" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal">
