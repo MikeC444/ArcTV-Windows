@@ -189,7 +189,7 @@ public sealed class SettingsView : UserControl
             "Addons" => new AddonsPane(_addons),
             "Home Rows" => new HomeRowsPane(_settings, _home),
             "Blocked Genres" => new BlockedGenresPane(_settings),
-            "Player" => new PlayerPane(_settings),
+            "Player" => new PlayerPane(_settings, _local),
             "Subtitles" => new SubtitlesPane(_settings, _local),
             "Audio" => new AudioPane(_settings),
             "Updates" => new UpdatesPane(_settings),

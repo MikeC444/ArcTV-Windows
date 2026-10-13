@@ -149,7 +149,7 @@ public partial class PlayerView : UserControl
 
         _overlay?.ShowStatus("");
         // a source that never starts must not leave the loading symbol turning for ever: after a while the player says so and offers another source
-        _startWatch = new DispatcherTimer { Interval = StartTimeout };
+        _startWatch = new DispatcherTimer { Interval = _item.Prepare is null ? StartTimeout : TorrentStartTimeout }; // (a torrent may still be fetching its first parts when the player is given it)
         _startWatch.Tick += (_, _) =>
         {
             _startWatch?.Stop();
@@ -162,6 +162,7 @@ public partial class PlayerView : UserControl
 
     /// <summary>How long a source gets to show its first picture.</summary>
     public static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(45);
+    public static readonly TimeSpan TorrentStartTimeout = TimeSpan.FromSeconds(120);
 
     /// <summary>Leaves the player for this title's source list (from where it is now), so a source that hangs or is not wanted can be swapped.</summary>
     private void ChooseAnotherSource()

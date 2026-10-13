@@ -237,8 +237,11 @@ internal sealed class BlockedGenresPane(SettingsModel settings) : ModelPane(sett
     }
 }
 
-internal sealed class PlayerPane(SettingsModel settings) : ModelPane(settings)
+internal sealed class PlayerPane(SettingsModel settings, ArcTV.Core.Storage.LocalSettings local) : ModelPane(settings)
 {
+    private ArcTV.Core.Sources.TorrentBuffer _buffer = ArcTV.Core.Sources.TorrentBuffers.From(local.TorrentBuffer);
+    private int _storage = local.TorrentStorageGb;
+
     protected override void Build(StackPanel column)
     {
         column.Children.Add(Ui.Card(new TextBlock
@@ -249,6 +252,23 @@ internal sealed class PlayerPane(SettingsModel settings) : ModelPane(settings)
             "When an episode ends, the next one starts by itself with the best source that plays at once. Saved to your account; Arc TV for Windows follows it once next-episode playback is built.",
             Settings.Current?.AutoplayNextEpisode ?? true,
             on => _ = Settings.UpdateAsync(s => s with { AutoplayNextEpisode = on })));
+
+        // torrents (kept on this PC, as on the Mac)
+        column.Children.Add(Ui.Heading("Torrent buffer"));
+        column.Children.Add(Ui.Note("How much of the start of a torrent must arrive before the video starts. " + _buffer.Detail()));
+        column.Children.Add(Ui.Choices([.. Enum.GetValues<ArcTV.Core.Sources.TorrentBuffer>().Select(b => ((string?)b.ToString(), b.ToString()))], _buffer.ToString(), code =>
+        {
+            _buffer = ArcTV.Core.Sources.TorrentBuffers.From(code);
+            local.TorrentBuffer = _buffer.ToString();
+            Redraw();
+        }));
+        column.Children.Add(Ui.Heading("Torrent storage limit"));
+        column.Children.Add(Ui.Note("The most disk space a torrent may use while you watch. Its files are deleted when you stop. A bigger file than this won't start."));
+        column.Children.Add(Ui.Choices([.. ArcTV.Core.Sources.TorrentStorage.Options.Select(g => ((string?)g.ToString(), ArcTV.Core.Sources.TorrentStorage.Label(g)))], _storage.ToString(), code =>
+        {
+            _storage = int.TryParse(code, out var gigabytes) ? gigabytes : ArcTV.Core.Sources.TorrentStorage.DefaultGigabytes;
+            local.TorrentStorageGb = _storage;
+        }));
     }
 }
 

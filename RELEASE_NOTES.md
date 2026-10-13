@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Settings > Player has Torrent buffer (Small, Normal, Large: how much of a torrent's start must arrive before it plays) and a Torrent storage limit. Torrents now start once that much has arrived, not after the very start and end of the file.
 - "Who's watching?" looks like the Mac app's: the logo, a welcome, and rounded square pictures.
 - Torrent sources now play: choose one and Arc TV finds the video in it and streams it while it downloads (what is going on is shown while it gets ready). Its files are deleted when you close the player.
 - The row titles on Home and the titles under the posters are bigger again.

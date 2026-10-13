@@ -15,6 +15,20 @@ public class SourcesTests
     private static SourceItem Item(string addon, AddonStream stream, int index = 0) => new(addon, stream, index);
 
     [Fact]
+    public void TorrentBufferAndStorageFollowTheMacApp()
+    {
+        Assert.Equal(TorrentBuffer.Normal, TorrentBuffers.From(null));
+        Assert.Equal(TorrentBuffer.Large, TorrentBuffers.From("large"));
+        Assert.Equal(6L * 1_048_576, TorrentBuffer.Normal.StartBytes());
+        Assert.True(TorrentBuffer.Small.StartBytes() < TorrentBuffer.Large.StartBytes());
+        Assert.True(TorrentStorage.Allows(10L * 1_073_741_824, 10));
+        Assert.False(TorrentStorage.Allows(11L * 1_073_741_824, 10));
+        Assert.True(TorrentStorage.Allows(long.MaxValue, 0));
+        Assert.Equal("No limit", TorrentStorage.Label(0));
+        Assert.Equal("5 GB", TorrentStorage.Label(5));
+    }
+
+    [Fact]
     public void ManifestResourcesAcceptNamesAndObjects()
     {
         var manifest = JsonSerializer.Deserialize<AddonManifest>("""
