@@ -21,10 +21,17 @@ try {
     $headers = @{ 'User-Agent' = 'ArcTV-Windows-build'; 'Accept' = 'application/vnd.github+json' }
     if ($env:GITHUB_TOKEN) { $headers['Authorization'] = "Bearer $($env:GITHUB_TOKEN)" }
 
-    $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/latest' -Headers $headers
-    $asset = $release.assets | Where-Object { $_.name -match '^mpv-dev-lgpl-x86_64-\d' } | Select-Object -First 1
+    # the newest releases first; the first that has an LGPL x64 build wins (the plain x86_64 build is preferred over the -v3 one, which needs a newer CPU)
+    $releases = Invoke-RestMethod -Uri 'https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases?per_page=8' -Headers $headers
+    $asset = $null
+    foreach ($release in $releases) {
+        $asset = $release.assets | Where-Object { $_.name -match '^mpv-dev-lgpl-x86_64-\d' -and $_.name -like '*.7z' } | Select-Object -First 1
+        if (-not $asset) { $asset = $release.assets | Where-Object { $_.name -match '^mpv-dev-lgpl-x86_64.*\.7z$' -and $_.name -notmatch 'aarch64|i686' } | Select-Object -First 1 }
+        if ($asset) { break }
+    }
     if (-not $asset) {
-        throw "No LGPL x64 libmpv build was found in the latest release ($($release.tag_name)). Download libmpv-2.dll yourself (an LGPL build) and put it in $Destination."
+        $seen = ($releases | Select-Object -First 1).assets | ForEach-Object { $_.name }
+        throw "No LGPL x64 libmpv build was found in the newest releases. The newest release holds: $($seen -join ', '). Download libmpv-2.dll yourself (an LGPL build) and put it in $Destination."
     }
 
     $work = Join-Path ([IO.Path]::GetTempPath()) ('libmpv-' + [Guid]::NewGuid().ToString('N'))

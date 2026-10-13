@@ -152,15 +152,15 @@ public sealed class MpvEngine : IVideoEngine, IDisposable
             var ev = Marshal.PtrToStructure<NativeMpv.Event>(pointer);
             switch (ev.EventId)
             {
-                case NativeMpv.EventShutdown:
+                case NativeMpv.IdShutdown:
                     return;
-                case NativeMpv.EventPropertyChange when ev.Data != IntPtr.Zero:
+                case NativeMpv.IdPropertyChange when ev.Data != IntPtr.Zero:
                     ReadProperty(Marshal.PtrToStructure<NativeMpv.EventProperty>(ev.Data));
                     break;
-                case NativeMpv.EventFileLoaded or NativeMpv.EventPlaybackRestart:
+                case NativeMpv.IdFileLoaded or NativeMpv.IdPlaybackRestart:
                     Report(() => Started?.Invoke());
                     break;
-                case NativeMpv.EventEndFile when ev.Data != IntPtr.Zero:
+                case NativeMpv.IdEndFile when ev.Data != IntPtr.Zero:
                     var end = Marshal.PtrToStructure<NativeMpv.EventEndFile>(ev.Data);
                     if (end.Reason == NativeMpv.EndFileEof) Report(() => Ended?.Invoke());
                     else if (end.Reason == NativeMpv.EndFileError) Report(() => Failed?.Invoke("This source could not be played. Try another source."));

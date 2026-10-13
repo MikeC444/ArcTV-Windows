@@ -11,11 +11,11 @@ internal static class NativeMpv
     public const int FormatFlag = 3;
     public const int FormatDouble = 5;
 
-    public const int EventShutdown = 1;
-    public const int EventEndFile = 7;
-    public const int EventFileLoaded = 8;
-    public const int EventPlaybackRestart = 21;
-    public const int EventPropertyChange = 22;
+    public const int IdShutdown = 1;
+    public const int IdEndFile = 7;
+    public const int IdFileLoaded = 8;
+    public const int IdPlaybackRestart = 21;
+    public const int IdPropertyChange = 22;
 
     public const int EndFileEof = 0;
     public const int EndFileError = 4;
