@@ -196,7 +196,7 @@ public partial class ShellView : UserControl
     {
         try
         {
-            return (await _addonClient.FetchMetaAsync(AppInfo.CinemetaManifestUrl, item.IsMovie ? "movie" : "series", item.ContentId, cancel))?.Poster;
+            return (await _addonClient.FetchMetaAsync(ArcTV.Core.AppInfo.CinemetaManifestUrl, item.IsMovie ? "movie" : "series", item.ContentId, cancel))?.Poster;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
