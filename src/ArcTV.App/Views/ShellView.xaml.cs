@@ -191,6 +191,19 @@ public partial class ShellView : UserControl
         return new PlaybackPreferences(s?.SubtitlesEnabled ?? false, s?.DefaultSubtitleLanguage, s?.DefaultAudioLanguage, SubtitleStyle.SizeFrom(_local.SubtitleSize), SubtitleStyle.ColorFrom(_local.SubtitleColor));
     }
 
+    /// <summary>A rated title's poster, from Cinemeta (the account keeps the rating, not the picture).</summary>
+    private async Task<string?> PosterFor(FeedbackItem item, CancellationToken cancel)
+    {
+        try
+        {
+            return (await _addonClient.FetchMetaAsync(AppInfo.CinemetaManifestUrl, item.IsMovie ? "movie" : "series", item.ContentId, cancel))?.Poster;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>One model for the session. When addons change, what Home, Movies and TV Shows read from them is fetched again.</summary>
     private AddonsModel AddonsFor()
     {
@@ -256,7 +269,7 @@ public partial class ShellView : UserControl
             "Movies" => new BrowseView("Movies", BrowseFor("movie")),
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
             "My List" => new MyListView(MyListFor()),
-            "Settings" => new SettingsView(_settingsModel, AddonsFor(), _home, _user, _local, _plus, MyListFor(), OpenTitle, () => _ = _home.LoadAsync(), () => _ = _account.SignOutAsync()),
+            "Settings" => new SettingsView(_settingsModel, AddonsFor(), _home, _user, _local, _plus, MyListFor(), PosterFor, () => _ = _home.LoadAsync(), () => _ = _account.SignOutAsync()),
             "Search" => new SearchView(new SearchModel(_account.Session!.User.Id, SourcesAsync, new RecentSearchStore(Path.Combine(AppPaths.DataFolder(), "recent-searches.json")), _addonClient) { Blocked = _settingsModel.Blocked }),
             _ => new ComingSoonView(place),
         };

@@ -324,7 +324,7 @@ public class ScreenTests
         var plus = new PlusModel(new FakePlusStore());
         foreach (var place in new[] { "Account", "Addons", "Home Rows", "Blocked Genres", "Player", "Subtitles", "Audio", "Updates", "Arc TV Plus", "Plus settings", "Recommendations", "Your stats" })
         {
-            var view = new SettingsView(settings, addons, home, new AccountUser("u1", "me@x.test", "Me"), local, plus, new MyListModel(_ => Task.FromResult(new List<WatchlistItem>())), _ => { }, () => { }, () => { }, place);
+            var view = new SettingsView(settings, addons, home, new AccountUser("u1", "me@x.test", "Me"), local, plus, new MyListModel(_ => Task.FromResult(new List<WatchlistItem>())), (_, _) => Task.FromResult<string?>("https://img.test/p.jpg"), () => { }, () => { }, place);
             var window = Host(view);
             await Settle();
             await Task.Delay(150);

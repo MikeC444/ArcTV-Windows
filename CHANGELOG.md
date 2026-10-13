@@ -375,3 +375,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Open:** Like / Not for me, the Picked for you engine and row, profiles, smart source picking, Download, the Plus popups.
 
+**Follow-up (owner: show the Liked and Not for me lists as posters, in a row, with the picture).** The two lists were plain rows with a letter. They are now a sideways-scrolling row of the same poster cards Home uses (a click opens the title), with a small cross on each to take the rating off. The account keeps the rating but not the picture, so `PlusModel.LoadPostersAsync` looks up each rated title's poster from Cinemeta (four at a time, announced together when done; a title whose lookup fails keeps its name on the card). Also fixes the CI build: `PlusPane.Tag` hid `FrameworkElement.Tag` (warning CS0108, an error on the build server), renamed `Chip`. Not seen on screen.
+

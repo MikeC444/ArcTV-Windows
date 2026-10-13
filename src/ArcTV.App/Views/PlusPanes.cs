@@ -33,7 +33,7 @@ internal abstract class PlusPane : ModelPane
         return Ui.Card(panel, 18);
     }
 
-    protected static Border Tag(string text, bool soon)
+    protected static Border Chip(string text, bool soon)
     {
         var color = soon ? Color.FromRgb(0xC9, 0xB5, 0xFF) : Color.FromRgb(0x19, 0xE6, 0xFF);
         return new Border
@@ -104,8 +104,8 @@ internal sealed class ArcTvPlusPane(SettingsModel settings, PlusModel plus) : Pl
             var card = new StackPanel();
             var title = new WrapPanel();
             title.Children.Add(new TextBlock { Text = perk.Title, FontSize = 15, FontWeight = FontWeights.Bold, VerticalAlignment = VerticalAlignment.Center });
-            title.Children.Add(Tag(perk.Soon ? "Coming soon" : status.Paywall ? "Plus" : "Included in early access", perk.Soon));
-            if (perk.Tag is { } extra && !perk.Soon) title.Children.Add(Tag(extra, true));
+            title.Children.Add(Chip(perk.Soon ? "Coming soon" : status.Paywall ? "Plus" : "Included in early access", perk.Soon));
+            if (perk.Tag is { } extra && !perk.Soon) title.Children.Add(Chip(extra, true));
             card.Children.Add(title);
             card.Children.Add(new TextBlock { Text = perk.Detail, FontSize = 13, Foreground = Ui.Res("Text2Brush"), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0) });
             var cell = Surface(card);
@@ -294,16 +294,18 @@ internal sealed class PlusSettingsPane(SettingsModel settings, PlusModel plus, A
 internal sealed class RecommendationsPane : PlusPane
 {
     private readonly MyListModel _list;
-    private readonly Action<MetaPreview> _open;
+    private readonly Func<FeedbackItem, CancellationToken, Task<string?>> _posterLookup;
     private readonly Action _seePlus;
     private Rating _tab = Rating.Like;
     private bool _confirmingReset;
 
-    public RecommendationsPane(SettingsModel settings, PlusModel plus, MyListModel list, Action<MetaPreview> open, Action seePlus) : base(settings, plus, list)
+    public RecommendationsPane(SettingsModel settings, PlusModel plus, MyListModel list, Func<FeedbackItem, CancellationToken, Task<string?>> posterLookup, Action seePlus) : base(settings, plus, list)
     {
         _list = list;
-        _open = open;
+        _posterLookup = posterLookup;
         _seePlus = seePlus;
+        // the same poster card Home uses (a click on it opens the title: the shell sees the click on a button that stands for a title)
+        Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("pack://application:,,,/ArcTV;component/Views/PosterTemplate.xaml") });
     }
 
     protected override async Task ShownAsync()
@@ -311,6 +313,7 @@ internal sealed class RecommendationsPane : PlusPane
         await Plus.LoadStatusAsync();
         if (!Plus.Active) return;
         await Task.WhenAll(Plus.LoadRatingsAsync(), _list.Items is null ? _list.LoadAsync() : Task.CompletedTask);
+        await Plus.LoadPostersAsync(_posterLookup);
     }
 
     protected override void Build(StackPanel column)
@@ -365,38 +368,30 @@ internal sealed class RecommendationsPane : PlusPane
             return panel;
         }
 
-        foreach (var item in shown) panel.Children.Add(RatedRow(item));
-        return panel;
-    }
-
-    private UIElement RatedRow(FeedbackItem item)
-    {
-        var grid = new Grid();
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        grid.ColumnDefinitions.Add(new ColumnDefinition());
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        var initial = new Border
+        // a row of posters you can scroll sideways (arrows at its ends), each with a small cross to take the rating off
+        var strip = new StackPanel { Orientation = Orientation.Horizontal };
+        foreach (var item in shown)
         {
-            Width = 40, Height = 60, CornerRadius = new CornerRadius(6), Background = Ui.Res("SurfaceBrush"),
-            Child = new TextBlock { Text = item.Title.Length > 0 ? item.Title[..1].ToUpperInvariant() : "?", FontSize = 18, FontWeight = FontWeights.Bold, Foreground = Ui.Res("Text3Brush"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
-        };
-        grid.Children.Add(initial);
-        var text = new StackPanel { Margin = new Thickness(12, 0, 12, 0), VerticalAlignment = VerticalAlignment.Center };
-        text.Children.Add(new TextBlock { Text = item.Title, FontSize = 14, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
-        text.Children.Add(new TextBlock { Text = item.IsMovie ? "Movie" : "TV show", FontSize = 12, Foreground = Ui.Res("Text3Brush") });
-        Grid.SetColumn(text, 1);
-        grid.Children.Add(text);
-        var buttons = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        var view = Ui.Act("View", () => _open(new MetaPreview(item.ContentId, item.IsMovie ? "movie" : "series", item.Title)));
-        view.Height = 34;
-        var remove = Ui.Act("Remove", () => _ = Plus.RemoveRatingAsync(item));
-        remove.Height = 34;
-        remove.Margin = new Thickness(0);
-        buttons.Children.Add(view);
-        buttons.Children.Add(remove);
-        Grid.SetColumn(buttons, 2);
-        grid.Children.Add(buttons);
-        return Ui.Card(grid, 10);
+            var cell = new Grid();
+            cell.Children.Add(new ContentControl { Content = new MetaPreview(item.ContentId, item.IsMovie ? "movie" : "series", item.Title, Plus.Posters.GetValueOrDefault(item.ContentId)) });
+            var remove = new Border
+            {
+                Width = 30, Height = 30, CornerRadius = new CornerRadius(15), Background = new SolidColorBrush(Color.FromArgb(0xC8, 0, 0, 0)), Cursor = System.Windows.Input.Cursors.Hand,
+                HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(10, 20, 0, 0), ToolTip = "Take this off your list",
+                Child = new TextBlock { Text = "\uE711", FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 12, Foreground = Brushes.White, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
+            };
+            var captured = item;
+            remove.MouseLeftButtonUp += (_, e) =>
+            {
+                e.Handled = true;
+                _ = Plus.RemoveRatingAsync(captured);
+            };
+            cell.Children.Add(remove);
+            strip.Children.Add(cell);
+        }
+
+        panel.Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 154, Content = strip });
+        return panel;
     }
 
     private static UIElement Shapes(RecommendationSummary s)

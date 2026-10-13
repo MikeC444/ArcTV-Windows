@@ -44,10 +44,10 @@ public sealed class SettingsView : UserControl
     private readonly Dictionary<string, (TextBlock Tag, Border Row)> _tags = [];
     private readonly PlusModel _plus;
     private readonly MyListModel _list;
-    private readonly Action<MetaPreview> _openTitle;
+    private readonly Func<FeedbackItem, CancellationToken, Task<string?>> _posterLookup;
     private string _current = "Account";
 
-    public SettingsView(SettingsModel settings, AddonsModel addons, HomeModel home, AccountUser user, LocalSettings local, PlusModel plus, MyListModel list, Action<MetaPreview> openTitle, Action refreshHome, Action signOut, string open = "Account")
+    public SettingsView(SettingsModel settings, AddonsModel addons, HomeModel home, AccountUser user, LocalSettings local, PlusModel plus, MyListModel list, Func<FeedbackItem, CancellationToken, Task<string?>> posterLookup, Action refreshHome, Action signOut, string open = "Account")
     {
         _settings = settings;
         _addons = addons;
@@ -56,7 +56,7 @@ public sealed class SettingsView : UserControl
         _local = local;
         _plus = plus;
         _list = list;
-        _openTitle = openTitle;
+        _posterLookup = posterLookup;
         _refreshHome = refreshHome;
         _signOut = signOut;
         _current = open;
@@ -194,7 +194,7 @@ public sealed class SettingsView : UserControl
             "Updates" => new UpdatesPane(_settings),
             "Arc TV Plus" => new ArcTvPlusPane(_settings, _plus),
             "Plus settings" => new PlusSettingsPane(_settings, _plus, _local, () => Show("Arc TV Plus")),
-            "Recommendations" => new RecommendationsPane(_settings, _plus, _list, _openTitle, () => Show("Arc TV Plus")),
+            "Recommendations" => new RecommendationsPane(_settings, _plus, _list, _posterLookup, () => Show("Arc TV Plus")),
             "Your stats" => new StatsPane(_settings, _plus, () => Show("Arc TV Plus")),
             _ => new ComingSoonPane(name),
         };

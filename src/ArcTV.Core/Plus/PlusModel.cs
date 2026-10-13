@@ -51,6 +51,7 @@ public sealed class PlusModel(IPlusStore store, Func<DateTime>? now = null, Time
     private IReadOnlyDictionary<string, FeedbackItem> _ratings = new Dictionary<string, FeedbackItem>();
     private bool _ratingsLoaded;
     private WatchStats? _stats;
+    private IReadOnlyDictionary<string, string> _posters = new Dictionary<string, string>();
     private bool _statsTruncated;
     private bool _statsFailed;
     private CancellationTokenSource? _watch;
@@ -68,6 +69,9 @@ public sealed class PlusModel(IPlusStore store, Func<DateTime>? now = null, Time
     public IReadOnlyDictionary<string, FeedbackItem> Ratings { get => _ratings; private set => Set(ref _ratings, value); }
 
     public bool RatingsLoaded { get => _ratingsLoaded; private set => Set(ref _ratingsLoaded, value); }
+
+    /// <summary>The poster of each rated title (by id), looked up when the Recommendations page opens: the account keeps the rating, not the picture.</summary>
+    public IReadOnlyDictionary<string, string> Posters { get => _posters; private set => Set(ref _posters, value); }
 
     public WatchStats? Stats { get => _stats; private set => Set(ref _stats, value); }
 
@@ -115,6 +119,35 @@ public sealed class PlusModel(IPlusStore store, Func<DateTime>? now = null, Time
         {
             StatsFailed = true;
         }
+    }
+
+    /// <summary>Finds a poster for every rated title that has none yet (four lookups at a time) and announces them together. A title whose lookup fails just stays without one.</summary>
+    public async Task LoadPostersAsync(Func<FeedbackItem, CancellationToken, Task<string?>> lookup, CancellationToken cancel = default)
+    {
+        var need = Ratings.Values.Where(i => !Posters.ContainsKey(i.ContentId)).ToList();
+        if (need.Count == 0) return;
+        var found = new System.Collections.Concurrent.ConcurrentDictionary<string, string>();
+        using var gate = new SemaphoreSlim(4);
+        await Task.WhenAll(need.Select(async item =>
+        {
+            await gate.WaitAsync(cancel).ConfigureAwait(false);
+            try
+            {
+                if (await lookup(item, cancel).ConfigureAwait(false) is { Length: > 0 } url) found[item.ContentId] = url;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // no poster for this one
+            }
+            finally
+            {
+                gate.Release();
+            }
+        })).ConfigureAwait(true);
+        if (found.IsEmpty) return;
+        var all = Posters.ToDictionary(p => p.Key, p => p.Value);
+        foreach (var (id, url) in found) all[id] = url;
+        Posters = all;
     }
 
     /// <summary>Takes the rating off one title. Shown at once; put back if the account could not be reached.</summary>

@@ -192,6 +192,27 @@ public class PlusTests
     }
 
     [Fact]
+    public async Task PostersAreLookedUpOnceForEveryRatedTitleAndAFailureLeavesOneOut()
+    {
+        var store = new FakeStore { Feedback = [Rated("a", "like"), Rated("b", "dislike"), Rated("c", "like")] };
+        var model = new PlusModel(store);
+        await model.LoadRatingsAsync();
+        var asked = new List<string>();
+        Task<string?> Lookup(FeedbackItem item, CancellationToken _)
+        {
+            lock (asked) asked.Add(item.ContentId);
+            return item.ContentId == "b" ? throw new HttpRequestException("no") : Task.FromResult<string?>("https://img.test/" + item.ContentId);
+        }
+
+        await model.LoadPostersAsync(Lookup);
+        Assert.Equal(["a", "c"], model.Posters.Keys.OrderBy(k => k));
+        Assert.Equal("https://img.test/a", model.Posters["a"]);
+        asked.Clear();
+        await model.LoadPostersAsync(Lookup);
+        Assert.Equal(["b"], asked); // only the one still without a poster is tried again
+    }
+
+    [Fact]
     public async Task RemovingARatingIsShownAtOnceAndPutBackOnFailure()
     {
         var store = new FakeStore { Feedback = [Rated("a", "like")] };
