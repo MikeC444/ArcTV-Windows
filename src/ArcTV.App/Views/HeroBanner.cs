@@ -59,7 +59,7 @@ public sealed class HeroBanner : Grid
     private static UIElement Slide(MetaPreview item)
     {
         var grid = new Grid();
-        grid.Children.Add(new RemoteImage { Url = item.Background ?? item.Poster, DecodeWidth = 1600, Stretch = Stretch.UniformToFill, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top });
+        grid.Children.Add(new RemoteImage { Url = BiggerBackground(item.Background) ?? item.Poster, FallbackUrl = item.Background ?? item.Poster, DecodeWidth = 0, Stretch = Stretch.UniformToFill, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top });
         // fades into the page at the bottom, and darkens the left so the words can be read
         grid.Children.Add(new System.Windows.Shapes.Rectangle { Fill = new LinearGradientBrush(Colors.Transparent, (Color)Application.Current.FindResource("BgColor"), 90) { GradientStops = { new GradientStop(Colors.Transparent, 0.45) } } });
         grid.Children.Add(new System.Windows.Shapes.Rectangle { Fill = new LinearGradientBrush(Color.FromArgb(0xD9, 8, 8, 10), Colors.Transparent, 0) { GradientStops = { new GradientStop(Colors.Transparent, 0.6) } } });
@@ -82,4 +82,11 @@ public sealed class HeroBanner : Grid
         grid.Children.Add(details);
         return grid;
     }
+
+    /// <summary>
+    /// The artwork server these addresses come from (Cinemeta's) keeps the banner picture in sizes, and the addon hands out the medium one, which goes soft on a
+    /// big window. Ask for the large one; the picture falls back to the address given if there is none. Anything else is left alone.
+    /// </summary>
+    private static string? BiggerBackground(string? url) =>
+        url is not null && url.Contains("/background/medium/", StringComparison.Ordinal) ? url.Replace("/background/medium/", "/background/large/", StringComparison.Ordinal) : url;
 }

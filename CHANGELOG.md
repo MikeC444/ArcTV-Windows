@@ -103,6 +103,10 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
   - the hover lift on a poster eases in and out instead of snapping (this card is shared with Home).
 - Bigger posters on request: the shared card went from 156x234 to 192x288 (a line is now 208 wide with its gap) and pictures are decoded at 400 wide. Home's rows
   use the same card, so they grow too.
+- Home banner looked soft (screenshot). Two changes, neither confirmed by looking at the result: the banner now asks the artwork server (Cinemeta's) for the
+  "large" background instead of the "medium" one the addon lists, and falls back to the listed address when there is no large one (a missing picture is not
+  retried; `RemoteImage` gained a `FallbackUrl`); and it is no longer shrunk to 1600 wide when decoded, but kept at the size it arrives. That the artwork
+  server has a "large" size is an assumption (it could not be reached from here); if it does not, nothing changes from before.
 - Pill text: the pill's content now takes its colour from the button, so the selected pill's black text applies.
 
 **Open:** blocked genres (needs profiles/settings), loading skeletons, a virtualised grid (the grid lays out every loaded poster), opening a title (needs title details).

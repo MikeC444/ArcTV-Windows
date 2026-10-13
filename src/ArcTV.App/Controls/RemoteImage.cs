@@ -26,9 +26,14 @@ public sealed class RemoteImage : Image
 
     public static readonly DependencyProperty DecodeWidthProperty = DependencyProperty.Register(nameof(DecodeWidth), typeof(int), typeof(RemoteImage), new PropertyMetadata(320));
 
+    public static readonly DependencyProperty FallbackUrlProperty = DependencyProperty.Register(nameof(FallbackUrl), typeof(string), typeof(RemoteImage), new PropertyMetadata(null, (d, _) => ((RemoteImage)d).Load()));
+
     private CancellationTokenSource? _cancel;
 
     public string? Url { get => (string?)GetValue(UrlProperty); set => SetValue(UrlProperty, value); }
+
+    /// <summary>Tried when <see cref="Url"/> is not there or never loads (for a bigger picture that may not exist for every title).</summary>
+    public string? FallbackUrl { get => (string?)GetValue(FallbackUrlProperty); set => SetValue(FallbackUrlProperty, value); }
 
     public int DecodeWidth { get => (int)GetValue(DecodeWidthProperty); set => SetValue(DecodeWidthProperty, value); }
 
@@ -46,43 +51,55 @@ public sealed class RemoteImage : Image
     {
         _cancel?.Cancel();
         Source = null;
-        if (!Uri.TryCreate(Url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) return;
+        var addresses = new[] { Url, FallbackUrl }
+            .Select(text => Uri.TryCreate(text, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https" ? uri : null)
+            .OfType<Uri>()
+            .Distinct()
+            .ToList();
+        if (addresses.Count == 0) return;
 
         var cancel = (_cancel = new CancellationTokenSource()).Token;
-        var key = $"{DecodeWidth}|{uri}";
-        if (Kept.TryGetValue(key, out var hit))
-        {
-            BeginAnimation(OpacityProperty, null);
-            Source = hit;
-            return;
-        }
-
         var width = DecodeWidth;
-        for (var attempt = 1; attempt <= Attempts && !cancel.IsCancellationRequested; attempt++)
+        foreach (var uri in addresses)
         {
-            try
+            var key = $"{width}|{uri}";
+            if (Kept.TryGetValue(key, out var hit))
             {
-                var picture = await Task.Run(() => FetchAsync(uri, width, cancel), cancel);
-                if (cancel.IsCancellationRequested) return;
-                Keep(key, picture);
-                Source = picture;
-                BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)));
+                BeginAnimation(OpacityProperty, null);
+                Source = hit;
                 return;
             }
-            catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+
+            for (var attempt = 1; attempt <= Attempts && !cancel.IsCancellationRequested; attempt++)
             {
-                return;
-            }
-            catch (Exception)
-            {
-                if (attempt == Attempts) return;
                 try
                 {
-                    await Task.Delay(attempt * 1500, cancel);
+                    var picture = await Task.Run(() => FetchAsync(uri, width, cancel), cancel);
+                    if (cancel.IsCancellationRequested) return;
+                    Keep(key, picture);
+                    Source = picture;
+                    BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)));
+                    return;
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (cancel.IsCancellationRequested)
                 {
                     return;
+                }
+                catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound or System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Gone)
+                {
+                    break; // not there: trying again will not help, so go on to the next address
+                }
+                catch (Exception)
+                {
+                    if (attempt == Attempts) break;
+                    try
+                    {
+                        await Task.Delay(attempt * 1500, cancel);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
                 }
             }
         }
@@ -98,7 +115,7 @@ public sealed class RemoteImage : Image
             var image = new BitmapImage();
             image.BeginInit();
             image.StreamSource = stream;
-            image.DecodePixelWidth = width;
+            if (width > 0) image.DecodePixelWidth = width;
             image.CacheOption = BitmapCacheOption.OnLoad;
             image.EndInit();
             image.Freeze();
