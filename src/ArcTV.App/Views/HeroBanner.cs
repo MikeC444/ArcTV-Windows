@@ -183,7 +183,7 @@ public sealed class HeroBanner : Grid
             },
         });
 
-        var details = new StackPanel { Margin = new Thickness(24, 96, 24, 112), VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 600 };
+        var details = new StackPanel { Margin = new Thickness(24, 96, 24, 150), VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 600 };
         if (!string.IsNullOrEmpty(item.Logo))
         {
             details.Children.Add(new RemoteImage { Url = item.Logo, DecodeWidth = 760, Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 380, MaxHeight = 110 });

@@ -46,7 +46,7 @@ public partial class HomeView : UserControl
         SizeChanged += (_, e) => { if (_hero is not null) _hero.Height = HeroHeight(e.NewSize.Height); };
     }
 
-    private static double HeroHeight(double windowHeight) => Math.Max(windowHeight * 0.62, 500);
+    private static double HeroHeight(double windowHeight) => Math.Max(windowHeight * 0.78, 580);
 
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
 
