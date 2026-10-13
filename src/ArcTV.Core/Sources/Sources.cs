@@ -60,6 +60,12 @@ public sealed partial record SourceItem(string AddonName, AddonStream Stream, in
 
     public bool IsPlayable => PlayUrl is not null;
 
+    /// <summary>
+    /// What identifies this stream among the others of its addon: every line the addon wrote about it (its name, title and description, the file name, size and file number) but not its
+    /// link, which can change between two requests. Streams often share a first line (<see cref="Headline"/>) and differ in quality, so that alone does not tell them apart.
+    /// </summary>
+    public string Signature => string.Join("\n", new[] { Stream.Name, Stream.Title, Stream.Description, Stream.BehaviorHints?.Filename, Stream.BehaviorHints?.VideoSize?.ToString(CultureInfo.InvariantCulture), Stream.FileIdx?.ToString(CultureInfo.InvariantCulture) }.Select(text => text ?? ""));
+
     /// <summary>A torrent (no web link, but a torrent hash): a torrent engine can stream it.</summary>
     public bool IsTorrent => PlayUrl is null && !string.IsNullOrEmpty(Stream.InfoHash);
 

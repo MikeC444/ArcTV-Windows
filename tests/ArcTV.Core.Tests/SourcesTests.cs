@@ -134,9 +134,37 @@ public class SourcesTests
         };
         Assert.Equal("ABC", new LastSource("Z", "gone", "abc").Match(items)!.Stream.InfoHash); // same torrent, any letter case
         Assert.Equal("B", new LastSource("B", "Movie 1080p").Match(items)!.AddonName); // same release from the same addon
-        Assert.Equal("A", new LastSource("C", "Movie 1080p").Match(items)!.AddonName); // else the same release name
+        Assert.Null(new LastSource("C", "Movie 1080p").Match(items)); // two addons list that name: not sure which, so not guessed
+        Assert.Equal("A", new LastSource("C", "Other").Match(items)!.AddonName); // a name only one stream has
         Assert.Null(new LastSource("A", "Nothing like it").Match(items));
         Assert.Null(new LastSource("A", "x").Match([Item("A", new AddonStream(Title: "x"))])); // a source that cannot play does not count
+    }
+
+    [Fact]
+    public void LastSourceDoesNotGuessBetweenStreamsThatShareAReleaseName()
+    {
+        // an addon often gives the same first line to every quality of a film; what tells them apart is the rest of what it wrote
+        var items = new List<SourceItem>
+        {
+            Item("A", new AddonStream(Name: "Debrid 2160p", Title: "Movie\n💾 58 GB", Url: "https://x/4k"), 0),
+            Item("A", new AddonStream(Name: "Debrid 1080p", Title: "Movie\n💾 6 GB", Url: "https://x/1080"), 1),
+            Item("A", new AddonStream(Name: "Debrid 720p", Title: "Movie\n💾 2 GB", Url: "https://x/720"), 2),
+        };
+        var chosen = items[1];
+        Assert.Equal("Movie", chosen.Headline);
+        // remembered with its full write-up: that very stream, even when the list comes in another order and with other links
+        var last = LastSource.From(chosen);
+        var fresh = new List<SourceItem>
+        {
+            Item("A", new AddonStream(Name: "Debrid 720p", Title: "Movie\n💾 2 GB", Url: "https://x/new720"), 0),
+            Item("A", new AddonStream(Name: "Debrid 1080p", Title: "Movie\n💾 6 GB", Url: "https://x/new1080"), 1),
+            Item("A", new AddonStream(Name: "Debrid 2160p", Title: "Movie\n💾 58 GB", Url: "https://x/new4k"), 2),
+        };
+        Assert.Equal("https://x/new1080", last.Match(fresh)!.PlayUrl!.ToString());
+        // remembered only by name (an older entry): three streams fit, so none is picked
+        Assert.Null(new LastSource("A", "Movie").Match(items));
+        // gone from the list: nothing
+        Assert.Null(last.Match([fresh[0], fresh[2]]));
     }
 
     [Fact]

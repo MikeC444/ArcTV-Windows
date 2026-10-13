@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Continue Watching now starts the same source you used last time, or shows the list when it cannot be sure which one that was, instead of starting a different one that might not play.
 - The top bar is bigger: a larger logo, bigger menu buttons and a bigger profile button.
 - A slow or unreachable server no longer closes the app.
 - The player's controls now sit at the very bottom of the picture on every screen, and clicking the Audio, Subtitles or Speed button again closes its list.
