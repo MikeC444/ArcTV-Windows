@@ -3,23 +3,27 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using ArcTV.Core.Home;
+using ArcTV.Core.MyList;
 
 namespace ArcTV.App.Views;
 
 public partial class HomeView : UserControl
 {
     private readonly HomeModel _model;
+    private readonly MyListModel? _list;
     private HeroBanner? _hero;
 
-    public HomeView(HomeModel model)
+    public HomeView(HomeModel model, MyListModel? list = null)
     {
         InitializeComponent();
         _model = model;
+        _list = list;
         Loaded += (_, _) =>
         {
             _model.PropertyChanged += OnModelChanged;
             Refresh();
             _hero?.Start(); // coming back from a title page, the banner goes on rotating
+            if (_list is { Items: null }) _ = _list.LoadAsync(); // so the banner's My List button knows what is on the list
         };
         Unloaded += (_, _) =>
         {
@@ -55,7 +59,7 @@ public partial class HomeView : UserControl
         else if (_hero is null || !_hero.Shows(hero))
         {
             _hero?.Stop();
-            _hero = new HeroBanner(hero) { Height = HeroHeight(ActualHeight) };
+            _hero = new HeroBanner(hero, _list) { Height = HeroHeight(ActualHeight) };
             HeroHost.Children.Clear();
             HeroHost.Children.Add(_hero);
             Rows.Margin = new Thickness(0, -60, 0, 40);

@@ -197,3 +197,7 @@ choice pills, the top bar's current place, and the chosen season circle. An unch
 
 **Follow-up (screenshot): account menu.** The menu from the account button (top right) was the default Windows one: a white box whose words were invisible because the app's text colour is light. It now has its
 own dark, rounded style (`DarkMenu`, `DarkMenuItem`, `DarkMenuSeparator`) with the email dimmed, a divider, and "Sign out" lit under the pointer.
+
+**Follow-up (owner asked where the Home banner's buttons were): banner buttons.** They had never been built (they were on the "not done on Home" list). Each banner slide now has Play (switched off until the
+player exists), More info (opens the title's page) and My List (adds or removes it; reads "In My List" when it is on it, whichever page changed it). Trailer is left out: it needs the account
+server's trailer lookup, which is not ported yet.

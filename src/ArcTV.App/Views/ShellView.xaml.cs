@@ -151,7 +151,7 @@ public partial class ShellView : UserControl
         foreach (var (name, pill) in _pills) pill.Tag = name == place ? "selected" : name;
         Page.Content = place switch
         {
-            "Home" => new HomeView(_home),
+            "Home" => new HomeView(_home, MyListFor()),
             "Movies" => new BrowseView("Movies", BrowseFor("movie")),
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
             "My List" => new MyListView(MyListFor()),

@@ -6,7 +6,7 @@ under its version automatically.
 
 ## Unreleased
 - Sign in with your email, or scan a QR code with your phone. You stay signed in next time.
-- Home is here: a rotating banner and rows of movies and shows from your addons.
+- Home is here: a rotating banner (with More info and My List buttons) and rows of movies and shows from your addons.
 - Movies and TV Shows pages: pick a genre, sort by Featured, Highest Rated or Newest, and keep scrolling for more. Posters are bigger and fade in, scrolling glides, and rows spread to fill the window as you resize it.
 - Search is here: type to search every addon at once, pick from suggestions, and get your recent searches back.
 - My List is here: your saved titles, with a green tick on the ones you've watched, and sorting.
