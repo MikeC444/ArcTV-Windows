@@ -23,6 +23,7 @@ public partial class PosterGrid : UserControl
 {
     private const double TileWidth = 208;
     private const double SideSpace = 72;
+    private const double ScrollBarWidth = 10; // the thin scroll bar in the theme
     private const double LoadMoreWithin = 900;
 
     public static readonly DependencyProperty ExtraProperty = DependencyProperty.Register(nameof(Extra), typeof(double), typeof(PosterGrid), new PropertyMetadata(0.0));
@@ -82,7 +83,7 @@ public partial class PosterGrid : UserControl
     // ---- laying out ----
 
     /// <summary>The width a line of posters has to fill (the control less its side space and the scroll bar).</summary>
-    private double Available() => ActualWidth - SystemParameters.VerticalScrollBarWidth - SideSpace;
+    private double Available() => ActualWidth - ScrollBarWidth - SideSpace;
 
     private int PerRow() => Math.Max(1, (int)(Available() / TileWidth));
 

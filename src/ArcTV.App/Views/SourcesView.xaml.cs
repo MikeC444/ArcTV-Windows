@@ -20,6 +20,7 @@ public partial class SourcesView : UserControl
     private readonly Action _back;
     private CancellationTokenSource? _run;
     private SmoothScroller? _smooth;
+    private SmoothScroller? _smoothInfo;
 
     public SourcesView(SourcesModel model, LastSourceStore? store, Action back)
     {
@@ -29,6 +30,7 @@ public partial class SourcesView : UserControl
         _back = back;
         ShowTitle();
         ListScroll.PreviewMouseWheel += (_, e) => (_smooth ??= new SmoothScroller(ListScroll, 1.1)).Wheel(e);
+        InfoScroll.PreviewMouseWheel += (_, e) => (_smoothInfo ??= new SmoothScroller(InfoScroll, 1.1)).Wheel(e); // the title's column has no scroll bar; the wheel moves it when the window is short
 
         Loaded += async (_, _) =>
         {
@@ -42,6 +44,7 @@ public partial class SourcesView : UserControl
             _model.PropertyChanged -= OnModelChanged;
             _run?.Cancel();
             _smooth?.Stop();
+            _smoothInfo?.Stop();
         };
     }
 

@@ -24,7 +24,7 @@
       </Grid.ColumnDefinitions>
 
       <!-- the title: poster, year, logo, genres and length, description -->
-      <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+      <ScrollViewer Grid.Column="0" x:Name="InfoScroll" VerticalScrollBarVisibility="Hidden">
         <StackPanel Margin="28,104,16,24">
           <Button Content="&#x2039;  Back" Style="{StaticResource ChoicePill}" HorizontalAlignment="Left" Click="OnBack" />
           <c:RoundedBorder Width="240" Height="360" CornerRadius="18" Margin="0,18,0,0" HorizontalAlignment="Left" Background="{StaticResource SurfaceBrush}" BorderBrush="#24FFFFFF" BorderThickness="1">
