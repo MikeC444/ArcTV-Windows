@@ -9,6 +9,7 @@ using ArcTV.Core.Addons;
 using ArcTV.Core.Browse;
 using ArcTV.Core.Details;
 using ArcTV.Core.MyList;
+using ArcTV.Core.Sources;
 
 namespace ArcTV.App.Views;
 
@@ -21,12 +22,14 @@ public sealed class HeroBanner : Grid
     private readonly StackPanel _dots = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 36, 78) };
     private readonly MyListModel? _list;
     private readonly IDetailExtras? _extras;
+    private readonly Action<PlayTarget>? _play;
     private Button? _listButton;
     private int _index;
 
-    public HeroBanner(IReadOnlyList<MetaPreview> items, MyListModel? list = null, IDetailExtras? extras = null)
+    public HeroBanner(IReadOnlyList<MetaPreview> items, MyListModel? list = null, IDetailExtras? extras = null, Action<PlayTarget>? play = null)
     {
         _items = items;
+        _play = play;
         _list = list;
         _extras = extras;
         ClipToBounds = true;
@@ -99,7 +102,23 @@ public sealed class HeroBanner : Grid
     private StackPanel Buttons(MetaPreview item)
     {
         var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 18, 0, 0) };
-        row.Children.Add(new Button { Content = "\u25B6  Play", Style = (Style)Application.Current.FindResource("PrimaryButton"), Height = 44, Padding = new Thickness(24, 0, 24, 0), IsEnabled = false, ToolTip = "Playing is coming soon to Arc TV for Windows.", Margin = new Thickness(0, 0, 12, 0) });
+        var play = new Button { Content = "\u25B6  Play", Style = (Style)Application.Current.FindResource("PrimaryButton"), Height = 44, Padding = new Thickness(24, 0, 24, 0), Margin = new Thickness(0, 0, 12, 0) };
+        if (_play is null)
+        {
+            play.IsEnabled = false;
+            play.ToolTip = "Playing is coming soon to Arc TV for Windows.";
+        }
+        else if (item.Type == "movie")
+        {
+            play.Click += (_, _) => _play(new PlayTarget(item.AsDetail()));
+        }
+        else
+        {
+            play.DataContext = item; // a show needs an episode: its page (which sees the click on a button that stands for a title) has them
+            play.ToolTip = "Opens the show to choose an episode";
+        }
+
+        row.Children.Add(play);
         var trailer = new Button { Content = "Trailer", Style = (Style)Application.Current.FindResource("ChoicePill"), Height = 44, Margin = new Thickness(0, 0, 12, 0), IsEnabled = false, ToolTip = "Looking for a trailer…" };
         row.Children.Add(trailer);
         _ = FindTrailerAsync(item, trailer);

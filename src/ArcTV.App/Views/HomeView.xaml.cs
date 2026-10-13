@@ -6,6 +6,7 @@ using ArcTV.App.Controls;
 using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
+using ArcTV.Core.Sources;
 
 namespace ArcTV.App.Views;
 
@@ -15,14 +16,16 @@ public partial class HomeView : UserControl
     private readonly MyListModel? _list;
     private SmoothScroller? _smooth;
     private readonly IDetailExtras? _extras;
+    private readonly Action<PlayTarget>? _play;
     private HeroBanner? _hero;
 
-    public HomeView(HomeModel model, MyListModel? list = null, IDetailExtras? extras = null)
+    public HomeView(HomeModel model, MyListModel? list = null, IDetailExtras? extras = null, Action<PlayTarget>? play = null)
     {
         InitializeComponent();
         _model = model;
         _list = list;
         _extras = extras;
+        _play = play;
         Loaded += (_, _) =>
         {
             _model.PropertyChanged += OnModelChanged;
@@ -69,7 +72,7 @@ public partial class HomeView : UserControl
         else if (_hero is null || !_hero.Shows(hero))
         {
             _hero?.Stop();
-            _hero = new HeroBanner(hero, _list, _extras) { Height = HeroHeight(ActualHeight) };
+            _hero = new HeroBanner(hero, _list, _extras, _play) { Height = HeroHeight(ActualHeight) };
             HeroHost.Children.Clear();
             HeroHost.Children.Add(_hero);
             Rows.Margin = new Thickness(0, -60, 0, 40);

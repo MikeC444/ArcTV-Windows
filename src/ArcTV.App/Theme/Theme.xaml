@@ -351,6 +351,28 @@
     </Setter>
   </Style>
 
+  <!-- a row in the source list: lit under the pointer, outlined when it is the recommended one (the button's Tag is "recommended") -->
+  <Style x:Key="SourceRow" TargetType="Button">
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Margin" Value="0,0,0,10" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Box" CornerRadius="14" Padding="16,12" Background="#D926262B" BorderBrush="Transparent" BorderThickness="1.5">
+            <ContentPresenter />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Tag" Value="recommended"><Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}" /></Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="Background" Value="{StaticResource SurfaceBrush}" /></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Box" Property="Opacity" Value="0.55" /></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <Style x:Key="DotButton" TargetType="Button">
     <Setter Property="Width" Value="18" />
     <Setter Property="Height" Value="24" />

@@ -10,6 +10,7 @@
     </ResourceDictionary.MergedDictionaries>
     <!-- an episode: its picture with the number on it, then its name and a couple of lines about it -->
     <DataTemplate DataType="{x:Type core:EpisodeInfo}">
+      <Button Style="{StaticResource PosterButton}" Focusable="True">
       <StackPanel Width="280" Margin="0,6,16,6">
         <c:RoundedBorder Width="280" Height="158" CornerRadius="14" Background="{StaticResource SurfaceBrush}" BorderBrush="#24FFFFFF" BorderThickness="1">
           <Grid>
@@ -22,6 +23,7 @@
         <TextBlock Text="{Binding DisplayTitle}" Margin="2,8,2,0" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
         <TextBlock Text="{Binding Overview}" Margin="2,2,2,0" FontSize="12" Foreground="{StaticResource Text2Brush}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="34" />
       </StackPanel>
+      </Button>
     </DataTemplate>
 
     <!-- a person in the cast: round photo (or their initial), name, character -->
@@ -85,7 +87,7 @@
         <!-- the buttons, with the IMDb rating at the far end of the row -->
         <Grid Margin="44,24,44,0">
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-            <Button x:Name="PlayButton" Content="&#x25B6;  Play" Style="{StaticResource PrimaryButton}" Height="48" Padding="28,0" IsEnabled="False" ToolTip="Playing is coming soon to Arc TV for Windows." Margin="0,0,14,0" />
+            <Button x:Name="PlayButton" Content="&#x25B6;  Play" Style="{StaticResource PrimaryButton}" Height="48" Padding="28,0" IsEnabled="False" Margin="0,0,14,0" Click="OnPlay" />
             <Button x:Name="TrailerButton" Content="Trailer" Style="{StaticResource ChoicePill}" Height="48" Margin="0,0,14,0" IsEnabled="False" ToolTip="Looking for a trailer…" Click="OnTrailer" />
             <Button x:Name="ListButton" Style="{StaticResource ChoicePill}" Height="48" Margin="0,0,14,0" Click="OnList" />
             <Button x:Name="WatchedButton" Style="{StaticResource ChoicePill}" Height="48" Click="OnWatched" />

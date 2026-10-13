@@ -7,6 +7,7 @@ using ArcTV.Core;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Details;
 using ArcTV.Core.MyList;
+using ArcTV.Core.Sources;
 
 namespace ArcTV.App.Views;
 
@@ -20,18 +21,21 @@ public partial class DetailView : UserControl
     private readonly MyListModel _list;
     private readonly Action _back;
     private readonly Func<IReadOnlyList<MetaPreview>>? _similarPool;
+    private readonly Action<PlayTarget>? _play;
     private bool _similarShown;
     private SmoothScroller? _smooth;
     private CancellationTokenSource? _run;
     private IReadOnlyList<int> _seasonsShown = [];
 
-    public DetailView(DetailModel model, MyListModel list, Action back, Func<IReadOnlyList<MetaPreview>>? similarPool = null)
+    public DetailView(DetailModel model, MyListModel list, Action back, Func<IReadOnlyList<MetaPreview>>? similarPool = null, Action<PlayTarget>? play = null)
     {
         InitializeComponent();
         _model = model;
         _list = list;
         _back = back;
         _similarPool = similarPool;
+        _play = play;
+        AddHandler(Button.ClickEvent, new RoutedEventHandler(OnEpisodeClick)); // a click on an episode's card opens its sources
 
         Loaded += async (_, _) =>
         {
@@ -94,6 +98,7 @@ public partial class DetailView : UserControl
         RefreshSeasons();
         RefreshTrailer();
         RefreshSimilar();
+        RefreshPlay();
 
         var cast = _model.Cast;
         CastPanel.Visibility = cast.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -101,6 +106,35 @@ public partial class DetailView : UserControl
     }
 
     private static bool SameCast(IReadOnlyList<CastMember>? shown, IReadOnlyList<CastMember> cast) => shown is not null && shown.SequenceEqual(cast);
+
+    /// <summary>What Play starts: a movie, or a show's first episode (there is no watch history here yet to say where you were).</summary>
+    private PlayTarget? MainTarget()
+    {
+        if (!_model.IsShow) return new PlayTarget(_model.Detail);
+        var first = _model.Detail.SeasonNumbers.Count > 0 ? _model.Detail.Seasons[_model.Detail.SeasonNumbers[0]].FirstOrDefault() : null;
+        return first is null ? null : EpisodeTarget(first);
+    }
+
+    private PlayTarget EpisodeTarget(EpisodeInfo episode) =>
+        new(_model.Detail, episode.Season, episode.Episode, $"S{episode.Season ?? 0} E{episode.Episode ?? 0} {episode.DisplayTitle}");
+
+    private void RefreshPlay()
+    {
+        var target = MainTarget();
+        PlayButton.IsEnabled = _play is not null && target is not null;
+        PlayButton.Content = target?.Season is { } season && target.Episode is { } episode ? $"\u25B6  Play S{season}E{episode}" : "\u25B6  Play";
+        PlayButton.ToolTip = _play is null ? "Playing is coming soon to Arc TV for Windows." : target is null ? "Looking for episodes…" : null;
+    }
+
+    private void OnPlay(object sender, RoutedEventArgs e)
+    {
+        if (_play is not null && MainTarget() is { } target) _play(target);
+    }
+
+    private void OnEpisodeClick(object sender, RoutedEventArgs e)
+    {
+        if (_play is not null && e.OriginalSource is Button { DataContext: EpisodeInfo episode }) _play(EpisodeTarget(episode));
+    }
 
     private void RefreshTrailer()
     {

@@ -12,6 +12,7 @@ using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
 using ArcTV.Core.Search;
+using ArcTV.Core.Sources;
 using ArcTV.Core.Storage;
 
 namespace ArcTV.App.Views;
@@ -165,7 +166,15 @@ public partial class ShellView : UserControl
     private void OpenTitle(MetaPreview item)
     {
         if (Page.Content is UIElement current) _history.Push((current, _place));
-        Page.Content = new DetailView(new DetailModel(item, _addonClient, _extras), MyListFor(), GoBack, () => _home.AllRows.SelectMany(row => row.Items).ToList());
+        Page.Content = new DetailView(new DetailModel(item, _addonClient, _extras), MyListFor(), GoBack, () => _home.AllRows.SelectMany(row => row.Items).ToList(), OpenSources);
+    }
+
+    /// <summary>The source list for a movie or an episode, over the page that asked for it; Back returns to that page.</summary>
+    private void OpenSources(PlayTarget target)
+    {
+        if (Page.Content is UIElement current) _history.Push((current, _place));
+        var store = new LastSourceStore(Path.Combine(AppPaths.DataFolder(), "last-sources.json"), _account.Session!.User.Id);
+        Page.Content = new SourcesView(new SourcesModel(target, AccountAddonsAsync, _addonClient), store, GoBack);
     }
 
     private void GoBack()
@@ -185,7 +194,7 @@ public partial class ShellView : UserControl
         foreach (var (name, pill) in _pills) pill.Tag = name == place ? "selected" : name;
         Page.Content = place switch
         {
-            "Home" => new HomeView(_home, MyListFor(), _extras),
+            "Home" => new HomeView(_home, MyListFor(), _extras, OpenSources),
             "Movies" => new BrowseView("Movies", BrowseFor("movie")),
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
             "My List" => new MyListView(MyListFor()),
