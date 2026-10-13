@@ -22,7 +22,7 @@ public sealed class HeroBanner : Grid
     private readonly IReadOnlyList<MetaPreview> _items;
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(6) };
     private readonly Grid _slide = new();
-    private readonly StackPanel _dots = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 36, 78) };
+    private readonly StackPanel _dots = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 36, 78 + FadeExtra) };
     private readonly MyListModel? _list;
     private readonly IDetailExtras? _extras;
     private readonly Action<PlayTarget>? _play;
