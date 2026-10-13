@@ -19,8 +19,8 @@
 
     <Grid>
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="0.40*" MinWidth="360" />
-        <ColumnDefinition Width="0.60*" />
+        <ColumnDefinition Width="*" MinWidth="360" />
+        <ColumnDefinition Width="*" />
       </Grid.ColumnDefinitions>
 
       <!-- the title: poster, year, logo, genres and length, description -->

@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- The source list starts at the middle of the window instead of stretching across most of it.
 - Posters now grow and shrink with the window, so about the same number fit across on a small window and on a big screen.
 - The Sources button is gone from a title's page (Choose source is in the right-click menu on a poster).
 - The right-click menu on a poster is bigger.
