@@ -184,20 +184,18 @@ public sealed class HeroBanner : Grid
         });
 
         var details = new StackPanel { Margin = new Thickness(24, 120, 24, 0), VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 600 }; // top left, under the top bar
+        // every part has a fixed height whatever it holds (a tall or short logo, no genres, a one-line description), so the buttons are in exactly the same place on every slide
+        var heading = new Grid { Height = 110, HorizontalAlignment = HorizontalAlignment.Left };
         if (!string.IsNullOrEmpty(item.Logo))
-        {
-            details.Children.Add(new RemoteImage { Url = item.Logo, DecodeWidth = 760, Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 380, MaxHeight = 110 });
-        }
+            heading.Children.Add(new RemoteImage { Url = item.Logo, DecodeWidth = 760, Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Bottom, MaxWidth = 380, MaxHeight = 110 });
         else
-        {
-            details.Children.Add(new TextBlock { Text = item.Name, FontSize = 44, FontWeight = FontWeights.ExtraBold, TextWrapping = TextWrapping.Wrap, MaxHeight = 120 });
-        }
+            heading.Children.Add(new TextBlock { Text = item.Name, FontSize = 44, FontWeight = FontWeights.ExtraBold, TextWrapping = TextWrapping.Wrap, MaxHeight = 110, VerticalAlignment = VerticalAlignment.Bottom, TextTrimming = TextTrimming.CharacterEllipsis });
+        details.Children.Add(heading);
 
         var facts = string.Join("   ", new[] { item.ReleaseInfo, item.Runtime, item.ImdbRating is null ? null : "★ " + item.ImdbRating }.Where(f => !string.IsNullOrEmpty(f)));
-        if (facts.Length > 0) details.Children.Add(new TextBlock { Text = facts, FontSize = 14, FontWeight = FontWeights.Medium, Margin = new Thickness(0, 12, 0, 0) });
-        if (item.Genres is { Count: > 0 }) details.Children.Add(new TextBlock { Text = string.Join("  ·  ", item.Genres.Take(3)), FontSize = 13, Opacity = 0.9, Margin = new Thickness(0, 6, 0, 0) });
-        var description = Text.HtmlDecoded(item.Description);
-        if (description.Length > 0) details.Children.Add(new TextBlock { Text = description, FontSize = 14, TextWrapping = TextWrapping.Wrap, MaxHeight = 66, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Thickness(0, 10, 0, 0) });
+        details.Children.Add(new TextBlock { Text = facts, Height = 20, FontSize = 14, FontWeight = FontWeights.Medium, Margin = new Thickness(0, 12, 0, 0) });
+        details.Children.Add(new TextBlock { Text = string.Join("  ·  ", (item.Genres ?? []).Take(3)), Height = 18, FontSize = 13, Opacity = 0.9, Margin = new Thickness(0, 6, 0, 0) });
+        details.Children.Add(new TextBlock { Text = Text.HtmlDecoded(item.Description), Height = 66, FontSize = 14, TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Thickness(0, 10, 0, 0) });
         details.Children.Add(Buttons(item));
 
         // the block grows and shrinks with the banner: its size follows the smaller of how wide and how tall the banner is (measured against a 1300 x 560 banner), within limits,

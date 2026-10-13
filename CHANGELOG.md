@@ -287,3 +287,6 @@ moved from the left of the picture to the right. The banner went back to 62% of 
 
 **Follow-up (owner: top left, not top right; scale with the window).** The Home banner's info block is back on the left, at the top (under the top bar), with the shade that keeps it readable on the left again. It now scales with the window: its size follows the smaller of how wide and how tall the banner is (measured against a 1300 x 560 banner,
 kept between 70% and 160%), and its distance from the top is a fifth of the banner's height (at least 104 pixels, so never under the top bar). The earlier try at "top right" is undone.
+
+**Follow-up (owner: keep the banner's buttons in the exact same spot on every slide).** The info block grew and shrank with what a title had (a tall or short logo, no genres, one line of description), so the buttons under it moved from slide to slide. Each part now has a fixed height whatever it holds: the logo (or title) area 110, the facts line 20, genres 18, the
+description 66 (cut off with "..." if longer), so Play, Trailer, More info and My List are in the same place on every slide at a given window size (and scale with it as before).
