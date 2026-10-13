@@ -40,7 +40,10 @@ public sealed class SettingsModel(IAccountSettingsStore store) : ObservableObjec
     /// <summary>Asks every page showing the settings to draw itself again (for a choice kept only on this PC, like the subtitle size).</summary>
     public void Redraw() => Raise(nameof(Current));
 
-    public IReadOnlySet<string> Blocked => BlockedGenres.Set(Current?.BlockedGenres);
+    /// <summary>Genres hidden on top of the ones the account blocks (a kids profile's list).</summary>
+    public IReadOnlyCollection<string> AlsoBlocked { get; set; } = [];
+
+    public IReadOnlySet<string> Blocked => BlockedGenres.Set((Current?.BlockedGenres ?? []).Concat(AlsoBlocked));
 
     public HomeRowPreferences RowPreferences => new(Current?.HomeRowOrder ?? [], Current?.HiddenRowIds ?? []);
 

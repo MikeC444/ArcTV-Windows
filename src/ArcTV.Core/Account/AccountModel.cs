@@ -14,6 +14,7 @@ public sealed class AccountModel : ObservableObject
     private readonly HttpClient? _http;
     private readonly Func<DateTime> _now;
     private Session? _session;
+    private string _profileId = Profiles.Profile.MainId;
     private bool _busy;
     private string? _error;
     private DateTime? _waitUntil;
@@ -47,7 +48,15 @@ public sealed class AccountModel : ObservableObject
         set { _settings.ServerUrl = value; Raise(); }
     }
 
-    public AuthClient Client(string? profileId = null) => new(ServerUrl, profileId, _http);
+    /// <summary>The profile in use (Arc TV Plus). Library calls carry it; "main" is the account's own profile.</summary>
+    public string ProfileId { get => _profileId; private set { if (Set(ref _profileId, value)) Raise(nameof(Scope)); } }
+
+    public void UseProfile(string? id) => ProfileId = string.IsNullOrEmpty(id) ? Profiles.Profile.MainId : id;
+
+    /// <summary>What this PC's local copies (recent searches, remembered sources, picked rows) are filed under: the account, and the profile when it is not the account's own, so the account's own profile keeps the names it always had.</summary>
+    public string? Scope => Session is { } s ? (ProfileId == Profiles.Profile.MainId ? s.User.Id : $"{s.User.Id}-{ProfileId}") : null;
+
+    public AuthClient Client(string? profileId = null) => new(ServerUrl, profileId ?? ProfileId, _http);
 
     public Task<bool> SignInAsync(string email, string password, CancellationToken cancel = default) =>
         EnterAsync(email, password, () => Client().LoginAsync(email.Trim(), password, _device.Id(), _device.Name, cancel));
@@ -109,6 +118,7 @@ public sealed class AccountModel : ObservableObject
     private void Forget()
     {
         _store.Clear();
+        ProfileId = Profiles.Profile.MainId;
         Session = null;
     }
 

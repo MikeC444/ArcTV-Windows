@@ -9,6 +9,7 @@ using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Player;
 using ArcTV.Core.Plus;
+using ArcTV.Core.Profiles;
 using ArcTV.Core.Settings;
 using ArcTV.Core.Browse;
 using ArcTV.Core.Continue;
@@ -46,18 +47,29 @@ public partial class ShellView : UserControl
     private IReadOnlyList<HomeSource> _sources = [];
     private string _place = "";
     private readonly Dictionary<string, Button> _pills = [];
+    private readonly Action? _switchProfile;
 
-    public ShellView(AccountModel account)
+    public ShellView(AccountModel account) : this(account, new PlusModel(new AccountPlusStore(account)))
+    {
+    }
+
+    /// <summary>
+    /// <paramref name="plus"/> is the account's Plus state (already read when profiles were); <paramref name="profile"/> is the profile in use, if the account has profiles, and
+    /// <paramref name="switchProfile"/> goes back to "Who's watching?" (null when there is nothing to switch to).
+    /// </summary>
+    public ShellView(AccountModel account, PlusModel plus, Profile? profile = null, Action? switchProfile = null)
     {
         InitializeComponent();
         _account = account;
+        _switchProfile = switchProfile;
         _extras = new AccountDetailExtras(account);
         var user = account.Session!.User;
         _user = user;
-        _home = new HomeModel(AccountAddonsAsync, user.Id);
-        _settingsModel = new SettingsModel(new AccountSettingsStore(account));
+        var scope = account.Scope ?? user.Id; // what this PC's local copies are filed under: the account, and the profile when it is not the account's own
+        _home = new HomeModel(AccountAddonsAsync, scope);
+        _settingsModel = new SettingsModel(new AccountSettingsStore(account)) { AlsoBlocked = profile is { IsKids: true } ? Profile.KidsBlockedGenres : [] };
         _settingsModel.Changed += ApplySettings;
-        _plus = new PlusModel(new AccountPlusStore(account));
+        _plus = plus;
         _continue = new ContinueModel(new AccountContinueStore(account), async title =>
         {
             // a movie played to the end is marked watched on My List (once)
@@ -71,7 +83,7 @@ public partial class ShellView : UserControl
                 BlockedGenres.Without(_home.AllRows.SelectMany(row => row.Items).GroupBy(i => i.Id).Select(g => g.First()).ToList(), _settingsModel.Blocked),
                 MyListFor().Items ?? [], _plus.Ratings, _continue.Items.Select(i => i.ContentId).ToList()),
             FeatureLoading.Loader(new FeatureCache(Path.Combine(AppPaths.DataFolder(), "features.json")), FeaturesOfAsync),
-            new AccountPickedStore(account), Path.Combine(AppPaths.DataFolder(), "picked.json"));
+            new AccountPickedStore(account), Path.Combine(AppPaths.DataFolder(), account.ProfileId == Profile.MainId ? "picked.json" : $"picked-{account.ProfileId}.json"));
 
         foreach (var place in Places)
         {
@@ -81,7 +93,7 @@ public partial class ShellView : UserControl
             Pills.Children.Add(pill);
         }
 
-        BuildAccountButton(user);
+        BuildAccountButton(user, profile);
 
         // a click on any poster (or suggestion) that stands for a title opens that title; the mouse's Back button and Escape come back
         AddHandler(Button.ClickEvent, new RoutedEventHandler(OnTitleClick));
@@ -132,15 +144,16 @@ public partial class ShellView : UserControl
         return IntPtr.Zero;
     }
 
-    private void BuildAccountButton(AccountUser user)
+    private void BuildAccountButton(AccountUser user, Profile? profile)
     {
-        var name = string.IsNullOrWhiteSpace(user.DisplayName) ? user.Email : user.DisplayName!;
-        var initial = new Border
+        var name = profile?.Name ?? (string.IsNullOrWhiteSpace(user.DisplayName) ? user.Email : user.DisplayName!);
+        FrameworkElement initial = profile is not null ? ProfilePickerView.Avatar(profile.Avatar, 36) : new Border
         {
             Width = 36, Height = 36, CornerRadius = new CornerRadius(18), Margin = new Thickness(4, 0, 10, 0),
             Background = (Brush)FindResource("BrandGradient"),
             Child = new TextBlock { Text = name[..1].ToUpperInvariant(), FontWeight = FontWeights.Bold, Foreground = Brushes.Black, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
         };
+        initial.Margin = new Thickness(4, 0, 10, 0);
         var label = new TextBlock { Text = name, MaxWidth = 150, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 14, 0), FontWeight = FontWeights.SemiBold };
         AccountButton.Content = new StackPanel { Orientation = Orientation.Horizontal, Children = { initial, label } };
 
@@ -148,6 +161,13 @@ public partial class ShellView : UserControl
         var signOut = new MenuItem { Header = "Sign out", Style = (Style)FindResource("DarkMenuItem") };
         signOut.Click += async (_, _) => await _account.SignOutAsync();
         AccountMenu.Items.Add(email);
+        if (_switchProfile is not null)
+        {
+            var switchItem = new MenuItem { Header = "Switch profile", Style = (Style)FindResource("DarkMenuItem") };
+            switchItem.Click += (_, _) => _switchProfile();
+            AccountMenu.Items.Add(switchItem);
+        }
+
         AccountMenu.Items.Add(new Separator { Style = (Style)FindResource("DarkMenuSeparator") });
         AccountMenu.Items.Add(signOut);
     }
@@ -294,7 +314,7 @@ public partial class ShellView : UserControl
     /// </summary>
     private SourcesView SourcesPage(PlayTarget target)
     {
-        var store = new LastSourceStore(Path.Combine(AppPaths.DataFolder(), "last-sources.json"), _account.Session!.User.Id);
+        var store = new LastSourceStore(Path.Combine(AppPaths.DataFolder(), "last-sources.json"), _account.Scope!);
         var smart = _plus.Active && _local.SmartPicking;
         var model = new SourcesModel(target, AccountAddonsAsync, _addonClient, items => AutoPick.Choose(target, items, store.Get(target.Title.Id, target.Season, target.Episode), smart));
         return new SourcesView(model, store, GoBack, OpenPlayer);
@@ -339,7 +359,7 @@ public partial class ShellView : UserControl
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
             "My List" => new MyListView(MyListFor()),
             "Settings" => new SettingsView(_settingsModel, AddonsFor(), _home, _user, _local, _plus, MyListFor(), PosterFor, () => { _picked.Reload(); _ = _home.LoadAsync(); }, () => _ = _account.SignOutAsync()),
-            "Search" => new SearchView(new SearchModel(_account.Session!.User.Id, SourcesAsync, new RecentSearchStore(Path.Combine(AppPaths.DataFolder(), "recent-searches.json")), _addonClient) { Blocked = _settingsModel.Blocked }),
+            "Search" => new SearchView(new SearchModel(_account.Scope!, SourcesAsync, new RecentSearchStore(Path.Combine(AppPaths.DataFolder(), "recent-searches.json")), _addonClient) { Blocked = _settingsModel.Blocked }),
             _ => new ComingSoonView(place),
         };
     }

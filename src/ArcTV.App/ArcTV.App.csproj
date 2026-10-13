@@ -23,6 +23,7 @@
     <PackageReference Include="QRCoder" Version="1.6.0" />
     <Resource Include="Assets\auth-hero.jpg" />
     <Resource Include="Assets\logo.png" />
+    <Resource Include="Assets\avatars\*.png" />
     <Resource Include="Assets\ArcTV.ico" />
   </ItemGroup>
   <ItemGroup>

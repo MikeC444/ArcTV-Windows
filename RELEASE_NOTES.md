@@ -5,6 +5,8 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Profiles (Arc TV Plus): "Who's watching?" appears when you sign in, with pictures to choose from and a PIN for profiles that have one. Manage Profiles adds, edits and removes them, and "Switch profile" in the account menu comes back to it. Each profile keeps its own list, ratings, Continue Watching and settings, and a kids profile hides mature genres.
+- The app no longer starts over by itself when your sign-in is renewed in the background.
 - Play carries on with the source you used last time, without asking again. A new "Sources" button on a title lets you pick a different one.
 - Smart source picking (Arc TV Plus) starts the best source that can play, once every addon has answered.
 - The next episode starts by itself when one ends (if Auto Play Next Episode is on), and a Next episode button shows in the last minute.

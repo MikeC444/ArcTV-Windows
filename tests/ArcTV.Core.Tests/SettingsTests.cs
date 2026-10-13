@@ -107,6 +107,17 @@ public class SettingsTests
     }
 
     [Fact]
+    public async Task AKidsListIsBlockedOnTopOfTheAccountsOwn()
+    {
+        var model = new SettingsModel(new FakeStore(AccountSettings.Default with { BlockedGenres = ["Horror"] }));
+        await model.LoadAsync();
+        model.AlsoBlocked = ["Crime", "War"];
+        Assert.True(model.Blocked.SetEquals(["horror", "crime", "war"]));
+        model.AlsoBlocked = [];
+        Assert.Single(model.Blocked);
+    }
+
+    [Fact]
     public void BlockedGenresLeaveTitlesOut()
     {
         MetaPreview Item(string id, params string[] genres) => new(id, "movie", id) { Genres = [.. genres] };

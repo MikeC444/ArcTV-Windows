@@ -37,6 +37,25 @@ public class AccountModelTests : IDisposable
     }
 
     [Fact]
+    public async Task TheProfileInUseDecidesTheHeaderAndWhatLocalCopiesAreFiledUnder()
+    {
+        var (model, handler) = Make((_, _) => (HttpStatusCode.OK, Login));
+        Assert.Null(model.Scope); // nobody signed in
+        await model.SignInAsync("a@b.co", "password1");
+        Assert.Equal("u", model.Scope); // the account's own profile keeps the plain name
+        model.UseProfile("kid");
+        Assert.Equal("u-kid", model.Scope);
+        Assert.Equal("kid", model.Client().ProfileId);
+        await model.AuthorizedAsync((c, t) => c.SendJsonAsync(HttpMethod.Get, "/user/watchlist", null, null, t));
+        Assert.Equal("kid", handler.Calls[^1].Request.Headers.GetValues("X-ArcTV-Profile").Single());
+        model.UseProfile(null);
+        Assert.Equal("u", model.Scope);
+        model.UseProfile("kid");
+        await model.SignOutAsync();
+        Assert.Equal("main", model.ProfileId); // the next person starts on their own profile
+    }
+
+    [Fact]
     public async Task BadInputNeverReachesTheServer()
     {
         var (model, handler) = Make((_, _) => (HttpStatusCode.OK, Login));

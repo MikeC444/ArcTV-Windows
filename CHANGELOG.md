@@ -477,3 +477,19 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Issues fixed:** None yet.
 
+## 17 -- Profiles: Who's watching, manage profiles, switching
+
+**Status:** Built and tested by the Windows build server (xUnit and the screen tests); not seen on a screen from this sandbox. Ported from the Mac app's `Profiles.swift`, `ProfilesView.swift` and the profile part of `AppModel`.
+
+**Context:** A Plus account can have up to five profiles, each with its own My List, Continue Watching, ratings, settings and addons. Windows only ever used the account's own profile.
+
+**Changes:**
+- Core: `Profile`, the sixteen avatars (the Mac app's pictures, turned into PNGs because WPF cannot read WebP), `ProfilesApi` (list, create, edit, delete, check a PIN; the PIN of a locked profile travels in `X-ArcTV-Pin`), `ProfilesModel` (reading the list, PIN check with words for each outcome, name rules). `AccountModel` now knows the profile in use: library calls carry `X-ArcTV-Profile` (calls about the account itself, such as the profile list and Plus, do not), and `Scope` names what this PC's local copies (recent searches, remembered sources, the Picked for you memory) are filed under, so the account's own profile keeps the names it had.
+- App: `ProfilePickerView` ("Who's watching?", the PIN question, Manage Profiles with add and edit, delete asking twice). `MainWindow` reads Plus and the profiles after sign-in, shows the picker when there is more than one profile, and starts the whole app (`ShellView`) again for the profile chosen, so nothing of the last profile stays in memory. The account menu has Switch profile (Plus accounts) and the account button shows the profile's picture and name. A kids profile hides the kids list of genres on top of the account's own blocked ones.
+
+**Tests performed:** xUnit: avatars, PINs, account-level paths, the model's loading, PIN outcomes and edits, the API calls and headers (the profile header on library calls and not on profile calls, the PIN header, kept/removed/set PIN), the profile in use and its scope, the kids genres. Screen tests: the picker lists the profiles, opens one without a PIN at once, refuses a wrong PIN and opens on the right one, and adds a profile from Manage Profiles.
+
+**Issues discovered:** The window rebuilt the whole app each time the account announced `IsSignedIn`, which it also does whenever the sign-in token is renewed, so the app could start over by itself (back to Home, in the middle of a video) about when a token ran out.
+
+**Issues fixed:** `MainWindow` now only reacts when signing in or out actually changes. The kids profile's genre list and the profile picker could not be tried against a real account.
+

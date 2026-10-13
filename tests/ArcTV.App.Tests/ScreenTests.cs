@@ -350,4 +350,102 @@ public class ScreenTests
         Assert.True(view.ActualHeight > 0);
         window.Close();
     });
+
+    private sealed class FakeProfiles : ArcTV.Core.Profiles.IProfileStore
+    {
+        public List<ArcTV.Core.Profiles.Profile> Items =
+        [
+            new("main", "Me", "fox", IsDefault: true),
+            new("p2", "Kid", "cat", "kids", HasPin: true),
+        ];
+
+        public Task<IReadOnlyList<ArcTV.Core.Profiles.Profile>> ListAsync(CancellationToken cancel = default) => Task.FromResult<IReadOnlyList<ArcTV.Core.Profiles.Profile>>(Items.ToList());
+
+        public Task CreateAsync(string name, string avatar, string kind, string? pin, CancellationToken cancel = default)
+        {
+            Items.Add(new("new", name, avatar, kind, pin is not null));
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAsync(string id, string name, string avatar, string kind, ArcTV.Core.Profiles.PinChange pin, string? currentPin, CancellationToken cancel = default) => Task.CompletedTask;
+
+        public Task DeleteAsync(string id, string? currentPin, CancellationToken cancel = default) => Task.CompletedTask;
+
+        public Task<ArcTV.Core.Profiles.PinOutcome> VerifyPinAsync(string id, string pin, CancellationToken cancel = default) =>
+            Task.FromResult(pin == "1234" ? ArcTV.Core.Profiles.PinOutcome.Ok : ArcTV.Core.Profiles.PinOutcome.Wrong);
+    }
+
+    private static IEnumerable<T> Descendants<T>(System.Windows.DependencyObject root) where T : System.Windows.DependencyObject
+    {
+        for (var i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(root, i);
+            if (child is T found) yield return found;
+            foreach (var deeper in Descendants<T>(child)) yield return deeper;
+        }
+    }
+
+    [Fact]
+    public void WhosWatchingShowsEachProfileAndAsksForAPin() => OnUiThread(async () =>
+    {
+        var model = new ArcTV.Core.Profiles.ProfilesModel(new FakeProfiles());
+        await model.LoadAsync(true);
+        ArcTV.Core.Profiles.Profile? opened = null;
+        var view = new ProfilePickerView(model, "main", p => opened = p);
+        var window = Host(view);
+        await Settle();
+        Assert.Equal("list", view.State);
+        var cards = Descendants<System.Windows.Controls.Button>(view).Where(b => b.Tag is "main" or "p2").ToList();
+        Assert.Equal(2, cards.Count);
+
+        // a profile without a PIN opens at once
+        cards.Single(b => b.Tag is "main").RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+        Assert.Equal("main", opened?.Id);
+
+        // one with a PIN asks first; a wrong PIN is refused with words, the right one opens it
+        opened = null;
+        cards.Single(b => b.Tag is "p2").RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+        await Settle();
+        Assert.Equal("pin", view.State);
+        Assert.Null(opened);
+        var box = Descendants<System.Windows.Controls.PasswordBox>(view).Single();
+        var go = Descendants<System.Windows.Controls.Button>(view).Single(b => b.Content is "Continue");
+        box.Password = "0000";
+        go.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+        await Task.Delay(100);
+        await Settle();
+        Assert.Null(opened);
+        Assert.Contains(Descendants<System.Windows.Controls.TextBlock>(view), t => t.Text == "That PIN is wrong.");
+        box.Password = "1234";
+        go.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+        await Task.Delay(100);
+        await Settle();
+        Assert.Equal("p2", opened?.Id);
+        window.Close();
+    });
+
+    [Fact]
+    public void ManageProfilesOffersAddingAndEditing() => OnUiThread(async () =>
+    {
+        var model = new ArcTV.Core.Profiles.ProfilesModel(new FakeProfiles());
+        await model.LoadAsync(true);
+        var view = new ProfilePickerView(model, null, _ => { });
+        var window = Host(view);
+        await Settle();
+        Descendants<System.Windows.Controls.Button>(view).Single(b => b.Content is "Manage Profiles").RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+        await Settle();
+        Assert.Contains(Descendants<System.Windows.Controls.Button>(view), b => b.Tag is "add");
+        Descendants<System.Windows.Controls.Button>(view).Single(b => b.Tag is "add").RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+        await Settle();
+        Assert.Equal("add", view.State);
+        var name = Descendants<System.Windows.Controls.TextBox>(view).First();
+        name.Text = "Gran";
+        Descendants<System.Windows.Controls.Button>(view).Single(b => b.Content is "Save").RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+        await Task.Delay(100);
+        await Settle();
+        Assert.Equal("list", view.State);
+        Assert.Equal(3, model.Profiles.Count);
+        window.Close();
+    });
 }
+

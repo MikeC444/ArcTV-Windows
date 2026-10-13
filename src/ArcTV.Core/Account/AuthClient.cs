@@ -81,7 +81,7 @@ public sealed class AuthClient
         using var request = new HttpRequestMessage(method, url);
         request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {accessToken}");
         request.Headers.TryAddWithoutValidation("X-ArcTV-App-Version", AppInfo.Version);
-        if (!string.IsNullOrEmpty(ProfileId) && ProfileId != "main") request.Headers.TryAddWithoutValidation("X-ArcTV-Profile", ProfileId);
+        if (!string.IsNullOrEmpty(ProfileId) && ProfileId != Profiles.Profile.MainId && !Profiles.Profile.IsAccountLevel(path)) request.Headers.TryAddWithoutValidation("X-ArcTV-Profile", ProfileId);
         if (headers is not null) foreach (var (name, value) in headers) request.Headers.TryAddWithoutValidation(name, value);
         if (jsonBody is not null) request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
         return await ApiHttp.SendAsync(request, _http, ApiHttp.SlowTimeout, cancel).ConfigureAwait(false);
