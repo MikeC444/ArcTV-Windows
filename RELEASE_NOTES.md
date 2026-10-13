@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- The up and down arrows in Settings > Home Rows show again.
 - The top bar now stays inside the window: in a narrow window it shrinks to fit instead of pushing the profile button out of sight.
 - The Continue Watching pictures are bigger.
 - Clicking a title in Continue Watching opens its source list, and the video starts from where you left off once you pick one.

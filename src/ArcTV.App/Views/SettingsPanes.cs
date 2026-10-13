@@ -192,14 +192,20 @@ internal sealed class HomeRowsPane : ModelPane
             grid.Children.Add(text);
             Button Arrow(string glyph, int delta, bool enabled, int column)
             {
-                var b = new Button { Content = glyph, Width = 32, Height = 32, Margin = new Thickness(6, 0, 0, 0), IsEnabled = enabled, Style = (Style)Application.Current.FindResource("GhostButton"), FontSize = 12, Padding = new Thickness(0) };
+                // the ghost button's own padding left no room for the arrow in a 32-pixel square (it showed as an empty square), so this is the round button the season numbers use
+                var b = new Button
+                {
+                    Content = new TextBlock { Text = glyph, FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 15, FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
+                    Width = 40, Height = 40, Margin = new Thickness(8, 0, 0, 0), IsEnabled = enabled, Opacity = enabled ? 1 : 0.3, ToolTip = delta < 0 ? "Move up" : "Move down",
+                    Style = (Style)Application.Current.FindResource("SeasonCircle"), Foreground = Ui.Res("TextBrush"),
+                };
                 b.Click += async (_, _) => await Settings.MoveRowAsync(order, id, delta);
                 Grid.SetColumn(b, column);
                 return b;
             }
 
-            grid.Children.Add(Arrow("▲", -1, i > 0, 2));
-            grid.Children.Add(Arrow("▼", 1, i < choices.Count - 1, 3));
+            grid.Children.Add(Arrow("\uE70E", -1, i > 0, 2));
+            grid.Children.Add(Arrow("\uE70D", 1, i < choices.Count - 1, 3));
             column.Children.Add(Ui.Card(grid, 12));
         }
     }
