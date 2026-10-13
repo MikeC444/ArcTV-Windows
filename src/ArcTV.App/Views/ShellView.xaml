@@ -12,14 +12,15 @@
           <GradientStop Color="#00080A0A" Offset="1" />
         </LinearGradientBrush>
       </Grid.Background>
-      <Grid Margin="28,18,28,0" VerticalAlignment="Top">
+      <Grid x:Name="BarRow" Margin="28,18,28,0" VerticalAlignment="Top">
+        <Grid.LayoutTransform><ScaleTransform x:Name="BarScale" ScaleX="1" ScaleY="1" /></Grid.LayoutTransform>
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" MinWidth="120" />
           <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="*" MinWidth="120" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <Image x:Name="Logo" Grid.Column="0" Source="/Assets/logo.png" Height="52" HorizontalAlignment="Left" Cursor="Hand" MouseLeftButtonDown="OnLogo" />
-        <Border Grid.Column="1" CornerRadius="32" Background="#B3141417" BorderBrush="#17FFFFFF" BorderThickness="1" Padding="5">
+        <Border x:Name="PillsBox" Grid.Column="1" HorizontalAlignment="Center" Margin="24,0" CornerRadius="32" Background="#B3141417" BorderBrush="#17FFFFFF" BorderThickness="1" Padding="5">
           <StackPanel x:Name="Pills" Orientation="Horizontal" />
         </Border>
         <Button x:Name="AccountButton" Grid.Column="2" HorizontalAlignment="Right" Style="{StaticResource GhostButton}" Height="58" FontSize="19" Padding="0" Click="OnAccount" ToolTip="Account">

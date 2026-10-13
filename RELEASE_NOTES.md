@@ -5,8 +5,9 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- The top bar now stays inside the window: in a narrow window it shrinks to fit instead of pushing the profile button out of sight.
 - The Continue Watching pictures are bigger.
-- Clicking a title in Continue Watching starts the recommended source straight away, from where you left off.
+- Clicking a title in Continue Watching opens its source list, and the video starts from where you left off once you pick one.
 - Settings > Addons shows your addons two to a row.
 - More space between the rows on Home, and bigger titles under the posters.
 - The source list no longer has a Copy link button.

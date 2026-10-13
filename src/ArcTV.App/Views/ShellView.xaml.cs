@@ -95,6 +95,7 @@ public partial class ShellView : UserControl
         }
 
         BuildAccountButton(user, profile);
+        SizeChanged += (_, _) => FitBar();
 
         // a click on any poster (or suggestion) that stands for a title opens that title; the mouse's Back button and Escape come back
         AddHandler(Button.ClickEvent, new RoutedEventHandler(OnTitleClick));
@@ -171,6 +172,18 @@ public partial class ShellView : UserControl
 
         AccountMenu.Items.Add(new Separator { Style = (Style)FindResource("DarkMenuSeparator") });
         AccountMenu.Items.Add(signOut);
+    }
+
+    /// <summary>
+    /// Keeps the top bar inside the window: the logo, the places and the profile button need a certain width, and in a narrower window the whole bar shrinks to fit (down to half size)
+    /// instead of pushing the profile button out of sight.
+    /// </summary>
+    private void FitBar()
+    {
+        if (ActualWidth <= 0) return;
+        var natural = Logo.DesiredSize.Width + PillsBox.DesiredSize.Width + PillsBox.Margin.Left + PillsBox.Margin.Right + AccountButton.DesiredSize.Width;
+        if (natural <= 0) return;
+        BarScale.ScaleX = BarScale.ScaleY = Math.Clamp((ActualWidth - 64) / natural, 0.5, 1);
     }
 
     private void OnAccount(object sender, RoutedEventArgs e)

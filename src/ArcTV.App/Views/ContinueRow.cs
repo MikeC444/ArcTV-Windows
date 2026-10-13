@@ -79,7 +79,7 @@ public sealed class ContinueRow : StackPanel
         HoverLift.Attach(card);
 
         var play = new Button { Style = (Style)Application.Current.FindResource("PosterButton"), Content = card, ToolTip = item.IsMovie ? "Continue watching" : $"Continue {item.EpisodeLabel}" };
-        play.Click += (_, _) => _play(item.ToTarget() with { AutoPick = true }); // from here the recommended source starts at once, whatever was used before
+        play.Click += (_, _) => _play(item.ToTarget() with { ChooseSource = true }); // from here the source list always shows (starting a source by itself did not work from here)
 
         var remove = new Border
         {
