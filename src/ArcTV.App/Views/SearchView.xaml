@@ -34,7 +34,12 @@
       <TextBlock Text="Search" FontSize="34" FontWeight="ExtraBold" Margin="44,96,44,0" />
 
       <!-- the round search box -->
-      <Border x:Name="BoxBorder" Height="56" MaxWidth="900" HorizontalAlignment="Stretch" Margin="44,20,44,12" CornerRadius="28" Background="{StaticResource SurfaceBrush}" BorderThickness="1" BorderBrush="#26FFFFFF">
+      <Grid Margin="44,20,44,12">
+       <Grid.ColumnDefinitions>
+         <ColumnDefinition Width="*" MaxWidth="900" />
+         <ColumnDefinition Width="Auto" />
+       </Grid.ColumnDefinitions>
+       <Border x:Name="BoxBorder" Height="56" CornerRadius="28" Background="{StaticResource SurfaceBrush}" BorderThickness="1" BorderBrush="#26FFFFFF">
         <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
@@ -55,7 +60,8 @@
             </Button.Template>
           </Button>
         </Grid>
-      </Border>
+       </Border>
+      </Grid>
 
       <Popup x:Name="SuggestionPopup" PlacementTarget="{Binding ElementName=BoxBorder}" Placement="Bottom" VerticalOffset="6" StaysOpen="False" AllowsTransparency="True" Focusable="False">
         <Border x:Name="SuggestionBox" CornerRadius="16" Padding="8" Background="{StaticResource BgElevatedBrush}" BorderBrush="#26FFFFFF" BorderThickness="1" Margin="0,0,24,24">
@@ -66,13 +72,19 @@
 
       <!-- before anything is searched: recent searches, and a hint -->
       <StackPanel x:Name="IdlePanel">
-        <StackPanel x:Name="RecentPanel" Margin="44,8,44,16" MaxWidth="900" HorizontalAlignment="Left">
-          <Grid Margin="0,0,0,12">
-            <TextBlock Text="Recent searches" FontSize="17" FontWeight="SemiBold" />
-            <Button Content="Clear" Style="{StaticResource LinkButton}" HorizontalAlignment="Right" Click="OnClearRecents" />
-          </Grid>
-          <WrapPanel x:Name="Recents" />
-        </StackPanel>
+        <Grid x:Name="RecentPanel" Margin="44,8,44,16">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MaxWidth="900" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <Grid Margin="0,0,0,12">
+              <TextBlock Text="Recent searches" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" />
+              <Button Content="Clear" Style="{StaticResource LinkButton}" HorizontalAlignment="Right" VerticalAlignment="Center" Click="OnClearRecents" />
+            </Grid>
+            <WrapPanel x:Name="Recents" />
+          </StackPanel>
+        </Grid>
         <TextBlock Text="Search for movies and TV shows across your installed addons." FontSize="14" Foreground="{StaticResource Text2Brush}" Margin="44,0" />
       </StackPanel>
 

@@ -141,6 +141,6 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
 
 **Issues discovered:** the first build of this commit failed: `ShellView` used `Path` without `using System.IO` (the WPF project's implicit usings do not include it). Visual Studio showed "There were build errors" on pulling it.
 
-**Issues fixed:** the missing `using` was added.
+**Issues fixed:** the missing `using` was added. Layout fix from a screenshot: the search box was centred on the page (a bordered box with a maximum width centres itself) and "Clear" sat right beside "Recent searches"; the box and the recent searches now start at the page's left edge like the title, up to 900 wide, with "Clear" at the far end of its row.
 
 **Open:** choosing a suggestion searches for its title (opening a title needs title details); posters do not open anything yet; searches are not filtered by blocked genres on purpose (as on the Mac).
