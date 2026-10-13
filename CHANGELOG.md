@@ -96,6 +96,11 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
   keeps the last 120 decoded pictures. If a poster is still blank after that, its address is probably bad in the addon's data (not confirmed).
 - Empty strip on the right of a wide window (screenshot): a line holds a whole number of posters, so the rest was blank. Lines now share the spare width as
   extra space between posters (`SpacedRowPanel`), until another poster fits. Every line uses the same space, so the last, shorter line stays in step.
+- Snappiness pass on Movies and TV Shows (no timings were measured; the app has not been seen running here):
+  - resizing the window no longer throws you back to the top when the number of posters across changes: the same titles stay at the top of the screen;
+  - the wheel scrolls further per notch and glides to a stop (eased on each frame) instead of stepping;
+  - a page of lines above and below the screen is kept ready, so scrolling does not wait on pictures; pictures fade in as they arrive; up to 8 download at once;
+  - the hover lift on a poster eases in and out instead of snapping (this card is shared with Home).
 - Pill text: the pill's content now takes its colour from the button, so the selected pill's black text applies.
 
 **Open:** blocked genres (needs profiles/settings), loading skeletons, a virtualised grid (the grid lays out every loaded poster), opening a title (needs title details).

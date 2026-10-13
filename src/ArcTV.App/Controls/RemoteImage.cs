@@ -13,7 +13,7 @@ namespace ArcTV.App.Controls;
 /// </summary>
 public sealed class RemoteImage : Image
 {
-    private const int MaxAtOnce = 6;
+    private const int MaxAtOnce = 8;
     private const int Attempts = 3;
     private const int KeptPictures = 120;
 
@@ -52,6 +52,7 @@ public sealed class RemoteImage : Image
         var key = $"{DecodeWidth}|{uri}";
         if (Kept.TryGetValue(key, out var hit))
         {
+            BeginAnimation(OpacityProperty, null);
             Source = hit;
             return;
         }
@@ -65,6 +66,7 @@ public sealed class RemoteImage : Image
                 if (cancel.IsCancellationRequested) return;
                 Keep(key, picture);
                 Source = picture;
+                BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)));
                 return;
             }
             catch (OperationCanceledException) when (cancel.IsCancellationRequested)
