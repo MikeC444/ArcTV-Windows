@@ -451,3 +451,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 **Follow-up (owner: bigger row titles on Home).** The titles above the Home rows (the addon rows, Continue Watching and Picked for you) are 26 instead of 20. Not seen on screen.
 
 **Follow-up (owner: bigger scroll arrows on Home).** The round arrows at the ends of a row are 60 pixels across (were 44) with a larger arrow inside (24 instead of 16). They are one shared style, so every sideways row got them, not just Home (title pages, My List's rows, Recommendations); their height is read from the style where they are placed, so they still centre on the pictures. Not seen on screen.
+
+**Follow-up (owner: Like and Not for me as a thumbs up and down, not text).** On a title's page the two buttons show a thumbs up and a thumbs down (Segoe MDL2 Assets E8E1 and E8E0, size 20) instead of words; the one that is the title's rating takes the pill's selected look (no tick any more), and each has a tooltip and a screen-reader name ("Like", "Not for me"). Not seen on screen: the icons come from the Windows icon font, which this sandbox cannot show.

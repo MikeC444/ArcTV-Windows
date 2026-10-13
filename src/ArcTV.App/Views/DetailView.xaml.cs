@@ -198,9 +198,13 @@ public partial class DetailView : UserControl
         var rating = _plus?.RatingOf(id);
         var visible = _plus is { Active: true } ? Visibility.Visible : Visibility.Collapsed;
         LikeButton.Visibility = DislikeButton.Visibility = visible;
-        LikeButton.Content = rating == Rating.Like ? "✓  Liked" : "Like";
+        LikeButton.Content = ThumbIcon("\uE8E1");
+        LikeButton.ToolTip = rating == Rating.Like ? "Liked: click to take it back" : "Like";
+        System.Windows.Automation.AutomationProperties.SetName(LikeButton, "Like");
         LikeButton.Tag = rating == Rating.Like ? "selected" : "";
-        DislikeButton.Content = rating == Rating.Dislike ? "✓  Not for me" : "Not for me";
+        DislikeButton.Content = ThumbIcon("\uE8E0");
+        DislikeButton.ToolTip = rating == Rating.Dislike ? "Marked not for me: click to take it back" : "Not for me";
+        System.Windows.Automation.AutomationProperties.SetName(DislikeButton, "Not for me");
         DislikeButton.Tag = rating == Rating.Dislike ? "selected" : "";
     }
 
@@ -241,6 +245,9 @@ public partial class DetailView : UserControl
     private async void OnList(object sender, RoutedEventArgs e) => await _list.ToggleSavedAsync(_model.Detail);
 
     private async void OnWatched(object sender, RoutedEventArgs e) => await _list.ToggleWatchedAsync(_model.Detail);
+
+    /// <summary>A thumbs up or down for the Like and Not for me buttons (the pill turns to the selected look when it is the title's rating).</summary>
+    private static TextBlock ThumbIcon(string glyph) => new() { Text = glyph, FontFamily = new System.Windows.Media.FontFamily("Segoe MDL2 Assets"), FontSize = 20, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
 
     private async void OnLike(object sender, RoutedEventArgs e) => await Rate(Rating.Like);
 

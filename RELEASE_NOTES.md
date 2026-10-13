@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Like and Not for me on a title are now a thumbs up and a thumbs down.
 - The arrows that scroll a row sideways are bigger.
 - Row titles on Home are bigger and easier to read.
 - Posters are bigger, so fewer fit across the screen at once.
