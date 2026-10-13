@@ -10,4 +10,4 @@ under its version automatically.
 - Movies and TV Shows pages: pick a genre, sort by Featured, Highest Rated or Newest, and keep scrolling for more. Posters are bigger and fade in, scrolling glides, and rows spread to fill the window as you resize it.
 - Search is here: type to search every addon at once, pick from suggestions, and get your recent searches back.
 - My List is here: your saved titles, with a green tick on the ones you've watched, and sorting.
-- Click any poster to open its page: artwork, description, seasons and episodes, cast, and a Trailer button, release date, cast photos, similar titles, and buttons to add it to My List or mark it watched. Press Back, Esc or your mouse's back button to return.
+- Click any poster to open its page: artwork, description, seasons and episodes, cast, and a Trailer button, release date, cast photos, similar titles, and buttons to add it to My List or mark it watched. Press Play to see every source your addons offer, best quality first (playing inside Arc TV is coming). Press Back, Esc or your mouse's back button to return.

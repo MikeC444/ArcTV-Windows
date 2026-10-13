@@ -12,6 +12,7 @@ using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
 using ArcTV.Core.Search;
+using ArcTV.Core.Sources;
 using ArcTV.Core.Storage;
 using Xunit;
 
@@ -189,6 +190,28 @@ public class ScreenTests
         model.ChooseSeason(2);
         await Settle();
         Assert.Single(model.Episodes);
+        Assert.True(view.ActualHeight > 0);
+        window.Close();
+    });
+
+    [Fact]
+    public void SourcesScreenListsStreamsAndFilters() => OnUiThread(async () =>
+    {
+        var manifest = System.Text.Json.JsonSerializer.Deserialize<AddonManifest>("""{"id":"s","name":"S","types":["movie"],"resources":["stream"]}""", new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))!;
+        var addons = new List<SyncedAddon> { new("https://s.test/manifest.json", "s", "Streams", true, 0, manifest) };
+        var client = new AddonClient(new HttpClient(new Handler(path => path.StartsWith("/stream/", StringComparison.Ordinal)
+            ? """{"streams":[{"name":"D","title":"Film 1080p WEB-DL","url":"https://cdn.test/f.mkv"},{"name":"T","title":"Film 720p","infoHash":"abc"}]}"""
+            : "{}")));
+        var model = new SourcesModel(new PlayTarget(new MetaDetail("tt1", "movie", "Film")), _ => Task.FromResult<IReadOnlyList<SyncedAddon>>(addons), client);
+        var view = new SourcesView(model, null, () => { });
+        var window = Host(view);
+        await model.LoadAsync();
+        await Settle();
+        Assert.Equal(2, model.Arranged.Count);
+        Assert.Equal(model.Arranged[0].Id, model.RecommendedId);
+        model.Filter = SourceFilter.Hd;
+        await Settle();
+        Assert.Equal(2, model.Arranged.Count); // the recommended source always stays, with the 720p one
         Assert.True(view.ActualHeight > 0);
         window.Close();
     });

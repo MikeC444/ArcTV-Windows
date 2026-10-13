@@ -232,3 +232,23 @@ Not done: sideways swipes on a touchpad (WPF does not report them without more w
 **Follow-up (owner: a smoother horizontal swipe).** Two changes: the glide along a row is gentler (it eased a quarter of the way per frame; now an eighth), and the glide of every scroller is now worked out from the time since the
 last frame instead of assuming 60 frames a second, so it feels the same on a fast screen. Two-finger sideways swipes on a touchpad (and a tilt wheel) now move the row under the pointer: WPF has no event for them, so the
 window's own `WM_MOUSEHWHEEL` message is listened for. Not tested on a touchpad (none here): how far a swipe goes may need tuning.
+
+## 8 -- Sources page
+
+**Status:** Written without a compiler here (no .NET SDK in the sandbox); built and tested by the Windows build server only (see the run for this commit). Not run or seen on screen.
+
+**Context:** What Play opens. The engine (`ArcTV.Core/Sources`) was built and tested first (previous commit); this is the page, ported from the Mac app's `SourcesView`.
+
+**Changes:**
+- `SourcesView`: the title on the left (poster, year, logo, facts, description), "Select a source" on the right: quality pills (All, 4K, 1080p, 720p, Other), a sort (Quality, Seeders, Size), a row for each stream (quality box, release name, codec, audio, seeders, size, addon, "Recommended" on the best direct link),
+  which addons were skipped or failed (and why), and a "No sources found" page with the reason and Try again.
+- Play now opens it: on a movie's page, on a show's page (the first episode), on an episode's card, and on the Home banner for a movie (for a show the banner opens the show to choose an episode).
+- Choosing a direct link copies it (so it can be opened in another player) and remembers it as the last source for that title or episode; torrents are listed but cannot be started until the torrent engine exists.
+
+**Tests performed:** see the build run. New: a screen test that opens the page with fake addons (engine tests were added in the previous commit).
+
+**Issues discovered:** the page was pushed once before its screen test, change log and a nullable-pattern tidy-up (a script error that was not noticed before committing); they follow in the next commit.
+
+**Issues fixed:** see above.
+
+**Open:** playing (the built-in player), starting torrents, "play the last source again without asking" and Resume, smart source picking (Plus), Download, a shown "Manage Addons" button (needs Settings).

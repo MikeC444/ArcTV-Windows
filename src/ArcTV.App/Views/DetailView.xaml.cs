@@ -122,7 +122,7 @@ public partial class DetailView : UserControl
     {
         var target = MainTarget();
         PlayButton.IsEnabled = _play is not null && target is not null;
-        PlayButton.Content = target?.Season is { } season && target.Episode is { } episode ? $"\u25B6  Play S{season}E{episode}" : "\u25B6  Play";
+        PlayButton.Content = target is { Season: { } season, Episode: { } episode } ? $"\u25B6  Play S{season}E{episode}" : "\u25B6  Play";
         PlayButton.ToolTip = _play is null ? "Playing is coming soon to Arc TV for Windows." : target is null ? "Looking for episodes…" : null;
     }
 
