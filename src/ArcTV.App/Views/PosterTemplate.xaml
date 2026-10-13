@@ -8,6 +8,7 @@
     <DataTemplate DataType="{x:Type addons:MetaPreview}">
       <Button Style="{StaticResource PosterButton}">
         <StackPanel x:Name="Card" Width="288" Margin="0,10,16,10" Background="Transparent" RenderTransformOrigin="0.5,0.5" Cursor="Hand">
+          <StackPanel.LayoutTransform><ScaleTransform ScaleX="{Binding Scale, Source={x:Static c:PosterMetrics.Instance}}" ScaleY="{Binding Scale, Source={x:Static c:PosterMetrics.Instance}}" /></StackPanel.LayoutTransform>
           <StackPanel.RenderTransform><ScaleTransform x:Name="Lift" ScaleX="1" ScaleY="1" /></StackPanel.RenderTransform>
           <c:RoundedBorder Width="288" Height="432" CornerRadius="16" Background="{StaticResource SurfaceBrush}" BorderBrush="#24FFFFFF" BorderThickness="1">
             <Grid>

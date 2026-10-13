@@ -95,7 +95,11 @@ public partial class ShellView : UserControl
         }
 
         BuildAccountButton(user, profile);
-        SizeChanged += (_, _) => FitBar();
+        SizeChanged += (_, _) =>
+        {
+            PosterMetrics.Instance.Update(ActualWidth); // the posters are drawn bigger or smaller with the window
+            FitBar();
+        };
 
         // a click on any poster (or suggestion) that stands for a title opens that title; right-clicking one opens its menu; the mouse's Back button and Escape come back
         AddHandler(Button.ClickEvent, new RoutedEventHandler(OnTitleClick));

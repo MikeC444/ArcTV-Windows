@@ -16,7 +16,7 @@
           <ItemsControl.Template>
             <ControlTemplate TargetType="ItemsControl">
               <!-- the row starts 24 in from the edge, but the posters slide on out under the window's own edge (as they do on the right), not under an invisible line 24 in -->
-              <c:ArrowScrollViewer CanContentScroll="True" ArrowCenter="226">
+              <c:ArrowScrollViewer CanContentScroll="True" ArrowCenter="226" ScalesWithPosters="True">
                 <ItemsPresenter Margin="24,0,0,0" />
               </c:ArrowScrollViewer>
             </ControlTemplate>

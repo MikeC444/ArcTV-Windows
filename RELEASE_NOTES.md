@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Posters now grow and shrink with the window, so about the same number fit across on a small window and on a big screen.
 - The Sources button is gone from a title's page (Choose source is in the right-click menu on a poster).
 - The right-click menu on a poster is bigger.
 - Right-click a poster for its menu: play or resume, add to My List, mark watched, like or not for me, view details, choose a source, and take it off Continue Watching or Picked for you.

@@ -31,7 +31,7 @@ public sealed class PickedRowView : StackPanel
         Children.Add(new TextBlock { Text = row.Title, FontSize = 26, FontWeight = FontWeights.Bold, Margin = new Thickness(24, 0, 0, 0) });
         var strip = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(24, 0, 0, 0) };
         foreach (var entry in row.Entries) strip.Children.Add(Card(entry));
-        Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 226, Content = strip });
+        Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 226, ScalesWithPosters = true, Content = strip });
     }
 
     private static Brush Res(string key) => (Brush)Application.Current.FindResource(key);
@@ -67,6 +67,7 @@ public sealed class PickedRowView : StackPanel
         };
 
         var cell = new Grid { Width = CardWidth + 16 };
+        PosterMetrics.Apply(cell); // drawn bigger or smaller with the window, like the posters
         CardMenu.SetItem(cell, entry.Item); // right-click opens the card menu
         CardMenu.SetFromPicked(cell, true);
         cell.Children.Add(open);

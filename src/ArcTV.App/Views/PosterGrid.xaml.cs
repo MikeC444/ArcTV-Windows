@@ -21,7 +21,7 @@ public sealed record PosterSection(string? Title, string? Detail, IReadOnlyList<
 /// </summary>
 public partial class PosterGrid : UserControl
 {
-    private const double TileWidth = 208;
+    private const double DesignTileWidth = 304; // a poster (288) and the space after it (16), before it is drawn bigger or smaller with the window
     private const double SideSpace = 48;
     private const double ScrollBarWidth = 0; // the theme hides scroll bars
     private const double LoadMoreWithin = 900;
@@ -53,7 +53,24 @@ public partial class PosterGrid : UserControl
             UpdateExtra();
             if (PerRow() != _perRow) Rebuild();
         };
-        Unloaded += (_, _) => _smooth?.Stop();
+        Loaded += (_, _) =>
+        {
+            PosterMetrics.Instance.PropertyChanged -= OnPosterScale;
+            PosterMetrics.Instance.PropertyChanged += OnPosterScale;
+            OnPosterScale(null, new System.ComponentModel.PropertyChangedEventArgs(null));
+        };
+        Unloaded += (_, _) =>
+        {
+            _smooth?.Stop();
+            PosterMetrics.Instance.PropertyChanged -= OnPosterScale;
+        };
+    }
+
+    /// <summary>The posters were drawn bigger or smaller (the window changed size): more or fewer now fit across a line.</summary>
+    private void OnPosterScale(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        UpdateExtra();
+        if (PerRow() != _perRow) Rebuild();
     }
 
     /// <summary>Shows these groups of titles. Lines that are already right are left alone, so adding a page of titles does not rebuild what is on screen.</summary>
@@ -84,6 +101,8 @@ public partial class PosterGrid : UserControl
 
     /// <summary>The width a line of posters has to fill (the control less its side space and the scroll bar).</summary>
     private double Available() => ActualWidth - ScrollBarWidth - SideSpace;
+
+    private static double TileWidth => DesignTileWidth * PosterMetrics.Instance.Scale;
 
     private int PerRow() => Math.Max(1, (int)(Available() / TileWidth));
 

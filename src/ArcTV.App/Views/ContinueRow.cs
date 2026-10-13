@@ -33,7 +33,7 @@ public sealed class ContinueRow : StackPanel
         Children.Add(new TextBlock { Text = "Continue Watching", FontSize = 26, FontWeight = FontWeights.Bold, Margin = new Thickness(24, 0, 0, 0) });
         var strip = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(24, 0, 0, 0) };
         foreach (var item in items) strip.Children.Add(Card(item));
-        Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 134, Content = strip });
+        Children.Add(new ArrowScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, ArrowCenter = 134, ScalesWithPosters = true, Content = strip });
     }
 
     private static Brush Res(string key) => (Brush)Application.Current.FindResource(key);
@@ -94,6 +94,7 @@ public sealed class ContinueRow : StackPanel
         };
 
         var cell = new Grid { Width = CardWidth + 16 };
+        PosterMetrics.Apply(cell); // drawn bigger or smaller with the window, like the posters
         CardMenu.SetItem(cell, item.AsPreview()); // right-click opens the card menu
         cell.Children.Add(play);
         cell.Children.Add(remove);

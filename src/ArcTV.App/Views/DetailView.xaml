@@ -13,6 +13,7 @@
       <DataTemplate x:Key="WideCard">
         <Button Style="{StaticResource PosterButton}">
           <StackPanel x:Name="Card" Width="300" Margin="0,10,16,10" Background="Transparent" RenderTransformOrigin="0.5,0.5" Cursor="Hand">
+            <StackPanel.LayoutTransform><ScaleTransform ScaleX="{Binding Scale, Source={x:Static c:PosterMetrics.Instance}}" ScaleY="{Binding Scale, Source={x:Static c:PosterMetrics.Instance}}" /></StackPanel.LayoutTransform>
             <StackPanel.RenderTransform><ScaleTransform x:Name="Lift" ScaleX="1" ScaleY="1" /></StackPanel.RenderTransform>
             <c:RoundedBorder Width="300" Height="169" CornerRadius="16" Background="{StaticResource SurfaceBrush}" BorderBrush="#24FFFFFF" BorderThickness="1">
               <Grid>
@@ -222,7 +223,7 @@
         <!-- a movie's page ends with other titles to try -->
         <StackPanel x:Name="SimilarPanel" Grid.Row="1" VerticalAlignment="Bottom" Margin="0,30,0,0" Visibility="Collapsed">
           <TextBlock Text="You May Also Like" FontSize="30" FontWeight="Bold" Margin="24,0,24,12" />
-          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ArrowCenter="95">
+          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ArrowCenter="95" ScalesWithPosters="True">
             <ItemsControl x:Name="SimilarList" ItemTemplate="{StaticResource WideCard}" Margin="24,0,24,10">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate><VirtualizingStackPanel Orientation="Horizontal" /></ItemsPanelTemplate>

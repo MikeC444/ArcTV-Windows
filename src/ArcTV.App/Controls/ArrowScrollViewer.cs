@@ -22,9 +22,33 @@ public class ArrowScrollViewer : ScrollViewer
 
     public double ArrowCenter { get => (double)GetValue(ArrowCenterProperty); set => SetValue(ArrowCenterProperty, value); }
 
+    /// <summary>True for a row of posters (or the cards beside them): the arrows' height then follows the posters' size, which follows the window's.</summary>
+    public bool ScalesWithPosters { get; set; }
+
+    private Button? _leftArrow;
+    private Button? _rightArrow;
+
     public ArrowScrollViewer()
     {
         SetResourceReference(StyleProperty, "ArrowRowScroll");
+        Loaded += (_, _) =>
+        {
+            PosterMetrics.Instance.PropertyChanged -= OnPosterScale;
+            PosterMetrics.Instance.PropertyChanged += OnPosterScale;
+            if (ScalesWithPosters) PlaceArrows();
+        };
+        Unloaded += (_, _) => PosterMetrics.Instance.PropertyChanged -= OnPosterScale;
+    }
+
+    private void OnPosterScale(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (ScalesWithPosters) PlaceArrows();
+    }
+
+    private void PlaceArrows()
+    {
+        if (_leftArrow is not null) Place(_leftArrow);
+        if (_rightArrow is not null) Place(_rightArrow);
     }
 
     private SmoothScroller Smooth => _smooth ??= new SmoothScroller(this, 1.1, 0.12, horizontal: true);
@@ -35,13 +59,13 @@ public class ArrowScrollViewer : ScrollViewer
         if (GetTemplateChild("RowLeft") is Button left)
         {
             left.Click += (_, _) => Smooth.By(-ViewportWidth * 0.8);
-            Place(left);
+            Place(_leftArrow = left);
         }
 
         if (GetTemplateChild("RowRight") is Button right)
         {
             right.Click += (_, _) => Smooth.By(ViewportWidth * 0.8);
-            Place(right);
+            Place(_rightArrow = right);
         }
     }
 
@@ -50,7 +74,8 @@ public class ArrowScrollViewer : ScrollViewer
     {
         if (double.IsNaN(ArrowCenter)) return;
         arrow.VerticalAlignment = VerticalAlignment.Top;
-        arrow.Margin = new Thickness(8, Math.Max(0, ArrowCenter - arrow.Height / 2), 8, 0);
+        var center = ArrowCenter * (ScalesWithPosters ? PosterMetrics.Instance.Scale : 1);
+        arrow.Margin = new Thickness(8, Math.Max(0, center - arrow.Height / 2), 8, 0);
     }
 
     /// <summary>A sideways swipe (two fingers on a touchpad, a tilt wheel): <paramref name="delta"/> is positive towards the right, 120 for a notch.</summary>
