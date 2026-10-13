@@ -160,9 +160,9 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
 
 **Tests performed:** see the build run. New: `MyListTests` (the Mac sort tests, decoding, load / failure) and a screen test.
 
-**Issues discovered:** none yet.
+**Issues discovered:** the first build of this commit failed: `MyListTests` used two types that are internal to the core library (`WatchlistResponse`, `ApiHttp`). Only the tests failed to compile; the app built. It was not noticed for two commits because the results were not read before moving on.
 
-**Issues fixed:** none yet.
+**Issues fixed:** the test reads the answer through its own small type.
 
 **Open:** adding and removing titles (needs title details); the saved list is not cached on this PC.
 

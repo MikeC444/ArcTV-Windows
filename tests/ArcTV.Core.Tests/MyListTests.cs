@@ -8,6 +8,9 @@ namespace ArcTV.Core.Tests;
 
 public class MyListTests
 {
+    /// <summary>The shape of the account's answer (the app's own copy of it is not visible to the tests).</summary>
+    private sealed record ItemsOnly(List<WatchlistItem> Items);
+
     private static WatchlistItem Item(string title, double? rating = null, int? year = null, bool? watched = null) =>
         new("p", title, "MOVIE", title, Year: year, Rating: rating, Watched: watched, UpdatedAt: "2026-01-01T00:00:00.000Z");
 
@@ -32,7 +35,7 @@ public class MyListTests
             {"items":[{"providerId":"com.linvo.cinemeta","contentId":"tt0816692","contentType":"MOVIE","title":"Interstellar","posterUrl":"https://example.com/p.jpg","year":2014,"rating":8.7,"watched":true,"updatedAt":"2026-10-01T00:00:00.000Z"},
                       {"providerId":"p","contentId":"tt2","contentType":"TV_SHOW","title":"A Show","updatedAt":"2026-10-02T00:00:00.000Z"}]}
             """;
-        var items = JsonSerializer.Deserialize<WatchlistResponse>(json, ApiHttp.Json)!.Items!;
+        var items = JsonSerializer.Deserialize<ItemsOnly>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web))!.Items;
         Assert.Equal(2, items.Count);
         var movie = items[0].AsPreview();
         Assert.Equal("movie", movie.Type);
