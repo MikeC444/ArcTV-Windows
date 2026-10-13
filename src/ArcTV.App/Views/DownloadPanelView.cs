@@ -6,6 +6,7 @@ using System.Windows.Media;
 using ArcTV.App.Controls;
 using ArcTV.Core.Downloads;
 using ArcTV.Core.Sources;
+using ArcTV.Core.Storage;
 
 namespace ArcTV.App.Views;
 
@@ -18,10 +19,13 @@ public sealed class DownloadPanelView : Grid
     private const string Mdl2 = "Segoe MDL2 Assets";
     private const double PanelWidth = 720;
     private const double PanelHeight = 700;
+    private const double MaxZoom = 1.3;
     private const double BannerHeight = 230;
 
     private readonly Func<PlayTarget, CancellationToken, Task<SourceResult>> _find;
     private readonly DownloadManager _manager;
+    private readonly LocalSettings _local;
+    private readonly TextBlock _folderText = new() { FontSize = 13, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
     private readonly bool _plus;
     private readonly Action _seePlus;
     private readonly Action _close;
@@ -39,9 +43,9 @@ public sealed class DownloadPanelView : Grid
     private PlayTarget _target;
     private CancellationTokenSource? _run;
 
-    public DownloadPanelView(PlayTarget target, Func<PlayTarget, CancellationToken, Task<SourceResult>> find, DownloadManager manager, bool plus, Action seePlus, Action close, Action<PlayTarget> saved)
+    public DownloadPanelView(PlayTarget target, Func<PlayTarget, CancellationToken, Task<SourceResult>> find, DownloadManager manager, LocalSettings local, bool plus, Action seePlus, Action close, Action<PlayTarget> saved)
     {
-        (_target, _find, _manager, _plus, _seePlus, _close, _saved) = (target, find, manager, plus, seePlus, close, saved);
+        (_target, _find, _manager, _local, _plus, _seePlus, _close, _saved) = (target, find, manager, local, plus, seePlus, close, saved);
 
         var dim = new Border { Background = new SolidColorBrush(Color.FromArgb(0xB3, 0, 0, 0)) };
         dim.MouseLeftButtonDown += (_, e) =>
@@ -52,9 +56,11 @@ public sealed class DownloadPanelView : Grid
         Children.Add(dim);
 
         var body = new StackPanel { Margin = new Thickness(24) };
+        if (_plus) body.Children.Add(FolderRow());
         body.Children.Add(_pickers);
         body.Children.Add(_sources);
         _scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = body };
+        _scroll.ScrollChanged += (_, e) => e.Handled = true; // scrolling here must not make the page's top bar come and go
 
         _jobsBar = new Border
         {
@@ -77,11 +83,16 @@ public sealed class DownloadPanelView : Grid
         _panel.MouseLeftButtonDown += (_, e) => e.Handled = true; // a click inside is not a click on the dim
         Children.Add(_panel);
 
-        // always the same size, whatever the files below are showing: as wide as 720 and as tall as 700, or as the window allows (never changing with the season or episode picked)
+        // always the same size, whatever the files below are showing (never changing with the season or episode picked). It is drawn up to 1.3 times its 720 x 700 units, less in a window
+        // too small for that, and never wider or taller than the window
+        var zoom = new ScaleTransform(1, 1);
+        _panel.LayoutTransform = zoom;
         SizeChanged += (_, e) =>
         {
-            _panel.Width = Math.Max(320, Math.Min(PanelWidth, e.NewSize.Width - 48));
-            _panel.Height = Math.Max(300, Math.Min(PanelHeight, e.NewSize.Height - 60));
+            var scale = Math.Clamp(Math.Min((e.NewSize.Width - 48) / PanelWidth, (e.NewSize.Height - 48) / PanelHeight), 0.5, MaxZoom);
+            zoom.ScaleX = zoom.ScaleY = scale;
+            _panel.Width = Math.Min(PanelWidth, (e.NewSize.Width - 48) / scale);
+            _panel.Height = Math.Min(PanelHeight, (e.NewSize.Height - 48) / scale);
         };
 
         ShowBanner();
@@ -99,6 +110,29 @@ public sealed class DownloadPanelView : Grid
             _manager.Jobs.CollectionChanged -= OnJobsChanged;
             foreach (var job in _manager.Jobs) job.PropertyChanged -= OnJobChanged;
         };
+    }
+
+    /// <summary>"Save to  C:\Users\...\Downloads  Change": where files go, and a folder picker to change it.</summary>
+    private UIElement FolderRow()
+    {
+        _manager.Folder = _local.DownloadFolder ?? DownloadManager.DefaultFolder();
+        _folderText.Text = _manager.Folder;
+        _folderText.Foreground = Ui.Res("TextBrush");
+        var change = new Button { Content = "Change", Style = Ui.StyleOf("ChoicePill"), Height = 34, Padding = new Thickness(16, 0, 16, 0), Margin = new Thickness(12, 0, 0, 0), ToolTip = "Choose another folder to save downloads in" };
+        change.Click += (_, _) =>
+        {
+            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "Choose where downloads are saved", InitialDirectory = _manager.Folder };
+            if (dialog.ShowDialog(Window.GetWindow(this)) != true || string.IsNullOrEmpty(dialog.FolderName)) return;
+            _local.DownloadFolder = dialog.FolderName;
+            _manager.Folder = dialog.FolderName;
+            _folderText.Text = dialog.FolderName;
+        };
+        var row = new DockPanel { Margin = new Thickness(0, 0, 0, 16) };
+        DockPanel.SetDock(change, Dock.Right);
+        row.Children.Add(change);
+        row.Children.Add(new TextBlock { Text = "Save to", FontSize = 13, FontWeight = FontWeights.SemiBold, Foreground = Ui.Res("Text2Brush"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 10, 0) });
+        row.Children.Add(_folderText);
+        return row;
     }
 
     /// <summary>What the panel is showing (for the tests): "plus" (the invitation), "loading", "list" or "none".</summary>
@@ -432,7 +466,7 @@ public sealed class DownloadPanelView : Grid
                 stack.Children.Add(bar);
                 break;
             case DownloadState.Done:
-                stack.Children.Add(Words("Saved to your Downloads folder", 11, brush: new SolidColorBrush(Color.FromRgb(0x4A, 0xDE, 0x80))));
+                stack.Children.Add(Words($"Saved to {(job.FilePath is { } saved ? Path.GetDirectoryName(saved) : "your Downloads folder")}", 11, brush: new SolidColorBrush(Color.FromRgb(0x4A, 0xDE, 0x80))));
                 break;
             default:
                 stack.Children.Add(Words(job.Message ?? "The download failed.", 11, brush: new SolidColorBrush(Color.FromRgb(0xFF, 0xB0, 0x20))));

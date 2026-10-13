@@ -458,7 +458,7 @@ public class ScreenTests
             new("Torrentio", new AddonStream(InfoHash: "abc", Title: "Film torrent"), 1),
         ];
         var manager = new ArcTV.Core.Downloads.DownloadManager(new HttpClient(), Path.Combine(Path.GetTempPath(), "arctv-dl-screen-" + Guid.NewGuid().ToString("N")));
-        var listed = new DownloadPanelView(target, (_, _) => Task.FromResult(new SourceResult(items, [], [])), manager, true, () => { }, () => { }, _ => { });
+        var listed = new DownloadPanelView(target, (_, _) => Task.FromResult(new SourceResult(items, [], [])), manager, new LocalSettings(Path.Combine(Path.GetTempPath(), "arctv-dl-settings-" + Guid.NewGuid().ToString("N") + ".json")), true, () => { }, () => { }, _ => { });
         var window = Host(listed);
         for (var i = 0; i < 100 && listed.State != "list"; i++)
         {
@@ -471,7 +471,7 @@ public class ScreenTests
         window.Close();
 
         var asked = false;
-        var invite = new DownloadPanelView(target, (_, _) => Task.FromResult(new SourceResult()), manager, false, () => asked = true, () => { }, _ => { });
+        var invite = new DownloadPanelView(target, (_, _) => Task.FromResult(new SourceResult()), manager, new LocalSettings(Path.Combine(Path.GetTempPath(), "arctv-dl-settings-" + Guid.NewGuid().ToString("N") + ".json")), false, () => asked = true, () => { }, _ => { });
         window = Host(invite);
         await Settle();
         Assert.Equal("plus", invite.State);

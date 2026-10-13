@@ -114,6 +114,9 @@ public sealed class DownloadManager(HttpClient http, string folder)
 {
     private int _next;
 
+    /// <summary>Where files are saved (the person can change it; a file already being saved keeps the folder it started in).</summary>
+    public string Folder { get; set; } = folder;
+
     public ObservableCollection<DownloadJob> Jobs { get; } = [];
 
     /// <summary>The Downloads folder of the signed-in Windows user.</summary>
@@ -161,8 +164,9 @@ public sealed class DownloadManager(HttpClient http, string folder)
         string? part = null;
         try
         {
-            Directory.CreateDirectory(folder);
-            var destination = UniquePath(folder, job.Name);
+            var where = Folder;
+            Directory.CreateDirectory(where);
+            var destination = UniquePath(where, job.Name);
             part = destination + ".part";
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, job.Stop.Token).ConfigureAwait(false);
@@ -208,7 +212,7 @@ public sealed class DownloadManager(HttpClient http, string folder)
         }
         catch (Exception ex) when (ex is HttpRequestException or IOException or UnauthorizedAccessException)
         {
-            var message = ex is HttpRequestException ? "The download stopped. Check your connection and try again." : "Couldn't save the file to your Downloads folder.";
+            var message = ex is HttpRequestException ? "The download stopped. Check your connection and try again." : "Couldn't save the file to that folder.";
             Post(() => (job.State, job.Message) = (DownloadState.Failed, message));
         }
         finally

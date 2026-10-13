@@ -616,3 +616,5 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 
 **Follow-up (owner: the Downloads popup shrank and grew when a season or episode was picked).** The panel sized itself to what it held, so the loading and short lists made it smaller. It now has a fixed size (720 x 700, or what the window allows) and the files scroll inside it.
 
+**Follow-up (owner: choose where downloads go; no top bar coming and going while scrolling the popup; a bigger list).** A "Save to" line with a Change button (a folder picker) at the top of the Downloads panel, kept on this PC (the Windows Downloads folder until chosen); the panel's scrolling no longer reaches the page, so the top bar stays put; the panel is drawn up to 1.3 times its size (less in a small window), so the list is bigger. Not seen on screen.
+

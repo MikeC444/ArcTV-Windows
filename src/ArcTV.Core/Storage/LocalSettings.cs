@@ -5,7 +5,7 @@ namespace ArcTV.Core.Storage;
 /// <summary>Small per-PC choices kept in settings.json (not secret).</summary>
 public sealed class LocalSettings(string path)
 {
-    private sealed record Data(string? ServerUrl, string? SubtitleSize = null, string? SubtitleColor = null, bool SmartPicking = false, string? TorrentBuffer = null, int TorrentStorageGb = 50);
+    private sealed record Data(string? ServerUrl, string? SubtitleSize = null, string? SubtitleColor = null, bool SmartPicking = false, string? TorrentBuffer = null, int TorrentStorageGb = 50, string? DownloadFolder = null);
 
     public string? ServerUrl
     {
@@ -45,6 +45,13 @@ public sealed class LocalSettings(string path)
     {
         get => Read().TorrentStorageGb;
         set => Write(Read() with { TorrentStorageGb = value });
+    }
+
+    /// <summary>Where downloads are saved; null until chosen (then the Windows Downloads folder).</summary>
+    public string? DownloadFolder
+    {
+        get => Read().DownloadFolder;
+        set => Write(Read() with { DownloadFolder = string.IsNullOrWhiteSpace(value) ? null : value });
     }
 
     private Data Read()

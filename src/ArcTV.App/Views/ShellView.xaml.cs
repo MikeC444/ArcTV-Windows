@@ -408,7 +408,7 @@ public partial class ShellView : UserControl
     private void OpenDownloads(PlayTarget target)
     {
         MenuLayer.Content = new DownloadPanelView(target, async (t, cancel) => await SourceFinder.FindAsync(await AccountAddonsAsync(cancel), t.Title.Type, t.StreamId, _addonClient, cancel),
-            Downloads, _plus.Active, () =>
+            Downloads, _local, _plus.Active, () =>
             {
                 _settingsPane = "Arc TV Plus";
                 Open("Settings");
