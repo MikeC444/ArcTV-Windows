@@ -93,6 +93,10 @@ public sealed record MetaPreview(
     List<string>? Genres = null,
     string? Runtime = null)
 {
+    /// <summary>The wide picture of the title for a landscape card: its landscape artwork, else its poster.</summary>
+    [JsonIgnore]
+    public string? WidePicture => string.IsNullOrEmpty(Background) ? Poster : Background;
+
     /// <summary>Set on titles from My List that have been watched (shows a tick on the poster). Not part of what addons send.</summary>
     [JsonIgnore]
     public bool Watched { get; init; }

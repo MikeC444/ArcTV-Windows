@@ -8,6 +8,42 @@
     <ResourceDictionary.MergedDictionaries>
       <ResourceDictionary Source="PosterTemplate.xaml" />
     </ResourceDictionary.MergedDictionaries>
+
+      <!-- a landscape card for a title (used by "You May Also Like"): its wide picture, then its name; it lifts a little under the pointer -->
+      <DataTemplate x:Key="WideCard">
+        <Button Style="{StaticResource PosterButton}">
+          <StackPanel x:Name="Card" Width="300" Margin="0,10,16,10" Background="Transparent" RenderTransformOrigin="0.5,0.5" Cursor="Hand">
+            <StackPanel.RenderTransform><ScaleTransform x:Name="Lift" ScaleX="1" ScaleY="1" /></StackPanel.RenderTransform>
+            <c:RoundedBorder Width="300" Height="169" CornerRadius="16" Background="{StaticResource SurfaceBrush}" BorderBrush="#24FFFFFF" BorderThickness="1">
+              <Grid>
+                <TextBlock Text="{Binding Name}" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" Margin="12" Foreground="{StaticResource Text3Brush}" FontSize="13" />
+                <c:RemoteImage Url="{Binding WidePicture}" DecodeWidth="640" Stretch="UniformToFill" />
+              </Grid>
+            </c:RoundedBorder>
+            <TextBlock Text="{Binding Name}" Margin="2,8,2,0" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+        </Button>
+        <DataTemplate.Triggers>
+          <Trigger SourceName="Card" Property="IsMouseOver" Value="True">
+            <Trigger.EnterActions>
+              <BeginStoryboard>
+                <Storyboard>
+                  <DoubleAnimation Storyboard.TargetName="Lift" Storyboard.TargetProperty="ScaleX" To="1.05" Duration="0:0:0.14"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction></DoubleAnimation>
+                  <DoubleAnimation Storyboard.TargetName="Lift" Storyboard.TargetProperty="ScaleY" To="1.05" Duration="0:0:0.14"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction></DoubleAnimation>
+                </Storyboard>
+              </BeginStoryboard>
+            </Trigger.EnterActions>
+            <Trigger.ExitActions>
+              <BeginStoryboard>
+                <Storyboard>
+                  <DoubleAnimation Storyboard.TargetName="Lift" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.18"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction></DoubleAnimation>
+                  <DoubleAnimation Storyboard.TargetName="Lift" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.18"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction></DoubleAnimation>
+                </Storyboard>
+              </BeginStoryboard>
+            </Trigger.ExitActions>
+          </Trigger>
+        </DataTemplate.Triggers>
+      </DataTemplate>
     <!-- an episode: its picture with the number on it, then its name and a couple of lines about it -->
     <DataTemplate DataType="{x:Type core:EpisodeInfo}">
       <Button Style="{StaticResource PosterButton}" Focusable="True">
@@ -139,8 +175,8 @@
         <!-- a movie's page ends with other titles to try -->
         <StackPanel x:Name="SimilarPanel" Margin="0,30,0,0" Visibility="Collapsed">
           <TextBlock Text="You May Also Like" FontSize="22" FontWeight="Bold" Margin="24,0,24,12" />
-          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ArrowCenter="154">
-            <ItemsControl x:Name="SimilarList" Margin="24,0,24,10">
+          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ArrowCenter="95">
+            <ItemsControl x:Name="SimilarList" ItemTemplate="{StaticResource WideCard}" Margin="24,0,24,10">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate><VirtualizingStackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
               </ItemsControl.ItemsPanel>

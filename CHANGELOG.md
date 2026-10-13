@@ -275,3 +275,5 @@ and the posters slide on out under the window's left edge, as they already do of
 
 **Follow-up (owner: the positioning of the Home banner's info).** The info block (title, facts, description, buttons) had 70 pixels under it, but Home's first row overlaps the bottom of the banner by 60, so the buttons almost touched the "Popular" heading: it now has 112. It also had no space on the right, so in a narrow window the description ran off the edge instead of wrapping:
 it now keeps 24 pixels from the right edge (and still holds to 600 wide when there is room).
+
+**Follow-up (owner: make the "You May Also Like" posters horizontal).** The row of similar titles on a movie's page now uses landscape cards (300 x 169) showing each title's wide picture (`MetaPreview.WidePicture`: its landscape artwork, else its poster, cropped to fit) with the name under it, instead of tall posters. The row's arrows are centred on those pictures.
