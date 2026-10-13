@@ -545,3 +545,5 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Issues fixed:** None yet.
 
+**Follow-up (owner: the right-click card menu a bit bigger).** The menu panel is drawn 1.3 times its old size (a layout transform on the whole panel, so the picture, buttons and words all grow together); in a window too small for that it shrinks to fit (not below 0.6), and its height is limited to the window's. Not seen on screen.
+

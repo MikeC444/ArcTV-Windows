@@ -21,6 +21,7 @@ namespace ArcTV.App.Views;
 public sealed class CardMenuView : Grid
 {
     private const string Mdl2 = "Segoe MDL2 Assets";
+    private const double Zoom = 1.3;
 
     private readonly MetaPreview _item;
     private readonly bool _fromPicked;
@@ -63,7 +64,15 @@ public sealed class CardMenuView : Grid
             Child = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Hidden, Content = column },
             Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 40, ShadowDepth = 12, Opacity = 0.6 },
         };
-        SizeChanged += (_, e) => panel.MaxHeight = Math.Max(300, e.NewSize.Height - 60);
+        // the panel is drawn a quarter bigger than its 500 units (less in a window too small for that), and as tall as the window allows
+        var zoom = new ScaleTransform(1, 1);
+        panel.LayoutTransform = zoom;
+        SizeChanged += (_, e) =>
+        {
+            var scale = Math.Clamp(Math.Min(Zoom, (e.NewSize.Width - 40) / 500, (e.NewSize.Height - 60) / 640), 0.6, Zoom);
+            zoom.ScaleX = zoom.ScaleY = scale;
+            panel.MaxHeight = Math.Max(300, (e.NewSize.Height - 60) / scale);
+        };
         Children.Add(panel);
 
         RefreshToggles();
