@@ -14,6 +14,14 @@ public class ArrowScrollViewer : ScrollViewer
 {
     private SmoothScroller? _smooth;
 
+    /// <summary>
+    /// How far down the row the arrows' middle sits, when the middle of the whole row is not the middle of what matters (an episode's picture has its name and a few lines
+    /// under it): set it to the middle of the pictures. Left alone, the arrows are centred on the row.
+    /// </summary>
+    public static readonly DependencyProperty ArrowCenterProperty = DependencyProperty.Register(nameof(ArrowCenter), typeof(double), typeof(ArrowScrollViewer), new PropertyMetadata(double.NaN));
+
+    public double ArrowCenter { get => (double)GetValue(ArrowCenterProperty); set => SetValue(ArrowCenterProperty, value); }
+
     public ArrowScrollViewer()
     {
         SetResourceReference(StyleProperty, "ArrowRowScroll");
@@ -24,8 +32,25 @@ public class ArrowScrollViewer : ScrollViewer
     public override void OnApplyTemplate()
     {
         base.OnApplyTemplate();
-        if (GetTemplateChild("RowLeft") is Button left) left.Click += (_, _) => Smooth.By(-ViewportWidth * 0.8);
-        if (GetTemplateChild("RowRight") is Button right) right.Click += (_, _) => Smooth.By(ViewportWidth * 0.8);
+        if (GetTemplateChild("RowLeft") is Button left)
+        {
+            left.Click += (_, _) => Smooth.By(-ViewportWidth * 0.8);
+            Place(left);
+        }
+
+        if (GetTemplateChild("RowRight") is Button right)
+        {
+            right.Click += (_, _) => Smooth.By(ViewportWidth * 0.8);
+            Place(right);
+        }
+    }
+
+    /// <summary>Moves an arrow so its middle is at <see cref="ArrowCenter"/> (when that is set) instead of the row's middle.</summary>
+    private void Place(Button arrow)
+    {
+        if (double.IsNaN(ArrowCenter)) return;
+        arrow.VerticalAlignment = VerticalAlignment.Top;
+        arrow.Margin = new Thickness(8, Math.Max(0, ArrowCenter - arrow.Height / 2), 8, 0);
     }
 
     /// <summary>A sideways swipe (two fingers on a touchpad, a tilt wheel): <paramref name="delta"/> is positive towards the right, 120 for a notch.</summary>

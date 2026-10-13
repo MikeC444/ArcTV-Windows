@@ -260,3 +260,6 @@ is now a thin dark one with a rounded handle and no arrows or white track (an im
 
 **Follow-up (owner: remove all scroll bars).** Instead of the thin dark bar added a moment earlier, no scroll bar is shown anywhere: the implicit `ScrollBar` style in the theme gives every bar no width or height and an empty look (a scroll viewer works the same with its bars out of sight).
 Pages, lists and rows still scroll with the wheel, a touchpad and the keyboard, and rows have their arrows. What is lost: dragging a bar with the mouse, and seeing how far down a page is. `PosterGrid` counts no bar in its width sums.
+
+**Follow-up (owner: put the row arrow in the middle of the episode picture).** A row's arrows were centred on the whole row, so on an episode row (picture, then its name and a few lines) they sat well below the picture's middle. `ArrowScrollViewer` has an `ArrowCenter` (how far down the arrows'
+middle sits): episodes use the middle of the 158-high picture, the cast the middle of the photo, and the posters on Home and in "You May Also Like" the middle of the poster.

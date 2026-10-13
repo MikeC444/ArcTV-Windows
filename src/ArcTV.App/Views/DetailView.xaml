@@ -115,7 +115,7 @@
             <TextBlock x:Name="SeasonTitle" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Bottom" />
             <TextBlock x:Name="SeasonCount" FontSize="14" Foreground="{StaticResource Text3Brush}" VerticalAlignment="Bottom" Margin="12,0,0,1" />
           </StackPanel>
-          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ArrowCenter="85">
             <ItemsControl x:Name="EpisodeList" Margin="44,0,28,10">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate><VirtualizingStackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
@@ -127,7 +127,7 @@
         <!-- the cast -->
         <StackPanel x:Name="CastPanel" Margin="0,30,0,0" Visibility="Collapsed">
           <TextBlock Text="Cast" FontSize="22" FontWeight="Bold" Margin="44,0,44,12" />
-          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ArrowCenter="52">
             <ItemsControl x:Name="CastList" Margin="44,0,28,10">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate><VirtualizingStackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
@@ -139,7 +139,7 @@
         <!-- a movie's page ends with other titles to try -->
         <StackPanel x:Name="SimilarPanel" Margin="0,30,0,0" Visibility="Collapsed">
           <TextBlock Text="You May Also Like" FontSize="22" FontWeight="Bold" Margin="44,0,44,12" />
-          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+          <c:ArrowScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ArrowCenter="154">
             <ItemsControl x:Name="SimilarList" Margin="44,0,28,10">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate><VirtualizingStackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
