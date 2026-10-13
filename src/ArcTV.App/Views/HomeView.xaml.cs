@@ -69,7 +69,7 @@ public partial class HomeView : UserControl
         SizeChanged += (_, e) => { if (_hero is not null) _hero.Height = HeroHeight(e.NewSize.Height); };
     }
 
-    private static double HeroHeight(double windowHeight) => Math.Max(windowHeight * 0.62, 500);
+    private static double HeroHeight(double windowHeight) => Math.Max(windowHeight * 0.62, 500) + HeroBanner.FadeExtra;
 
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
 
@@ -134,7 +134,7 @@ public partial class HomeView : UserControl
             _hero = new HeroBanner(hero, _list, _extras, _play) { Height = HeroHeight(ActualHeight) };
             HeroHost.Children.Clear();
             HeroHost.Children.Add(_hero);
-            RowsHost.Margin = new Thickness(0, -60, 0, 8);
+            RowsHost.Margin = new Thickness(0, -60 - HeroBanner.FadeExtra, 0, 8); // the rows start where they did: the banner's extra height is only fade
         }
     }
 

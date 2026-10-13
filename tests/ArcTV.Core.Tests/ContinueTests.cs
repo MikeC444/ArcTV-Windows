@@ -113,6 +113,27 @@ public class ContinueTests
     }
 
     [Fact]
+    public async Task EachItemGetsItsTitleLogoLookedUpOnceAndAFailureLeavesOneOut()
+    {
+        var store = new FakeStore { Items = [Movie("tt1", 600_000), Movie("tt2", 600_000), Episode("tt3", 1, 1, 100_000)] };
+        var asked = new List<string>();
+        var model = new ContinueModel(store)
+        {
+            LogoLookup = (item, _) =>
+            {
+                lock (asked) asked.Add(item.ContentId);
+                return item.ContentId == "tt2" ? throw new HttpRequestException("no") : Task.FromResult<string?>("https://img.test/" + item.ContentId + ".png");
+            },
+        };
+        await model.LoadAsync();
+        Assert.Equal(["tt1", "tt3"], model.Logos.Keys.Order());
+        Assert.Equal("https://img.test/tt1.png", model.Logos["tt1"]);
+        asked.Clear();
+        await model.LoadAsync();
+        Assert.Equal(["tt2"], asked); // only the one still without a logo is tried again
+    }
+
+    [Fact]
     public async Task AReportRefreshesTheRow()
     {
         var store = new FakeStore { Items = [Movie("tt1", 600_000)] };

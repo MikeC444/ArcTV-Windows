@@ -112,9 +112,16 @@ public sealed class AccountContinueStore(AccountModel account) : IContinueStore
 public sealed class ContinueModel(IContinueStore store, Func<MetaDetail, Task>? movieFinished = null, Func<DateTime>? now = null) : ObservableObject
 {
     private IReadOnlyList<ContinueItem> _items = [];
+    private IReadOnlyDictionary<string, string> _logos = new Dictionary<string, string>();
     private readonly Func<DateTime> _now = now ?? (() => DateTime.UtcNow);
 
     public IReadOnlyList<ContinueItem> Items { get => _items; private set => Set(ref _items, value); }
+
+    /// <summary>The title logo of each item (by title id), looked up after the list is read: the account keeps the poster and backdrop of a title but not its logo.</summary>
+    public IReadOnlyDictionary<string, string> Logos { get => _logos; private set => Set(ref _logos, value); }
+
+    /// <summary>How to find an item's logo (the shell gives it a Cinemeta lookup). Null means logos are not looked up.</summary>
+    public Func<ContinueItem, CancellationToken, Task<string?>>? LogoLookup { get; set; }
 
     public async Task LoadAsync(CancellationToken cancel = default)
     {
@@ -124,8 +131,40 @@ public sealed class ContinueModel(IContinueStore store, Func<MetaDetail, Task>? 
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            // keep what was shown
+            return;
         }
+
+        await LoadLogosAsync(cancel).ConfigureAwait(true);
+    }
+
+    /// <summary>Finds a logo for every item that has none yet (four lookups at a time) and announces them together. An item whose lookup fails just shows without one.</summary>
+    public async Task LoadLogosAsync(CancellationToken cancel = default)
+    {
+        if (LogoLookup is not { } lookup) return;
+        var need = Items.Where(i => !Logos.ContainsKey(i.ContentId)).ToList();
+        if (need.Count == 0) return;
+        var found = new System.Collections.Concurrent.ConcurrentDictionary<string, string>();
+        using var gate = new SemaphoreSlim(4);
+        await Task.WhenAll(need.Select(async item =>
+        {
+            await gate.WaitAsync(cancel).ConfigureAwait(false);
+            try
+            {
+                if (await lookup(item, cancel).ConfigureAwait(false) is { Length: > 0 } url) found[item.ContentId] = url;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // no logo for this one
+            }
+            finally
+            {
+                gate.Release();
+            }
+        })).ConfigureAwait(true);
+        if (found.IsEmpty) return;
+        var all = Logos.ToDictionary(p => p.Key, p => p.Value);
+        foreach (var (id, url) in found) all[id] = url;
+        Logos = all;
     }
 
     /// <summary>

@@ -43,6 +43,21 @@ public sealed class ContinueRow : StackPanel
         var picture = new Grid();
         picture.Children.Add(new TextBlock { Text = item.Title, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12), Foreground = Res("Text3Brush"), FontSize = 13 });
         picture.Children.Add(new RemoteImage { Url = item.BackdropUrl ?? item.PosterUrl, FallbackUrl = item.PosterUrl, DecodeWidth = 700, Stretch = Stretch.UniformToFill });
+        // the title's logo, top left, on a soft dark corner so it reads on any picture
+        if (_model.Logos.TryGetValue(item.ContentId, out var logo))
+        {
+            picture.Children.Add(new System.Windows.Shapes.Rectangle
+            {
+                Height = 90, VerticalAlignment = VerticalAlignment.Top, IsHitTestVisible = false,
+                Fill = new LinearGradientBrush(Color.FromArgb(0xB0, 0, 0, 0), Color.FromArgb(0, 0, 0, 0), 90),
+            });
+            picture.Children.Add(new RemoteImage
+            {
+                Url = logo, DecodeWidth = 360, Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
+                MaxWidth = 130, MaxHeight = 46, Margin = new Thickness(14, 14, 0, 0), IsHitTestVisible = false,
+            });
+        }
+
         if (item.EpisodeLabel is { } label)
             picture.Children.Add(new Border
             {

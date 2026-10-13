@@ -65,6 +65,7 @@ public partial class ShellView : UserControl
             if (list.Items is null) await list.LoadAsync();
             if (!list.IsWatched(title.Id)) await list.ToggleWatchedAsync(title);
         });
+        _continue.LogoLookup = async (item, cancel) => (await _addonClient.FetchMetaAsync(ArcTV.Core.AppInfo.CinemetaManifestUrl, item.IsMovie ? "movie" : "series", item.ContentId, cancel))?.Logo;
         _picked = new PickedModel(
             () => new PickedInputs(_plus.Active, _plus.StatusKnown && _plus.RatingsLoaded && _home.State == HomeState.Loaded && MyListFor().Items is not null,
                 BlockedGenres.Without(_home.AllRows.SelectMany(row => row.Items).GroupBy(i => i.Id).Select(g => g.First()).ToList(), _settingsModel.Blocked),

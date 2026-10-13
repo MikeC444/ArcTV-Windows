@@ -16,6 +16,9 @@ namespace ArcTV.App.Views;
 /// <summary>The banner at the top of Home: featured titles that change by themselves every few seconds (stopped while the pointer is over it), with dots to jump to one.</summary>
 public sealed class HeroBanner : Grid
 {
+    /// <summary>The banner is this much taller than the part with words on it: the picture goes on under them and fades slowly into the page, so there is no edge to see.</summary>
+    public const double FadeExtra = 140;
+
     private readonly IReadOnlyList<MetaPreview> _items;
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(6) };
     private readonly Grid _slide = new();
@@ -169,11 +172,13 @@ public sealed class HeroBanner : Grid
                 StartPoint = new Point(0, 0), EndPoint = new Point(0, 1),
                 GradientStops =
                 {
-                    new GradientStop(Page(0), 0.30), new GradientStop(Page(40), 0.50), new GradientStop(Page(110), 0.68),
-                    new GradientStop(Page(190), 0.84), new GradientStop(Page(245), 0.95), new GradientStop(Page(255), 1.0),
+                    new GradientStop(Page(0), 0.26), new GradientStop(Page(35), 0.44), new GradientStop(Page(95), 0.60), new GradientStop(Page(170), 0.74),
+                    new GradientStop(Page(225), 0.85), new GradientStop(Page(252), 0.93), new GradientStop(Page(255), 0.97),
                 },
             },
         });
+        // the very bottom is the page's own colour for certain: a gradient's last pixel row can show the picture through at an uneven window height, which looked like a line
+        grid.Children.Add(new System.Windows.Shapes.Rectangle { Height = 6, VerticalAlignment = VerticalAlignment.Bottom, Fill = new SolidColorBrush(page) });
         grid.Children.Add(new System.Windows.Shapes.Rectangle
         {
             Fill = new LinearGradientBrush
@@ -204,8 +209,9 @@ public sealed class HeroBanner : Grid
         details.LayoutTransform = scale;
         grid.SizeChanged += (_, e) =>
         {
-            scale.ScaleX = scale.ScaleY = Math.Clamp(Math.Min(e.NewSize.Width / 1300.0, e.NewSize.Height / 560.0), 0.7, 1.6);
-            details.Margin = new Thickness(24, Math.Max(104, e.NewSize.Height * 0.2), 24, 0);
+            var shown = e.NewSize.Height - FadeExtra; // the part with words on it
+            scale.ScaleX = scale.ScaleY = Math.Clamp(Math.Min(e.NewSize.Width / 1300.0, shown / 560.0), 0.7, 1.6);
+            details.Margin = new Thickness(24, Math.Max(104, shown * 0.2), 24, 0);
         };
         grid.Children.Add(details);
         RefreshListButton();
