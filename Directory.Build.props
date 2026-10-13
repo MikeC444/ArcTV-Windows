@@ -3,7 +3,8 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- warnings are errors on the build server only (GitHub sets CI=true), so a newer SDK's extra warnings never stop a build on your PC -->
+    <TreatWarningsAsErrors Condition="'$(CI)' == 'true'">true</TreatWarningsAsErrors>
     <!-- lets the Windows app project compile on Linux and macOS too (nothing can run there), so changes can be checked anywhere -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <!-- the release workflow passes -p:Version=1.2.3; everything else is a development build -->

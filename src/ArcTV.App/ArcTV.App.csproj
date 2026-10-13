@@ -8,6 +8,8 @@
     <RootNamespace>ArcTV.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- a PC with only a newer .NET desktop runtime can still run a build made without the runtime bundled (Visual Studio's F5) -->
+    <RollForward>Major</RollForward>
   </PropertyGroup>
   <!-- the release workflow passes -p:ArcTVApiBaseUrl=... (its API_BASE_URL secret); AppInfo reads it back -->
   <ItemGroup>
