@@ -9,6 +9,7 @@ using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Browse;
 using ArcTV.Core.Home;
+using ArcTV.Core.Search;
 using ArcTV.Core.Storage;
 using Xunit;
 
@@ -129,6 +130,25 @@ public class ScreenTests
         Assert.True(view.ActualHeight > 0);
         window.Close();
     });
+
+    [Fact]
+    public void SearchScreenSearchesAndShowsResults() => OnUiThread(async () =>
+    {
+        var client = new AddonClient(new HttpClient(new Handler(Answer)));
+        var sources = new List<HomeSource> { new("https://x.test/manifest.json", System.Text.Json.JsonSerializer.Deserialize<AddonManifest>(SearchManifest, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))!) };
+        var model = new SearchModel("u1", _ => Task.FromResult<IReadOnlyList<HomeSource>>(sources), null, client);
+        var view = new SearchView(model);
+        var window = Host(view);
+        await Settle();
+        await model.SearchAsync("alp");
+        await Settle();
+        Assert.Equal(SearchState.Results, model.State);
+        Assert.Equal(2, model.Movies.Count);
+        Assert.True(view.ActualHeight > 0);
+        window.Close();
+    });
+
+    private const string SearchManifest = """{"id":"x","name":"Cool","catalogs":[{"type":"movie","id":"all","extra":[{"name":"search"}]}]}""";
 
     [Fact]
     public void ShellOpensWithItsTopBar() => OnUiThread(async () =>

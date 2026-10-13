@@ -1,18 +1,12 @@
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using System.Windows.Media;
-using ArcTV.Core.Addons;
 using ArcTV.Core.Browse;
 using ArcTV.Core.Home;
 
 namespace ArcTV.App.Views;
-
-/// <summary>One line of the poster grid.</summary>
-internal sealed record PosterRow(IReadOnlyList<MetaPreview> Items);
 
 /// <summary>
 /// Movies or TV Shows, laid out like the web app's: the title with a genre picker beside it, Featured / Highest Rated / Newest, then a poster grid that
@@ -20,31 +14,13 @@ internal sealed record PosterRow(IReadOnlyList<MetaPreview> Items);
 /// </summary>
 public partial class BrowseView : UserControl
 {
-    private const double LoadMoreWithin = 900;
-    private const double WheelStep = 1.3;
-    private const double Glide = 0.3;
-
     private readonly string _title;
     private readonly BrowseModel _model;
-    private const double TileWidth = 208;
-    private const double SideSpace = 72;
-
-    public static readonly DependencyProperty ExtraProperty = DependencyProperty.Register(nameof(Extra), typeof(double), typeof(BrowseView), new PropertyMetadata(0.0));
-
-    /// <summary>Space added between posters so a line fills the width: the window is rarely an exact number of posters wide.</summary>
-    public double Extra { get => (double)GetValue(ExtraProperty); private set => SetValue(ExtraProperty, value); }
-
-    private readonly ObservableCollection<PosterRow> _rows = [];
-    private List<MetaPreview> _items = [];
-    private int _perRow;
     private readonly Dictionary<BrowseSort, Button> _sortButtons = [];
     private BrowseSort _sort = BrowseSort.Featured;
     private string? _genre;
     private long _popupClosedAt;
     private CancellationTokenSource? _run;
-    private ScrollViewer? _scroll;
-    private double _target;
-    private bool _gliding;
 
     public BrowseView(string title, BrowseModel model)
     {
@@ -52,13 +28,7 @@ public partial class BrowseView : UserControl
         _title = title;
         _model = model;
         TitleText.Text = title;
-        Rows.ItemsSource = _rows;
-        SizeChanged += (_, _) =>
-        {
-            UpdateExtra();
-            if (PerRow() != _perRow) Sync();
-        };
-        Rows.PreviewMouseWheel += OnWheel;
+        Posters.NearEnd += async (_, _) => await LoadMoreAsync();
 
         foreach (var sort in BrowseSorts.All)
         {
@@ -74,61 +44,7 @@ public partial class BrowseView : UserControl
         {
             _model.PropertyChanged -= OnModelChanged;
             _run?.Cancel();
-            StopGlide();
         };
-    }
-
-    private ScrollViewer? Scroll()
-    {
-        if (_scroll is null)
-        {
-            Rows.ApplyTemplate();
-            _scroll = Rows.Template.FindName("PageScroll", Rows) as ScrollViewer;
-        }
-
-        return _scroll;
-    }
-
-    // ---- scrolling: the wheel moves further than WPF's default and glides to a stop instead of jumping ----
-
-    private void OnWheel(object sender, MouseWheelEventArgs e)
-    {
-        if (Scroll() is not { } scroll) return;
-        if (!_gliding) _target = scroll.VerticalOffset;
-        _target = Math.Clamp(_target - e.Delta * WheelStep, 0, scroll.ScrollableHeight);
-        if (!_gliding)
-        {
-            _gliding = true;
-            CompositionTarget.Rendering += OnFrame;
-        }
-
-        e.Handled = true;
-    }
-
-    private void OnFrame(object? sender, EventArgs e)
-    {
-        if (Scroll() is not { } scroll)
-        {
-            StopGlide();
-            return;
-        }
-
-        var current = scroll.VerticalOffset;
-        var next = current + (_target - current) * Glide;
-        if (Math.Abs(_target - next) < 0.5)
-        {
-            next = _target;
-            StopGlide();
-        }
-
-        scroll.ScrollToVerticalOffset(next);
-    }
-
-    private void StopGlide()
-    {
-        if (!_gliding) return;
-        _gliding = false;
-        CompositionTarget.Rendering -= OnFrame;
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -157,7 +73,7 @@ public partial class BrowseView : UserControl
 
     private void Refresh()
     {
-        Sync();
+        Posters.Show([new PosterSection(null, null, _sort.Apply(_model.Items))]);
         var items = _model.Items.Count;
         var firstPage = _model.Loading && items == 0;
         LoadingPanel.Visibility = firstPage ? Visibility.Visible : Visibility.Collapsed;
@@ -172,69 +88,11 @@ public partial class BrowseView : UserControl
         Message.Visibility = message is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
-    /// <summary>The width a line of posters has to fill (the page less its side space and the scroll bar).</summary>
-    private double Available() => ActualWidth - SystemParameters.VerticalScrollBarWidth - SideSpace;
-
-    private int PerRow() => Math.Max(1, (int)(Available() / TileWidth));
-
-    private void UpdateExtra()
-    {
-        var perRow = PerRow();
-        var extra = perRow > 1 ? Math.Max(0, (Available() - perRow * TileWidth) / (perRow - 1)) : 0;
-        if (Math.Abs(extra - Extra) >= 0.5) Extra = extra;
-    }
-
-    /// <summary>
-    /// Brings the grid in line with the model. The posters sit in lines (as many as fit across); a new page only adds lines at the end, so the lines
-    /// already on screen are left alone.
-    /// </summary>
-    private void Sync()
-    {
-        var target = _sort.Apply(_model.Items);
-        var perRow = PerRow();
-        var appended = perRow == _perRow && target.Count >= _items.Count;
-        for (var i = 0; appended && i < _items.Count; i++) appended = ReferenceEquals(_items[i], target[i]);
-
-        // when only the number across changes (the window was resized), the same titles stay at the top of the screen instead of jumping back to the start
-        int? place = null;
-        var sameOrder = target.Count == _items.Count;
-        for (var i = 0; sameOrder && i < _items.Count; i++) sameOrder = ReferenceEquals(_items[i], target[i]);
-        if (!appended && sameOrder && _rows.Count > 0 && Scroll() is { ExtentHeight: > 0 } before)
-            place = (int)(before.VerticalOffset / (before.ExtentHeight / _rows.Count)) * _perRow;
-
-        var from = 0;
-        if (appended)
-        {
-            from = _items.Count / perRow;
-            while (_rows.Count > from) _rows.RemoveAt(_rows.Count - 1);
-        }
-        else
-        {
-            _rows.Clear();
-        }
-
-        for (var start = from * perRow; start < target.Count; start += perRow) _rows.Add(new PosterRow(target.Skip(start).Take(perRow).ToList()));
-        _items = target;
-        _perRow = perRow;
-
-        if (place is { } first && Scroll() is { } scroll && _rows.Count > 0)
-        {
-            Rows.UpdateLayout();
-            scroll.ScrollToVerticalOffset(first / perRow * (scroll.ExtentHeight / _rows.Count));
-        }
-    }
-
     private void ChooseSort(BrowseSort sort)
     {
         _sort = sort;
         foreach (var (name, button) in _sortButtons) button.Tag = name == sort ? "selected" : "";
-        Sync();
-    }
-
-    private void OnScrollChanged(object sender, ScrollChangedEventArgs e)
-    {
-        if (e.VerticalChange == 0 && e.ExtentHeightChange == 0 && e.ViewportHeightChange == 0) return;
-        if (e.OriginalSource is ScrollViewer scroll && scroll.ScrollableHeight - scroll.VerticalOffset < LoadMoreWithin) _ = LoadMoreAsync();
+        Refresh();
     }
 
     private async Task LoadMoreAsync()
@@ -319,8 +177,7 @@ public partial class BrowseView : UserControl
         if (string.Equals(genre, _genre, StringComparison.Ordinal)) return;
         _genre = genre;
         BuildGenrePicker();
-        StopGlide();
-        Scroll()?.ScrollToTop();
+        Posters.ScrollToTop();
         await ReloadAsync();
     }
 }

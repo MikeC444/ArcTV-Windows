@@ -3,23 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:v="clr-namespace:ArcTV.App.Views"
              xmlns:c="clr-namespace:ArcTV.App.Controls">
-  <UserControl.Resources>
-    <ResourceDictionary>
-      <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="PosterTemplate.xaml" />
-      </ResourceDictionary.MergedDictionaries>
-
-      <!-- one line of posters; only the lines on screen exist, so only their pictures are fetched. Spare width is shared out between the posters. -->
-      <DataTemplate DataType="{x:Type v:PosterRow}">
-        <ItemsControl ItemsSource="{Binding Items}" Margin="44,0,0,0" Focusable="False" IsTabStop="False">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate><c:SpacedRowPanel Extra="{Binding Extra, RelativeSource={RelativeSource AncestorType={x:Type v:BrowseView}}}" /></ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-        </ItemsControl>
-      </DataTemplate>
-    </ResourceDictionary>
-  </UserControl.Resources>
-
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -43,17 +26,6 @@
       <TextBlock x:Name="Message" Margin="44,12,44,0" FontSize="15" TextWrapping="Wrap" Foreground="{StaticResource Text2Brush}" Visibility="Collapsed" />
     </StackPanel>
 
-    <ItemsControl x:Name="Rows" Grid.Row="1" Focusable="False" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel" VirtualizingPanel.CacheLength="1,1" VirtualizingPanel.CacheLengthUnit="Page" ScrollViewer.CanContentScroll="True" ScrollViewer.ScrollChanged="OnScrollChanged">
-      <ItemsControl.Template>
-        <ControlTemplate TargetType="ItemsControl">
-          <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" CanContentScroll="True" Focusable="False" Padding="0,0,0,40">
-            <ItemsPresenter />
-          </ScrollViewer>
-        </ControlTemplate>
-      </ItemsControl.Template>
-      <ItemsControl.ItemsPanel>
-        <ItemsPanelTemplate><VirtualizingStackPanel /></ItemsPanelTemplate>
-      </ItemsControl.ItemsPanel>
-    </ItemsControl>
+    <v:PosterGrid x:Name="Posters" Grid.Row="1" />
   </Grid>
 </UserControl>

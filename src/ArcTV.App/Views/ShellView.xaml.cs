@@ -6,6 +6,8 @@ using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Browse;
 using ArcTV.Core.Home;
+using ArcTV.Core.Search;
+using ArcTV.Core.Storage;
 
 namespace ArcTV.App.Views;
 
@@ -100,6 +102,7 @@ public partial class ShellView : UserControl
             "Home" => new HomeView(_home),
             "Movies" => new BrowseView("Movies", BrowseFor("movie")),
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
+            "Search" => new SearchView(new SearchModel(_account.Session!.User.Id, SourcesAsync, new RecentSearchStore(Path.Combine(AppPaths.DataFolder(), "recent-searches.json")), _addonClient)),
             _ => new ComingSoonView(place),
         };
     }

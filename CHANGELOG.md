@@ -119,3 +119,28 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
 - Pill text: the pill's content now takes its colour from the button, so the selected pill's black text applies.
 
 **Open:** blocked genres (needs profiles/settings), loading skeletons, a virtualised grid (the grid lays out every loaded poster), opening a title (needs title details).
+
+## 5 -- Search
+
+**Status:** Written without a compiler here (no .NET SDK in the sandbox); built and tested by the Windows build server only (see the run for this commit). Not run or seen on screen by anyone.
+
+**Context:** Next place after Movies / TV Shows. Ported from the Mac app's `CatalogSearch`, `RecentSearches` and `SearchView`.
+
+**Changes:**
+- `ArcTV.Core/Search`: `CatalogSearch` (every addon at once; an addon with a searchable catalogue is asked for real, otherwise its base catalogues are filtered by
+  title; results are handed over as each addon answers; one that takes over 6 seconds is left behind and counted), `RecentSearches` (newest first, no doubles, 8 kept)
+  and `SearchModel` (idle / searching / results / none / error; keeps old results up while new ones load).
+- `RecentSearchStore`: recent searches per account in `recent-searches.json` next to the other app data.
+- `SearchView`: round search box that searches as you type (after a 250 ms pause, never for one letter), up to five suggestions under it (Up/Down/Return/Escape),
+  recent searches as chips, then Movies and TV Shows as groups of posters.
+- `PosterGrid`: the poster lines, glide scrolling, resize behaviour and "load more near the end" moved out of `BrowseView` into one control that Movies, TV Shows
+  and Search now share (headed groups are new). Behaviour of Movies / TV Shows is meant to be unchanged; resizing keeps your place by position in the list
+  rather than by title.
+
+**Tests performed:** see the build run. New: `SearchTests` (recents, searchable vs base-only addons, slow addon, model states, recents on disk) and a screen test.
+
+**Issues discovered:** none yet.
+
+**Issues fixed:** none yet.
+
+**Open:** choosing a suggestion searches for its title (opening a title needs title details); posters do not open anything yet; searches are not filtered by blocked genres on purpose (as on the Mac).
