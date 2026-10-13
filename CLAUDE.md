@@ -13,3 +13,11 @@
   the WPF parts) builds the whole solution, WPF included, and runs the xUnit tests here (`dotnet build ArcTV.sln`, `dotnet test ArcTV.sln`). Nothing can be
   *run* here: the app is never seen on screen from this sandbox. The **Build and test (Arc TV Windows)** workflow runs on a Windows machine. Say plainly
   what was built, tested and run, and never imply a screen was seen when it was not.
+
+## Where the work stands (for a new session)
+
+- Done and on `main`, CI green: foundations, sign-in (log in, sign up, phone QR, encrypted saved session), Home + floating top bar (banner, addon rows, `ArcTV.App.Tests` opens the real screens on the Windows build server).
+- Next, in order: Movies / TV Shows (browse by genre), Search, My List, title details + sources; the player (libmpv); Continue Watching, settings, addons, profiles,
+  Plus, recommendations; torrents (MonoTorrent) and downloads; installer, updater, first release. Port each from the Mac app's `Sources/ArcTV*` (clone `MikeC444/ArcTV-Mac`).
+- Not done on Home yet: hide-bar-on-scroll, Continue Watching, Picked for you, banner Play/Trailer/My List/Info buttons, saved-rows cache.
+- The owner tests with Visual Studio on their PC (pull, F5); they report what they see. Always build onto `main`. Commit trailers per the session's attribution reminder.
