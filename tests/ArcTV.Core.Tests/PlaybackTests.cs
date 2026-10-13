@@ -73,6 +73,8 @@ public class PlaybackTests
 
     private static SourceItem Direct(string addon, string title, int index = 0) => new(addon, new AddonStream(Title: title, Url: "https://cdn.example/" + index + ".mkv"), index);
 
+    private static SourceItem Item(string addon, string title) => new(addon, new AddonStream(Title: title), 9);
+
     private static SourceItem Torrent(string addon, string title, string hash, int index = 0) => new(addon, new AddonStream(Title: title, InfoHash: hash), index);
 
     [Fact]
@@ -95,11 +97,13 @@ public class PlaybackTests
         Assert.Same(best, AutoPick.Choose(new PlayTarget(show, 1, 2), items, null, true));
         // asking for the list always gets it
         Assert.Null(AutoPick.Choose(new PlayTarget(show, 1, 2, ChooseSource: true), items, last, true));
-        // a remembered torrent cannot play yet: not picked, and smart picking still picks a direct link
-        Assert.Null(AutoPick.Choose(new PlayTarget(show, 1, 2), items, new LastSource("T", "Torrent 1080p", "abc"), false));
-        Assert.Same(best, AutoPick.Choose(new PlayTarget(show, 1, 2), items, new LastSource("T", "Torrent 1080p", "abc"), true));
-        // nothing plays: show the list
-        Assert.Null(AutoPick.Choose(new PlayTarget(show, 1, 2, AutoPick: true), [torrent], null, true));
+        // a remembered torrent is found and picked too (a torrent can play now)
+        Assert.Same(torrent, AutoPick.Choose(new PlayTarget(show, 1, 2), items, new LastSource("T", "Torrent 1080p", "abc"), false));
+        Assert.Same(torrent, AutoPick.Choose(new PlayTarget(show, 1, 2), items, new LastSource("T", "Torrent 1080p", "abc"), true));
+        // a torrent is the best when it is all there is
+        Assert.Same(torrent, AutoPick.Choose(new PlayTarget(show, 1, 2, AutoPick: true), [torrent], null, true));
+        // nothing can play (no link and no torrent): show the list
+        Assert.Null(AutoPick.Choose(new PlayTarget(show, 1, 2, AutoPick: true), [Item("N", "nothing")], null, true));
     }
 
     [Fact]

@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Torrent sources now play: choose one and Arc TV finds the video in it and streams it while it downloads (what is going on is shown while it gets ready). Its files are deleted when you close the player.
 - The row titles on Home and the titles under the posters are bigger again.
 - Posters never grow past a set size, however big the window is.
 - The source list starts at the middle of the window instead of stretching across most of it.

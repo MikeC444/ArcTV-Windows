@@ -21,14 +21,17 @@ public partial class SourcesView : UserControl
     private readonly Action<PlayingItem>? _play;
     private CancellationTokenSource? _run;
     private bool _started;
+    private readonly ITorrentStarter? _torrents;
+    private CancellationTokenSource? _torrentRun;
     private SmoothScroller? _smooth;
     private SmoothScroller? _smoothInfo;
 
     /// <summary>True when a source was picked without asking, so this page was only a way through to the player.</summary>
     public bool AutoChosen => _model.AutoChosen is not null;
 
-    public SourcesView(SourcesModel model, LastSourceStore? store, Action back, Action<PlayingItem>? play = null, Func<ArcTV.Core.Details.MetaDetail, Task<string?>>? logoLookup = null)
+    public SourcesView(SourcesModel model, LastSourceStore? store, Action back, Action<PlayingItem>? play = null, Func<ArcTV.Core.Details.MetaDetail, Task<string?>>? logoLookup = null, ITorrentStarter? torrents = null)
     {
+        _torrents = torrents;
         InitializeComponent();
         _model = model;
         _store = store;
@@ -55,6 +58,7 @@ public partial class SourcesView : UserControl
             _model.PropertyChanged -= OnModelChanged;
             _model.AutoChose -= OnAutoChose;
             _run?.Cancel();
+            _torrentRun?.Cancel(); // (a torrent already playing is not touched: it stops with its player)
             _smooth?.Stop();
             _smoothInfo?.Stop();
         };
@@ -195,11 +199,11 @@ public partial class SourcesView : UserControl
         var right = new StackPanel { VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(12, 0, 0, 0) };
         if (item.SizeText is { } size) right.Children.Add(new TextBlock { Text = size, FontSize = 13, FontWeight = FontWeights.Medium, Foreground = dim, HorizontalAlignment = HorizontalAlignment.Right });
         right.Children.Add(new TextBlock { Text = item.AddonName, FontSize = 11, Foreground = faint, HorizontalAlignment = HorizontalAlignment.Right });
-        right.Children.Add(new TextBlock { Text = item.IsPlayable ? (_play is null ? "Click to copy the link" : "Click to play") : item.IsTorrent ? "Needs the torrent player (coming soon)" : "Cannot be played", FontSize = 11, Foreground = item.IsPlayable ? (Brush)FindResource("AccentBrush") : faint, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 2, 0, 0) });
+        right.Children.Add(new TextBlock { Text = item.IsPlayable ? (_play is null ? "Click to copy the link" : "Click to play") : item.IsTorrent ? (_torrents is null || _play is null ? "Needs the torrent player" : "Click to play (torrent)") : "Cannot be played", FontSize = 11, Foreground = item.CanStream ? (Brush)FindResource("AccentBrush") : faint, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 2, 0, 0) });
         Grid.SetColumn(right, 2);
         grid.Children.Add(right);
 
-        var row = new Button { Style = (Style)FindResource("SourceRow"), Content = grid, IsEnabled = item.IsPlayable, Tag = recommended ? "recommended" : "" };
+        var row = new Button { Style = (Style)FindResource("SourceRow"), Content = grid, IsEnabled = item.CanStream, Tag = recommended ? "recommended" : "" };
         row.Click += (_, _) => Choose(item);
         return row;
     }
@@ -207,10 +211,16 @@ public partial class SourcesView : UserControl
     /// <summary>Remembers the choice and plays it (without a player to play it, copies the direct link so it can be opened in another one).</summary>
     private void Choose(SourceItem item)
     {
-        if (item.PlayUrl is not { } url) return;
+        if (!item.CanStream) return;
         var target = _model.Target;
-        ArcTV.App.Player.PlayerLog.Write($"source chosen addon={item.AddonName} quality={item.Quality} auto={AutoChosen} startAt={target.StartAt:0}");
+        ArcTV.App.Player.PlayerLog.Write($"source chosen addon={item.AddonName} quality={item.Quality} torrent={item.IsTorrent} auto={AutoChosen} startAt={target.StartAt:0}");
         _store?.Set(LastSource.From(item), target.Title.Id, target.Season, target.Episode);
+        if (item.PlayUrl is not { } url)
+        {
+            if (_torrents is not null && _play is not null) _ = StartTorrentAsync(item);
+            return;
+        }
+
         if (_play is not null)
         {
             _play(new PlayingItem(url, target.Heading, item.AddonName, target, item.Stream.BehaviorHints?.Filename));
@@ -218,6 +228,48 @@ public partial class SourcesView : UserControl
         }
 
         CopyLink(url);
+    }
+
+    /// <summary>Gets a torrent ready (finding its people and the start of its video, with what is going on shown), then plays it from its local address; it stops when the player is closed.</summary>
+    private async Task StartTorrentAsync(SourceItem item)
+    {
+        _torrentRun?.Cancel();
+        var run = _torrentRun = new CancellationTokenSource();
+        var target = _model.Target;
+        void Show(TorrentProgress progress) => Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (run.IsCancellationRequested) return;
+            var text = progress.Detail is { } detail ? $"{progress.Message}  ({detail})" : progress.Message;
+            NoticeText.Text = text;
+            NoticeBox.Visibility = Visibility.Visible;
+            LoadingText.Text = text;
+        }));
+
+        Show(new TorrentProgress("Getting the torrent ready…"));
+        try
+        {
+            var start = await _torrents!.StartAsync(item, target, Show, run.Token);
+            if (run.IsCancellationRequested)
+            {
+                start.Release();
+                return;
+            }
+
+            ArcTV.App.Player.PlayerLog.Write("torrent ready");
+            _play!(new PlayingItem(start.Url, target.Heading, item.AddonName, target, item.Stream.BehaviorHints?.Filename) { OnClose = start.Release });
+        }
+        catch (OperationCanceledException)
+        {
+            // another source was chosen, or this page was left
+        }
+        catch (Exception ex)
+        {
+            ArcTV.App.Player.PlayerLog.Write($"torrent failed: {ex.Message}");
+            if (run.IsCancellationRequested) return;
+            NoticeText.Text = ex is TorrentException ? ex.Message : "The torrent could not be started. Try another source.";
+            NoticeBox.Visibility = Visibility.Visible;
+            ListScroll.ScrollToTop();
+        }
     }
 
     private void CopyLink(Uri url)

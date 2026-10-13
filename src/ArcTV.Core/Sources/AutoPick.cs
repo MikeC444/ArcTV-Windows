@@ -9,10 +9,10 @@ public static class AutoPick
     /// </summary>
     public static SourceItem? Choose(PlayTarget target, IReadOnlyList<SourceItem> items, LastSource? last, bool smartPicking)
     {
-        SourceItem? Best() => items.FirstOrDefault(i => i.IsPlayable);
+        SourceItem? Best() => items.FirstOrDefault(i => i.CanStream);
         if (target.AutoPick) return Best();
         if (target.ChooseSource) return null;
-        if (last?.Match(items) is { IsPlayable: true } same) return same;
+        if (last?.Match(items) is { } same) return same;
         return smartPicking ? Best() : null;
     }
 }

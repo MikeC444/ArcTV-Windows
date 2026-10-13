@@ -5,3 +5,4 @@
   releases (as of 2026-10-13) list no LGPL-only library, only the standard `mpv-dev-x86_64` one, which I believe includes GPL parts. I have not confirmed its licence. If it is GPL, shipping it has obligations (for example offering its source);
   the alternative is an LGPL build of libmpv from another source.
 - **QRCoder** (MIT), for the sign-in QR code.
+- **MonoTorrent** (MIT, https://github.com/alanmcgovern/monotorrent), the torrent engine: it finds the people sharing a torrent, downloads its video in the order it is watched and serves it to the player over a local address.

@@ -249,7 +249,7 @@ public static class SourceListing
     };
 
     /// <summary>The best source that plays straight away (the list is already best first), marked "Recommended".</summary>
-    public static string? RecommendedId(IEnumerable<SourceItem> items) => items.FirstOrDefault(i => i.IsPlayable)?.Id;
+    public static string? RecommendedId(IEnumerable<SourceItem> items) => items.FirstOrDefault(i => i.CanStream)?.Id;
 
     /// <summary>
     /// The sources after filtering and sorting. Quality keeps the list's own order (direct links first, best quality first); the recommended source always stays on top.
@@ -278,4 +278,8 @@ public sealed record PlayTarget(Details.MetaDetail Title, int? Season = null, in
 }
 
 /// <summary>A source that was picked: what to play and what to call it.</summary>
-public sealed record PlayingItem(Uri Url, string Heading, string SourceName, PlayTarget Target, string? Filename = null);
+public sealed record PlayingItem(Uri Url, string Heading, string SourceName, PlayTarget Target, string? Filename = null)
+{
+    /// <summary>Called when the player is closed: a torrent being streamed for it is stopped and its files removed.</summary>
+    public Action? OnClose { get; init; }
+}

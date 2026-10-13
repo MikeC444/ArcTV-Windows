@@ -58,7 +58,7 @@
           </Border>
 
           <StackPanel x:Name="LoadingPanel" HorizontalAlignment="Left" Margin="0,6,0,0">
-            <TextBlock Text="Asking your addons…" FontSize="16" Foreground="{StaticResource Text2Brush}" />
+            <TextBlock x:Name="LoadingText" Text="Asking your addons…" FontSize="16" Foreground="{StaticResource Text2Brush}" />
             <ProgressBar IsIndeterminate="True" Height="3" Width="220" Margin="0,14,0,0" HorizontalAlignment="Left" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
           </StackPanel>
 

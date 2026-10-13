@@ -561,3 +561,20 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Follow-up (owner: make the row text bigger).** With posters now drawn at most 0.9 of their size, the words under them shrank with them, so the row titles above Home's rows (the addon rows, Continue Watching, Picked for you) are 32 (were 26) and the words under every poster and card are 20 (were 17; the reason line under a Picked for you card 16, was 14). The words under a poster are scaled with the poster, so at the largest poster size they are drawn at 18. Not seen on screen.
 
+## 19 -- Torrent playback (MonoTorrent)
+
+**Status:** Compiled and unit-tested by the Windows build server for what can be tested without a network; the streaming itself (finding peers, buffering, playing) has not been run by anyone. Ported from the Mac app's `Torrents.swift` and `TorrentEngine`.
+
+**Context:** Direct links played, but a source that was only a torrent was greyed out ("Needs the torrent player"), so for many addons most results were unplayable.
+
+**Changes:**
+- Core: `TorrentLink.Magnet` (hash, name and the trackers the addon lists; the usual public trackers when it lists none) and `TorrentFileChoice.Pick` (the addon's own file when it is a video, else the video that names the episode (S01E02 or 1x02), else the biggest video). `SourceItem.CanStream` (a link or a torrent) now decides what can be chosen, recommended and picked without asking; `PlayingItem.OnClose` runs when the player is closed.
+- App: `TorrentStreamer` (the MonoTorrent package) adds the magnet link, waits for its file list (two minutes at most), picks the video, and asks MonoTorrent for a seekable stream with a local HTTP address once the first parts have arrived (three minutes at most), which mpv plays like any link. One torrent at a time; when the player closes (or another source is chosen) it is stopped and its files are removed. The source list shows what is going on (finding people, the file list, buffering with peers and speed) and the reason when it fails; torrent rows can be clicked now.
+- `THIRD_PARTY_NOTICES.md` lists MonoTorrent (MIT).
+
+**Tests performed:** magnet links and the choice of file (including episodes and a text file bigger than the video), the changed auto-pick rules. Nothing that needs the internet or a torrent was run.
+
+**Issues discovered:** The first build with the MonoTorrent package is the first compile against its API, which I wrote from memory of its documentation (the sandbox cannot restore NuGet packages).
+
+**Issues fixed:** None yet.
+

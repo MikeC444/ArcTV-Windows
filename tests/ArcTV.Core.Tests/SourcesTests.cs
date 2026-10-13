@@ -204,4 +204,36 @@ public class SourcesTests
         Assert.Equal("tt9", new PlayTarget(show).StreamId);
         Assert.Equal("A Show", new PlayTarget(show).Heading);
     }
+
+    [Fact]
+    public void ATorrentStreamBecomesAMagnetLinkWithItsTrackers()
+    {
+        var stream = new AddonStream(InfoHash: "ABC123", Title: "Movie.2025.1080p\n👤 5", Sources: ["tracker:udp://t1.example:80/announce", "dht:ABC123", "tracker:udp://t1.example:80/announce", "tracker:udp://t2.example:1/a b"]);
+        var magnet = TorrentLink.Magnet(stream)!;
+        Assert.StartsWith("magnet:?xt=urn:btih:ABC123&dn=Movie.2025.1080p", magnet);
+        Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(magnet, "t1.example").Count); // each tracker once
+        Assert.Contains("&tr=udp%3A%2F%2Ft2.example%3A1%2Fa%20b", magnet);
+        Assert.DoesNotContain("dht", magnet);
+        Assert.Contains("opentrackr", TorrentLink.Magnet(new AddonStream(InfoHash: "abc"))!); // no trackers named: the usual ones
+        Assert.Null(TorrentLink.Magnet(new AddonStream(Title: "no hash")));
+        Assert.Null(TorrentLink.Magnet(new AddonStream(InfoHash: "  ")));
+    }
+
+    [Fact]
+    public void TheVideoOfATorrentIsChosenByHintThenEpisodeThenSize()
+    {
+        var files = new List<TorrentFile>
+        {
+            new(0, "Show.S01E01.mkv", 900), new(1, "Show.S01E02.1080p.mkv", 800), new(2, "Show.S01E02.720p.mkv", 300), new(3, "readme.txt", 5000), new(4, "Sample.mp4", 50),
+        };
+        Assert.Equal(2, TorrentFileChoice.Pick(files, 2, 1, 1)); // the addon's own pick, when it is a video
+        Assert.Equal(1, TorrentFileChoice.Pick(files, 3, 1, 2)); // its pick is not a video: the episode, the biggest that names it
+        Assert.Equal(0, TorrentFileChoice.Pick(files, null, null, null)); // the biggest video (never the 5000-byte text file)
+        Assert.Equal(1, TorrentFileChoice.Pick(files, null, 1, 2));
+        Assert.Equal(0, TorrentFileChoice.Pick(files, null, 1, 7)); // an episode nothing names: the biggest video
+        Assert.Null(TorrentFileChoice.Pick([new(0, "a.txt", 1)], null, null, null));
+        Assert.True(TorrentFileChoice.IsVideo("X.MKV"));
+        Assert.False(TorrentFileChoice.IsVideo("noextension"));
+    }
 }
+

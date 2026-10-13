@@ -153,6 +153,7 @@ public partial class PlayerView : UserControl
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
+        _item.OnClose?.Invoke(); // a torrent streamed for this video stops with it
         _waitForVideoWindow?.Stop();
         _resizeDone?.Stop();
         _startWatch?.Stop();
