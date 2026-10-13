@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The Windows app: WPF (native Windows, not a web page in a window). Press F5 in Visual Studio to run it. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>ArcTV</AssemblyName>
+    <RootNamespace>ArcTV.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+  <!-- the release workflow passes -p:ArcTVApiBaseUrl=... (its API_BASE_URL secret); AppInfo reads it back -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ArcTVApiBaseUrl</_Parameter1>
+      <_Parameter2>$(ArcTVApiBaseUrl)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ArcTV.Core\ArcTV.Core.csproj" />
+  </ItemGroup>
+</Project>

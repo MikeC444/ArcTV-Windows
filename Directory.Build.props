@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- lets the Windows app project compile on Linux and macOS too (nothing can run there), so changes can be checked anywhere -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- the release workflow passes -p:Version=1.2.3; everything else is a development build -->
+    <Version Condition="'$(Version)' == ''">0.0.0-dev</Version>
+    <InformationalVersion>$(Version)</InformationalVersion>
+  </PropertyGroup>
+</Project>

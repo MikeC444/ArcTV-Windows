@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Everything that is not on screen (the addon protocol, the account API, the Home rows, the recommendations), so it can be tested on its own, anywhere. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ArcTV.Core</RootNamespace>
+  </PropertyGroup>
+</Project>

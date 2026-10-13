@@ -1,0 +1,45 @@
+name: Build and test (Arc TV Windows)
+
+# Runs on every push to any branch and on pull requests: compiles the app, runs the tests, and keeps the app as a downloadable zip so a branch can be
+# tried without cutting a release (unzip it and run ArcTV.exe: it carries everything it needs, no .NET install). Nothing ships to users from here:
+# see release.yml (added with the first release).
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build
+        run: dotnet build ArcTV.sln -c Release
+
+      - name: Test
+        run: dotnet test ArcTV.sln -c Release --no-build
+
+      # A self-contained publish: the .NET runtime is inside the folder, so the zip runs on a PC that has never had .NET installed.
+      - name: Publish the app
+        run: >
+          dotnet publish src/ArcTV.App/ArcTV.App.csproj -c Release -r win-x64 --self-contained true
+          -p:Version=0.0.0-ci.${{ github.run_number }} -o publish
+
+      - name: Name the zip after the branch and build
+        id: name
+        shell: bash
+        run: |
+          branch="${GITHUB_REF_NAME//[^A-Za-z0-9._-]/-}"
+          echo "zip=ArcTV-win-x64-${branch}-build${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Keep the app
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.name.outputs.zip }}
+          path: publish/
+          retention-days: 14

@@ -1,0 +1,14 @@
+<Window x:Class="ArcTV.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Arc TV" Width="1280" Height="760" MinWidth="900" MinHeight="560"
+        Background="{StaticResource BgBrush}" WindowStartupLocation="CenterScreen">
+  <Grid>
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+      <TextBlock Text="Arc TV" FontSize="56" FontWeight="ExtraBold" HorizontalAlignment="Center" />
+      <Border Height="4" Width="120" Margin="0,10,0,18" CornerRadius="2" Background="{StaticResource BrandGradient}" />
+      <TextBlock x:Name="Status" FontSize="16" Foreground="{StaticResource Text2Brush}" HorizontalAlignment="Center" />
+    </StackPanel>
+    <TextBlock x:Name="VersionLabel" Margin="16" FontSize="12" Foreground="{StaticResource Text3Brush}" HorizontalAlignment="Left" VerticalAlignment="Bottom" />
+  </Grid>
+</Window>

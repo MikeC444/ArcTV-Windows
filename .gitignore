@@ -1,0 +1,15 @@
+# Visual Studio and .NET
+.vs/
+bin/
+obj/
+publish/
+*.user
+*.suo
+*.userprefs
+[Dd]ebug/
+[Rr]elease/
+TestResults/
+*.log
+# the video player library is downloaded by the build, not kept in git
+libs/
+*.zip
