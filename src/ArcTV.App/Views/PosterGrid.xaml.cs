@@ -23,7 +23,7 @@ public partial class PosterGrid : UserControl
 {
     private const double TileWidth = 208;
     private const double SideSpace = 72;
-    private const double ScrollBarWidth = 10; // the thin scroll bar in the theme
+    private const double ScrollBarWidth = 0; // the theme hides scroll bars
     private const double LoadMoreWithin = 900;
 
     public static readonly DependencyProperty ExtraProperty = DependencyProperty.Register(nameof(Extra), typeof(double), typeof(PosterGrid), new PropertyMetadata(0.0));
