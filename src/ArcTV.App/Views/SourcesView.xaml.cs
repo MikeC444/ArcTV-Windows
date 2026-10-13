@@ -18,15 +18,17 @@ public partial class SourcesView : UserControl
     private readonly SourcesModel _model;
     private readonly LastSourceStore? _store;
     private readonly Action _back;
+    private readonly Action<PlayingItem>? _play;
     private CancellationTokenSource? _run;
     private SmoothScroller? _smooth;
     private SmoothScroller? _smoothInfo;
 
-    public SourcesView(SourcesModel model, LastSourceStore? store, Action back)
+    public SourcesView(SourcesModel model, LastSourceStore? store, Action back, Action<PlayingItem>? play = null)
     {
         InitializeComponent();
         _model = model;
         _store = store;
+        _play = play;
         _back = back;
         ShowTitle();
         ListScroll.PreviewMouseWheel += (_, e) => (_smooth ??= new SmoothScroller(ListScroll, 1.1)).Wheel(e);
@@ -174,29 +176,51 @@ public partial class SourcesView : UserControl
         var right = new StackPanel { VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(12, 0, 0, 0) };
         if (item.SizeText is { } size) right.Children.Add(new TextBlock { Text = size, FontSize = 13, FontWeight = FontWeights.Medium, Foreground = dim, HorizontalAlignment = HorizontalAlignment.Right });
         right.Children.Add(new TextBlock { Text = item.AddonName, FontSize = 11, Foreground = faint, HorizontalAlignment = HorizontalAlignment.Right });
-        right.Children.Add(new TextBlock { Text = item.IsPlayable ? "Click to copy the link" : item.IsTorrent ? "Needs the torrent player (coming soon)" : "Cannot be played", FontSize = 11, Foreground = item.IsPlayable ? (Brush)FindResource("AccentBrush") : faint, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 2, 0, 0) });
+        right.Children.Add(new TextBlock { Text = item.IsPlayable ? (_play is null ? "Click to copy the link" : "Click to play") : item.IsTorrent ? "Needs the torrent player (coming soon)" : "Cannot be played", FontSize = 11, Foreground = item.IsPlayable ? (Brush)FindResource("AccentBrush") : faint, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 2, 0, 0) });
+        if (item.PlayUrl is { } link)
+        {
+            var copy = new Button { Content = "Copy link", Style = (Style)FindResource("LinkButton"), HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 4, 0, 0), FontSize = 11 };
+            copy.Click += (_, _) => CopyLink(link);
+            right.Children.Add(copy);
+        }
+
         Grid.SetColumn(right, 2);
         grid.Children.Add(right);
 
         var row = new Button { Style = (Style)FindResource("SourceRow"), Content = grid, IsEnabled = item.IsPlayable, Tag = recommended ? "recommended" : "" };
-        row.Click += (_, _) => Choose(item);
+        // a button inside the row (Copy link) bubbles its click up to the row as well: only a click on the row itself plays
+        row.Click += (_, e) =>
+        {
+            if (ReferenceEquals(e.OriginalSource, row)) Choose(item);
+        };
         return row;
     }
 
-    /// <summary>For now: remember the choice and copy the direct link, so it can be opened in another player until the built-in one arrives.</summary>
+    /// <summary>Remembers the choice and plays it (without a player to play it, copies the direct link so it can be opened in another one).</summary>
     private void Choose(SourceItem item)
     {
         if (item.PlayUrl is not { } url) return;
         var target = _model.Target;
         _store?.Set(LastSource.From(item), target.Title.Id, target.Season, target.Episode);
+        if (_play is not null)
+        {
+            _play(new PlayingItem(url, target.Heading, item.AddonName, target, item.Stream.BehaviorHints?.Filename));
+            return;
+        }
+
+        CopyLink(url);
+    }
+
+    private void CopyLink(Uri url)
+    {
         try
         {
             Clipboard.SetText(url.ToString());
-            NoticeText.Text = "Link copied. Playing inside Arc TV is coming soon; until then, paste it into a video player (such as VLC) to watch.";
+            NoticeText.Text = _play is null ? "Link copied. Playing inside Arc TV is coming soon; until then, paste it into a video player (such as VLC) to watch." : "Link copied. Paste it into another video player to watch it there.";
         }
         catch (Exception)
         {
-            NoticeText.Text = "Playing inside Arc TV is coming soon. The link could not be copied just now; try again.";
+            NoticeText.Text = "The link could not be copied just now; try again.";
         }
 
         NoticeBox.Visibility = Visibility.Visible;

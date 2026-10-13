@@ -1,0 +1,134 @@
+<Window x:Class="ArcTV.App.Views.PlayerOverlay"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:ArcTV.App.Controls"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" ShowActivated="False" ResizeMode="NoResize"
+        SnapsToDevicePixels="True" Title="Arc TV player" Width="800" Height="450">
+  <Window.Resources>
+    <!-- a round button for the player's controls -->
+    <Style x:Key="PlayerRound" TargetType="Button">
+      <Setter Property="Width" Value="44" />
+      <Setter Property="Height" Value="44" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Grid>
+              <Ellipse x:Name="Disc" Fill="#59000000" Stroke="#40FFFFFF" StrokeThickness="1" />
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Disc" Property="Fill" Value="{StaticResource PillGradient}" /></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </Window.Resources>
+
+  <Grid x:Name="Root" Background="#01000000" MouseMove="OnMouseMove" MouseLeftButtonDown="OnVideoClick">
+    <!-- while the video loads: the title's picture, its logo in the middle, and a loading symbol under it -->
+    <Grid x:Name="Cover" Background="Black">
+      <c:RemoteImage x:Name="CoverPicture" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center" DecodeWidth="0" />
+      <Rectangle Fill="#99000000" />
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Grid HorizontalAlignment="Center">
+          <TextBlock x:Name="CoverName" FontSize="40" FontWeight="ExtraBold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="700" />
+          <c:RemoteImage x:Name="CoverLogo" Stretch="Uniform" StretchDirection="DownOnly" MaxWidth="460" MaxHeight="150" DecodeWidth="920" Shown="OnCoverLogoShown" />
+        </Grid>
+        <c:Spinner Margin="0,28,0,0" HorizontalAlignment="Center" />
+      </StackPanel>
+    </Grid>
+
+    <!-- once playing: the title's logo at the top right (and the episode under it) -->
+    <StackPanel x:Name="TitleEnd" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="40,28" IsHitTestVisible="False" Visibility="Collapsed">
+      <Grid HorizontalAlignment="Right">
+        <TextBlock x:Name="TitleName" FontSize="22" FontWeight="ExtraBold" TextAlignment="Right" TextWrapping="Wrap" MaxWidth="360" />
+        <c:RemoteImage x:Name="TitleLogo" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Right" MaxWidth="280" MaxHeight="56" DecodeWidth="560" Shown="OnTitleLogoShown" />
+      </Grid>
+      <TextBlock x:Name="EpisodeText" FontSize="13" Foreground="{StaticResource Text2Brush}" TextAlignment="Right" HorizontalAlignment="Right" Margin="0,4,0,0" Visibility="Collapsed" />
+    </StackPanel>
+
+    <!-- the controls: they fade away a few seconds after the pointer stops moving -->
+    <Grid x:Name="ControlLayer">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+      <Rectangle Grid.Row="0" Height="150" VerticalAlignment="Top" IsHitTestVisible="False">
+        <Rectangle.Fill>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#CC000000" Offset="0" />
+            <GradientStop Color="#00000000" Offset="1" />
+          </LinearGradientBrush>
+        </Rectangle.Fill>
+      </Rectangle>
+      <Rectangle Grid.Row="2" Height="230" VerticalAlignment="Bottom" IsHitTestVisible="False">
+        <Rectangle.Fill>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#00000000" Offset="0" />
+            <GradientStop Color="#E6000000" Offset="1" />
+          </LinearGradientBrush>
+        </Rectangle.Fill>
+      </Rectangle>
+
+      <!-- top left: back and the 10-second jumps -->
+      <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,28,0,0">
+        <Button Style="{StaticResource PlayerRound}" ToolTip="Back" Click="OnBack" Margin="0,0,10,0"><TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="16" /></Button>
+        <Button Style="{StaticResource PlayerRound}" ToolTip="Back 10 seconds" Click="OnBack10" Content="&#x2212;10" Margin="0,0,10,0" />
+        <Button Style="{StaticResource PlayerRound}" ToolTip="Forward 10 seconds" Click="OnForward10" Content="+10" />
+      </StackPanel>
+
+      <!-- the bottom: play / pause, the time played, the timeline, the time left, volume and full screen, then a centred row of pills -->
+      <StackPanel Grid.Row="2" Margin="40,0,40,28">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <Button x:Name="PlayButton" Grid.Column="0" Style="{StaticResource PlayerRound}" Click="OnPlayPause" Margin="0,0,14,0"><TextBlock x:Name="PlayGlyph" Text="&#xE769;" FontFamily="Segoe MDL2 Assets" FontSize="16" /></Button>
+          <TextBlock x:Name="PlayedText" Grid.Column="1" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" Margin="0,0,12,0" />
+          <c:Timeline x:Name="Bar" Grid.Column="2" VerticalAlignment="Center" />
+          <TextBlock x:Name="LeftText" Grid.Column="3" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" Margin="12,0,18,0" />
+          <Button x:Name="MuteButton" Grid.Column="4" Style="{StaticResource PlayerRound}" ToolTip="Mute" Click="OnMute" Width="38" Height="38"><TextBlock x:Name="MuteGlyph" Text="&#xE767;" FontFamily="Segoe MDL2 Assets" FontSize="15" /></Button>
+          <c:Timeline x:Name="VolumeBar" Grid.Column="5" Width="90" VerticalAlignment="Center" Margin="6,0,14,0" />
+          <Button x:Name="FullscreenButton" Grid.Column="6" Style="{StaticResource PlayerRound}" ToolTip="Full screen (F)" Click="OnFullscreen" Width="38" Height="38"><TextBlock x:Name="FullscreenGlyph" Text="&#xE740;" FontFamily="Segoe MDL2 Assets" FontSize="15" /></Button>
+        </Grid>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+          <Button x:Name="AudioButton" Content="Audio" Style="{StaticResource ChoicePill}" Margin="0,0,10,0" Click="OnAudio" Focusable="False" />
+          <Button x:Name="SubtitlesButton" Content="Subtitles" Style="{StaticResource ChoicePill}" Margin="0,0,10,0" Click="OnSubtitles" Focusable="False" />
+          <Button x:Name="SpeedButton" Style="{StaticResource ChoicePill}" Click="OnSpeed" Focusable="False" />
+        </StackPanel>
+      </StackPanel>
+    </Grid>
+
+    <!-- a jump or a slow patch on the network: the loading symbol in the middle of the picture -->
+    <c:Spinner x:Name="Busy" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed" />
+
+    <!-- something went wrong (or the source is a "not ready yet" slate) -->
+    <Border x:Name="FailurePanel" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="560" Padding="28" CornerRadius="16" Background="#E6141417" BorderBrush="#26FFFFFF" BorderThickness="1" Visibility="Collapsed">
+      <StackPanel>
+        <TextBlock Text="This couldn't be played" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" />
+        <TextBlock x:Name="FailureText" Foreground="{StaticResource Text2Brush}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,18" />
+        <Button Content="Back to the sources" Style="{StaticResource GhostButton}" Width="200" Click="OnBack" />
+      </StackPanel>
+    </Border>
+
+    <!-- the Audio / Subtitles / Speed lists -->
+    <Popup x:Name="MenuPopup" StaysOpen="False" Placement="Top" AllowsTransparency="True" VerticalOffset="-10" Closed="OnMenuClosed">
+      <Border CornerRadius="14" Padding="8" Margin="0,0,0,24" Background="{StaticResource BgElevatedBrush}" BorderBrush="#33FFFFFF" BorderThickness="1" MaxHeight="420">
+        <Border.Effect><DropShadowEffect BlurRadius="24" ShadowDepth="8" Opacity="0.6" /></Border.Effect>
+        <ScrollViewer VerticalScrollBarVisibility="Hidden"><StackPanel x:Name="MenuRows" /></ScrollViewer>
+      </Border>
+    </Popup>
+  </Grid>
+</Window>

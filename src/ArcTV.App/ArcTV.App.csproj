@@ -28,4 +28,17 @@
   <ItemGroup>
     <ProjectReference Include="..\ArcTV.Core\ArcTV.Core.csproj" />
   </ItemGroup>
+  <!--
+    The video player is mpv, used through its library, libmpv-2.dll (an LGPL build), which sits beside ArcTV.exe. It is not kept in git: scripts\get-libmpv.ps1 downloads it into the libmpv folder, and
+    this target does so on the first build on Windows if it is missing (a failed download never fails the build: the player then says the engine is missing). Set -p:SkipLibMpv=true to skip it.
+  -->
+  <ItemGroup>
+    <None Include="libmpv\libmpv-2.dll" Condition="Exists('libmpv\libmpv-2.dll')" Link="libmpv-2.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="GetLibMpv" BeforeTargets="BeforeBuild" Condition="'$(OS)' == 'Windows_NT' And '$(SkipLibMpv)' != 'true' And !Exists('$(MSBuildProjectDirectory)\libmpv\libmpv-2.dll')">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\scripts\get-libmpv.ps1&quot;" IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true" ContinueOnError="true" />
+    <ItemGroup>
+      <None Include="libmpv\libmpv-2.dll" Condition="Exists('libmpv\libmpv-2.dll')" Link="libmpv-2.dll" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
 </Project>

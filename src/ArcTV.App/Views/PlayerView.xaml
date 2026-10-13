@@ -1,0 +1,9 @@
+<UserControl x:Class="ArcTV.App.Views.PlayerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:ArcTV.App.Controls">
+  <!-- the video is drawn by mpv into this native window; everything you see over it (the loading cover, the controls) is in the overlay window laid on top -->
+  <Grid Background="Black">
+    <c:MpvHost x:Name="Video" />
+  </Grid>
+</UserControl>

@@ -18,6 +18,15 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      # libmpv (the video player's engine) is not in git: fetched here so the published zip carries it. A failure shows as a warning; the app builds either way and its player
+      # then says the engine is missing.
+      - name: Get libmpv
+        shell: pwsh
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/get-libmpv.ps1
+
       - name: Build
         run: dotnet build ArcTV.sln -c Release
 

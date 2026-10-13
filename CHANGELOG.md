@@ -290,3 +290,26 @@ kept between 70% and 160%), and its distance from the top is a fifth of the bann
 
 **Follow-up (owner: keep the banner's buttons in the exact same spot on every slide).** The info block grew and shrank with what a title had (a tall or short logo, no genres, one line of description), so the buttons under it moved from slide to slide. Each part now has a fixed height whatever it holds: the logo (or title) area 110, the facts line 20, genres 18, the
 description 66 (cut off with "..." if longer), so Play, Trailer, More info and My List are in the same place on every slide at a given window size (and scale with it as before).
+
+## 9 -- Player (libmpv)
+
+**Status:** Written without a compiler here (no .NET SDK in the sandbox); built and tested by the Windows build server only (see the run for this commit). Not run or seen on screen, and no video has been played: whether libmpv downloads and loads is unverified until a Windows machine runs it.
+
+**Context:** What choosing a source opens. Ported from the Mac app's player (mpv, same options where they apply) and laid out like it.
+
+**Changes:**
+- `ArcTV.Core/Player`: `PlayerModel` (clock, play/pause, seek and skip, volume, speed, audio and subtitle tracks, "loading" while buffering or seeking, the "not ready yet" slate check) and `PlaceholderVideo`; tests in `PlayerTests`.
+- `ArcTV.App/Player`: P/Invoke for `libmpv-2.dll` (`NativeMpv`) and `MpvEngine` behind an `IVideoEngine` interface (the tests use a stand-in). If the DLL is missing the player shows a message saying so rather than crashing.
+- The picture is drawn by mpv into a child window (`MpvHost`); WPF cannot draw over such a window, so the controls live in a transparent owned window (`PlayerOverlay`) kept over the video. Loading cover: the title's artwork dimmed, the logo in the middle, a spinner under it. Once playing, the logo sits top right (with the episode name for a show).
+- Controls: back, -10 / +10, play/pause, time, timeline (click and drag), time left, mute and volume, Audio / Subtitles / Speed menus, full screen; they hide after 3 seconds of no movement. Keys: Space, Left/Right, Up/Down, M, F, Esc.
+- Sources page: clicking a direct link now plays it (a torrent is still listed only). `ShellView` hides the top bar while playing.
+- libmpv is an LGPL build fetched by `scripts/get-libmpv.ps1` (from shinchiro/mpv-winbuild-cmake) by the CI workflow and, on a Windows build, by the project when the file is missing; copied beside `ArcTV.exe`. Not kept in git. `THIRD_PARTY_NOTICES.md` added.
+
+**Tests performed:** see the build run. New: `PlayerTests` (Core) and a screen test that opens the player with a stand-in engine.
+
+**Issues discovered:** none yet; the download source and the overlay-window approach are untested on a real PC.
+
+**Issues fixed:** n/a.
+
+**Open:** torrents (MonoTorrent), Resume / Continue Watching and reporting progress to the account, next-episode, the Episodes / Player / Sources pills, subtitle styling, a placeholder-slate prompt flow, picture-in-picture.
+

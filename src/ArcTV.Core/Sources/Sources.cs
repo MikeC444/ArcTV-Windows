@@ -270,3 +270,6 @@ public sealed record PlayTarget(Details.MetaDetail Title, int? Season = null, in
 
     public string Heading => EpisodeTitle is { } episode ? $"{Title.Name} \u00B7 {episode}" : Title.Name;
 }
+
+/// <summary>A source that was picked: what to play and what to call it.</summary>
+public sealed record PlayingItem(Uri Url, string Heading, string SourceName, PlayTarget Target, string? Filename = null);

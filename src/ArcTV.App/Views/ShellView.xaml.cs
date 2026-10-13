@@ -12,6 +12,7 @@ using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
 using ArcTV.Core.Search;
+using ArcTV.App.Player;
 using ArcTV.Core.Sources;
 using ArcTV.Core.Storage;
 
@@ -59,7 +60,7 @@ public partial class ShellView : UserControl
         };
         PreviewKeyDown += (_, e) =>
         {
-            if (e.Key == Key.Escape && _history.Count > 0 && Keyboard.FocusedElement is not TextBox) GoBack();
+            if (e.Key == Key.Escape && _history.Count > 0 && Keyboard.FocusedElement is not TextBox && Page.Content is not PlayerView) GoBack(); // the player has its own Esc (it leaves full screen first)
         };
         Open("Home");
         Loaded += async (_, _) =>
@@ -174,12 +175,21 @@ public partial class ShellView : UserControl
     {
         if (Page.Content is UIElement current) _history.Push((current, _place));
         var store = new LastSourceStore(Path.Combine(AppPaths.DataFolder(), "last-sources.json"), _account.Session!.User.Id);
-        Page.Content = new SourcesView(new SourcesModel(target, AccountAddonsAsync, _addonClient), store, GoBack);
+        Page.Content = new SourcesView(new SourcesModel(target, AccountAddonsAsync, _addonClient), store, GoBack, OpenPlayer);
+    }
+
+    /// <summary>The player, over the sources page; the top bar is out of the way while it plays, and Back returns to the sources.</summary>
+    private void OpenPlayer(PlayingItem item)
+    {
+        if (Page.Content is UIElement current) _history.Push((current, _place));
+        Bar.Visibility = Visibility.Collapsed;
+        Page.Content = new PlayerView(item, () => new MpvEngine(), GoBack);
     }
 
     private void GoBack()
     {
         if (_history.Count == 0) return;
+        Bar.Visibility = Visibility.Visible;
         var (page, place) = _history.Pop();
         _place = place;
         foreach (var (name, pill) in _pills) pill.Tag = name == place ? "selected" : name;
@@ -190,6 +200,7 @@ public partial class ShellView : UserControl
     {
         if (place == _place && _history.Count == 0) return;
         _history.Clear();
+        Bar.Visibility = Visibility.Visible;
         _place = place;
         foreach (var (name, pill) in _pills) pill.Tag = name == place ? "selected" : name;
         Page.Content = place switch

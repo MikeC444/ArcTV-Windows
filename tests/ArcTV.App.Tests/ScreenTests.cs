@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text;
 using System.Windows;
 using System.Windows.Threading;
+using ArcTV.App.Player;
 using ArcTV.App.Views;
 using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
@@ -213,6 +214,64 @@ public class ScreenTests
         await Settle();
         Assert.Equal(2, model.Arranged.Count); // the recommended source always stays, with the 720p one
         Assert.True(view.ActualHeight > 0);
+        window.Close();
+    });
+
+    private sealed class FakeEngine : IVideoEngine
+    {
+        public IntPtr StartedIn;
+        public Uri? Url;
+        public bool Paused_;
+
+        public event Action<double>? Position;
+        public event Action<double>? Duration;
+        public event Action<bool>? Paused;
+        public event Action<bool>? Buffering;
+        public event Action<bool>? Seeking;
+        public event Action? Started;
+        public event Action? Ended;
+        public event Action<string>? Failed;
+
+        public void Start(IntPtr window, Uri url, double startAt)
+        {
+            StartedIn = window;
+            Url = url;
+            Duration?.Invoke(5400);
+            Position?.Invoke(12);
+            Buffering?.Invoke(false);
+            Started?.Invoke();
+        }
+
+        public void SetPause(bool paused) { Paused_ = paused; Paused?.Invoke(paused); }
+        public void SeekTo(double seconds) => Position?.Invoke(seconds);
+        public void SeekBy(double seconds) { }
+        public void SetVolume(double volume) { }
+        public void SetSpeed(double speed) { }
+        public void SetAudioTrack(int? id) { }
+        public void SetSubtitleTrack(int? id) { }
+        public string? GetString(string property) => null;
+        public void Shutdown() { }
+
+        public void Unused() { _ = Seeking; _ = Ended; _ = Failed; }
+    }
+
+    [Fact]
+    public void PlayerScreenOpensStartsTheEngineAndShowsItsOverlay() => OnUiThread(async () =>
+    {
+        var engine = new FakeEngine();
+        var target = new PlayTarget(new MetaDetail("tt1", "movie", "Film"));
+        var view = new PlayerView(new PlayingItem(new Uri("https://cdn.test/f.mkv"), "Film", "Addon", target), () => engine, () => { });
+        var window = Host(view);
+        for (var i = 0; i < 40 && engine.Url is null; i++)
+        {
+            await Task.Delay(50);
+            await Settle();
+        }
+
+        Assert.NotNull(engine.Url);
+        Assert.NotEqual(IntPtr.Zero, engine.StartedIn);
+        Assert.NotNull(view.Model);
+        Assert.False(view.Model!.Loading);
         window.Close();
     });
 

@@ -13,3 +13,6 @@ TestResults/
 # the video player library is downloaded by the build, not kept in git
 libs/
 *.zip
+
+# the video engine, downloaded by scripts/get-libmpv.ps1
+src/ArcTV.App/libmpv/
