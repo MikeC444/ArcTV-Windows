@@ -40,26 +40,6 @@ public static class BrowseSorts
         double.TryParse(item.ImdbRating, NumberStyles.Float, CultureInfo.InvariantCulture, out var rating) ? rating : -1;
 }
 
-/// <summary>The genres Cinemeta's catalogues can be filtered by (the web app's drop-down).</summary>
-public static class Genres
-{
-    /// <summary>The Movies drop-down: exactly the genres Cinemeta's catalogue lists, in its order.</summary>
-    public static readonly IReadOnlyList<string> Movies =
-    [
-        "Action", "Adventure", "Animation", "Biography", "Comedy", "Crime", "Documentary", "Drama", "Family", "Fantasy",
-        "History", "Horror", "Mystery", "Romance", "Sci-Fi", "Sport", "Thriller", "War", "Western",
-    ];
-
-    /// <summary>The TV Shows drop-down: the same, and three more.</summary>
-    public static readonly IReadOnlyList<string> Shows = [.. Movies, "Reality-TV", "Talk-Show", "Game-Show"];
-
-    public static readonly IReadOnlyList<string> All =
-    [
-        "Action", "Adventure", "Animation", "Biography", "Comedy", "Crime", "Documentary", "Drama", "Family", "Fantasy",
-        "History", "Horror", "Music", "Mystery", "Romance", "Sci-Fi", "Sport", "Thriller", "War", "Western",
-    ];
-}
-
 /// <summary>Movies and TV Shows pages: pages of a type from every addon, optionally for one genre. A port of the web app's getSectionsByType / getMoreItemsByType.</summary>
 public static class BrowsePaging
 {

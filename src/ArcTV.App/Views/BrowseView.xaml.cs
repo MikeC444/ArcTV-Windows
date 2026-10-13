@@ -6,6 +6,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Browse;
+using ArcTV.Core.Home;
 
 namespace ArcTV.App.Views;
 

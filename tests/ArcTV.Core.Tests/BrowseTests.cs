@@ -38,14 +38,6 @@ public class BrowseTests
         Assert.Equal(new[] { "m1", "s1", "m2", "dup" }, HomeSections.DistinctById(merged).Select(i => i.Id));
     }
 
-    [Fact]
-    public void ShowsHaveThreeMoreGenresThanMovies()
-    {
-        Assert.Equal(Genres.Movies.Count + 3, Genres.Shows.Count);
-        Assert.Contains("Talk-Show", Genres.Shows);
-        Assert.DoesNotContain("Talk-Show", Genres.Movies);
-    }
-
     private const string Manifest = """
         {"id":"cine","name":"Cine","catalogs":[
           {"type":"movie","id":"top"},

@@ -75,7 +75,7 @@ The WPF screens and `ArcTV.App.Tests` compiled only.
 **Context:** First of the places after Home. Ported from the Mac app's `Browse.swift`, `BrowseView.swift` and `HomeSource.browsePage`.
 
 **Changes:**
-- `ArcTV.Core/Browse`: `BrowseSort` (Featured, Highest Rated, Newest), `Genres` (Movies, TV Shows), `BrowsePaging.BrowsePageAsync` (one page of a type from an
+- `ArcTV.Core/Browse`: `BrowseSort` (Featured, Highest Rated, Newest), `BrowsePaging.BrowsePageAsync` (one page of a type from an
   addon, for a genre or all) and `BrowseModel` (first page, then more as you scroll; a genre's loaded titles kept while the shell lives).
 - `AddonSources`: the "which addons can fill pages" rule (enabled addons with catalogues, else Cinemeta), lifted out of `HomeModel` so Home and Browse share it.
 - `BrowseView`: title, genre pill with a two-column list, sort pills, poster grid that loads more near the bottom. The poster card moved to
