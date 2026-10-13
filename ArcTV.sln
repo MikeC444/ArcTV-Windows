@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArcTV.Core", "src\ArcTV.Cor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArcTV.Core.Tests", "tests\ArcTV.Core.Tests\ArcTV.Core.Tests.csproj", "{3B0B3C1E-6A57-4D5B-9E5A-1C2A0D7B0003}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArcTV.App.Tests", "tests\ArcTV.App.Tests\ArcTV.App.Tests.csproj", "{3B0B3C1E-6A57-4D5B-9E5A-1C2A0D7B0004}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{3B0B3C1E-6A57-4D5B-9E5A-1C2A0D7B0003}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B0B3C1E-6A57-4D5B-9E5A-1C2A0D7B0003}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3B0B3C1E-6A57-4D5B-9E5A-1C2A0D7B0003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B0B3C1E-6A57-4D5B-9E5A-1C2A0D7B0004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B0B3C1E-6A57-4D5B-9E5A-1C2A0D7B0004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B0B3C1E-6A57-4D5B-9E5A-1C2A0D7B0004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B0B3C1E-6A57-4D5B-9E5A-1C2A0D7B0004}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

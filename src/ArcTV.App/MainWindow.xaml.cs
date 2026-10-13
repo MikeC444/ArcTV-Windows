@@ -18,5 +18,5 @@ public partial class MainWindow : Window
         ShowCurrent();
     }
 
-    private void ShowCurrent() => Host.Content = App.Account.IsSignedIn ? new SignedInPlaceholder(App.Account) : new SignInView();
+    private void ShowCurrent() => Host.Content = App.Account.IsSignedIn ? new ShellView(App.Account) : new SignInView();
 }

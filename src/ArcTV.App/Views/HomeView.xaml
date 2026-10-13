@@ -1,0 +1,66 @@
+<UserControl x:Class="ArcTV.App.Views.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:ArcTV.App.Controls"
+             xmlns:home="clr-namespace:ArcTV.Core.Home;assembly=ArcTV.Core"
+             xmlns:addons="clr-namespace:ArcTV.Core.Addons;assembly=ArcTV.Core">
+  <UserControl.Resources>
+    <!-- one poster: the picture, and the name under it; it lifts a little under the pointer -->
+    <DataTemplate DataType="{x:Type addons:MetaPreview}">
+      <StackPanel x:Name="Card" Width="156" Margin="0,10,16,10" Background="Transparent" RenderTransformOrigin="0.5,0.5" Cursor="Hand">
+        <Border Width="156" Height="234" CornerRadius="10" Background="{StaticResource SurfaceBrush}" ClipToBounds="True">
+          <Grid>
+            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" Margin="12" Foreground="{StaticResource Text3Brush}" FontSize="13" />
+            <c:RemoteImage Url="{Binding Poster}" DecodeWidth="320" Stretch="UniformToFill" />
+          </Grid>
+        </Border>
+        <TextBlock Text="{Binding Name}" Margin="2,8,2,0" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+      <DataTemplate.Triggers>
+        <Trigger SourceName="Card" Property="IsMouseOver" Value="True">
+          <Setter TargetName="Card" Property="RenderTransform">
+            <Setter.Value><ScaleTransform ScaleX="1.06" ScaleY="1.06" /></Setter.Value>
+          </Setter>
+        </Trigger>
+      </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type home:HomeSection}">
+      <StackPanel Margin="0,0,0,16">
+        <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" Margin="44,0,0,0" />
+        <ItemsControl ItemsSource="{Binding Items}" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+          <ItemsControl.Template>
+            <ControlTemplate TargetType="ItemsControl">
+              <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" CanContentScroll="True" Focusable="False" Padding="44,0,0,0" PreviewMouseWheel="OnRowWheel">
+                <ItemsPresenter />
+              </ScrollViewer>
+            </ControlTemplate>
+          </ItemsControl.Template>
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><VirtualizingStackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+      </StackPanel>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <Grid>
+    <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" CanContentScroll="False" Visibility="Collapsed">
+      <StackPanel>
+        <Grid x:Name="HeroHost" />
+        <ItemsControl x:Name="Rows" Margin="0,-60,0,40" />
+      </StackPanel>
+    </ScrollViewer>
+
+    <StackPanel x:Name="LoadingPanel" HorizontalAlignment="Center" VerticalAlignment="Center">
+      <TextBlock Text="Getting your rows ready…" FontSize="16" Foreground="{StaticResource Text2Brush}" />
+      <ProgressBar IsIndeterminate="True" Height="3" Width="220" Margin="0,14,0,0" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
+    </StackPanel>
+
+    <StackPanel x:Name="EmptyPanel" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" MaxWidth="420">
+      <TextBlock Text="Nothing to show yet" FontSize="26" FontWeight="ExtraBold" HorizontalAlignment="Center" />
+      <TextBlock Text="Home couldn't load its rows. Check your connection and your addons, then try again." TextWrapping="Wrap" TextAlignment="Center" Foreground="{StaticResource Text2Brush}" Margin="0,10,0,18" />
+      <Button Content="Try again" Style="{StaticResource GhostButton}" Width="160" Click="OnRetry" />
+    </StackPanel>
+  </Grid>
+</UserControl>

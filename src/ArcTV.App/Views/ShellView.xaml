@@ -1,0 +1,33 @@
+<UserControl x:Class="ArcTV.App.Views.ShellView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Grid Background="{StaticResource BgBrush}">
+    <ContentControl x:Name="Page" />
+
+    <!-- the top bar floats over the page; a soft fade keeps the pills readable over pictures -->
+    <Grid x:Name="Bar" VerticalAlignment="Top" Height="96">
+      <Grid.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="#E608080A" Offset="0" />
+          <GradientStop Color="#00080A0A" Offset="1" />
+        </LinearGradientBrush>
+      </Grid.Background>
+      <Grid Margin="36,14,36,0" VerticalAlignment="Top">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" MinWidth="120" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" MinWidth="120" />
+        </Grid.ColumnDefinitions>
+        <Image x:Name="Logo" Grid.Column="0" Source="/Assets/logo.png" Height="38" HorizontalAlignment="Left" Cursor="Hand" MouseLeftButtonDown="OnLogo" />
+        <Border Grid.Column="1" CornerRadius="24" Background="#B3141417" BorderBrush="#17FFFFFF" BorderThickness="1" Padding="4">
+          <StackPanel x:Name="Pills" Orientation="Horizontal" />
+        </Border>
+        <Button x:Name="AccountButton" Grid.Column="2" HorizontalAlignment="Right" Style="{StaticResource GhostButton}" Height="44" Padding="0" Click="OnAccount" ToolTip="Account">
+          <Button.ContextMenu>
+            <ContextMenu x:Name="AccountMenu" />
+          </Button.ContextMenu>
+        </Button>
+      </Grid>
+    </Grid>
+  </Grid>
+</UserControl>
