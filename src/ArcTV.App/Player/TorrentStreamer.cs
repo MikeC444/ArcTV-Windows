@@ -96,6 +96,14 @@ public sealed class TorrentStreamer : ITorrentStarter
 
             // 3. the start of it (the player is given its address once the first parts have arrived)
             progress(new TorrentProgress("Getting the start of the video…"));
+            // a torrent whose file list was kept from an earlier time is checked on disk first: reading from it during the check fails ("Could not read the requested data")
+            while (manager.State is TorrentState.Hashing or TorrentState.Starting or TorrentState.Metadata)
+            {
+                cancel.ThrowIfCancellationRequested();
+                Note(manager, "getting ready");
+                await Task.Delay(100, cancel).ConfigureAwait(false);
+            }
+
             var provider = manager.StreamProvider ?? throw new TorrentException("The torrent could not be streamed. Try another source.");
             var opening = provider.CreateHttpStreamAsync(file, true);
             started = DateTime.UtcNow;
@@ -114,8 +122,10 @@ public sealed class TorrentStreamer : ITorrentStarter
         }
         catch (Exception ex)
         {
-            PlayerLog.Write($"torrent: stopped before playing ({ex.GetType().Name}: {ex.Message})");
+            PlayerLog.Write($"torrent: stopped before playing ({ex.GetType().Name}: {ex.Message}{(cancel.IsCancellationRequested ? ", the player was left" : "")})");
             await StopAsync().ConfigureAwait(false);
+            // leaving the player stops the torrent under the read that is still waiting, which then fails with its own error: that is the person leaving, not a failure
+            if (cancel.IsCancellationRequested && ex is not OperationCanceledException) throw new OperationCanceledException(cancel);
             throw;
         }
         finally
