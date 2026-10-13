@@ -61,6 +61,9 @@ public sealed class SearchModel(string userId, Func<CancellationToken, Task<IRea
         StillChecking = false;
     }
 
+    /// <summary>Genres hidden everywhere (Settings > Blocked Genres).</summary>
+    public IReadOnlySet<string> Blocked { get; set; } = new HashSet<string>();
+
     public async Task SearchAsync(string query)
     {
         var q = string.Join(' ', query.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
@@ -95,9 +98,10 @@ public sealed class SearchModel(string userId, Func<CancellationToken, Task<IRea
         else State = SearchState.Searching;
 
         var context = SynchronizationContext.Current;
-        void Apply(SearchProgress progress)
+        void Apply(SearchProgress raw)
         {
             if (generation != _generation) return;
+            var progress = raw with { Movies = Settings.BlockedGenres.Without(raw.Movies, Blocked), TvShows = Settings.BlockedGenres.Without(raw.TvShows, Blocked) };
             if (progress.Movies.Count > 0 || progress.TvShows.Count > 0)
             {
                 Movies = progress.Movies;

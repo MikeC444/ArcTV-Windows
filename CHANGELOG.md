@@ -332,3 +332,24 @@ description 66 (cut off with "..." if longer), so Play, Trailer, More info and M
 
 **Open:** the other Settings sections (profiles, blocked genres, subtitles, account, version), reordering addons, an install confirmation that shows what the addon offers first.
 
+## 11 -- Settings (all the places that do not need Plus)
+
+**Status:** Written without a compiler here; built and tested by the Windows build server only (see the run for this commit). Not run or seen on screen.
+
+**Context:** "Build all the settings, not just addons." Ported from the Mac app's `SettingsView` / `SettingsPanes`. The four Plus pages (Arc TV Plus, Plus settings, Recommendations, Your stats) need the Plus account and recommendation engine and are not built yet: they are in the sidebar marked "Soon".
+
+**Changes:**
+- Core (`ArcTV.Core/Settings`): `AccountSettings` (read tolerant of missing keys; an empty language is sent as null), `SettingsApi` (GET/PUT `/user/settings`), `SettingsModel` (change shown at once, saved, put back if the save fails; blocked genres, row visibility and order), `LanguageChoices`, `HomeRowOrder`, `SubtitleSize` / `SubtitleColor`, `BlockedGenres`, `PlaybackPreferences`. `LocalSettings` now keeps the subtitle size and colour on this PC and no longer drops one value when another is written.
+- Blocked genres are applied in `HomeModel` (rows and banner), `BrowseModel` (Movies, TV Shows) and `SearchModel`; row order and visibility are applied to Home. Changing blocked genres makes Movies and TV Shows start over.
+- Player: `MpvEngine` follows subtitles on/off, the subtitle and audio language, and subtitle size and colour.
+- App: `SettingsView` (grouped sidebar, the chosen place on the right) with panes Account, Addons, Home Rows, Blocked Genres, Player, Subtitles (with a preview), Audio and Updates (current version, check for updates, notes, download link).
+- Tests: `SettingsTests` (parse and send, save and put back, genres, row moving, languages, subtitle style, local choices) and a screen test that opens every place.
+
+**Tests performed:** see the build run.
+
+**Issues discovered:** the Mac app's torrent buffer and storage limit settings (Player) and the Mac subtitle preview picture are not ported (no torrents yet; the preview is a plain frame). The "Auto play next episode" switch is saved to the account, but next-episode playback is not built.
+
+**Issues fixed:** n/a.
+
+**Open:** the four Plus pages, profiles (Watching as, kids genres), torrent buffer and storage, the next-episode behaviour.
+

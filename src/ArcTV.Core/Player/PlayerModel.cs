@@ -43,6 +43,10 @@ public interface IPlayerCommands
     void Shutdown();
 }
 
+/// <summary>What the person chose in Settings that the player follows: subtitles on at the start, the languages to look for, and how subtitles look.</summary>
+public sealed record PlaybackPreferences(bool SubtitlesEnabled = false, string? SubtitleLanguage = null, string? AudioLanguage = null,
+    Settings.SubtitleSize SubtitleSize = Settings.SubtitleSize.Medium, Settings.SubtitleColor SubtitleColor = Settings.SubtitleColor.White);
+
 /// <summary>
 /// A "not ready yet" slate: some debrid addons answer a title that isn't cached yet with a short video that says so, and it plays like any other video. Recognised by being
 /// far shorter than the title.

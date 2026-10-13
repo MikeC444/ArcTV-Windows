@@ -29,6 +29,9 @@ public sealed class BrowseModel(string type, Func<CancellationToken, Task<IReadO
 
     public string Type { get; } = type;
 
+    /// <summary>Genres hidden everywhere (Settings > Blocked Genres); read each time titles arrive. Set it before the page loads.</summary>
+    public IReadOnlySet<string> Blocked { get; set; } = new HashSet<string>();
+
     public IReadOnlyList<MetaPreview> Items { get => _items; private set => Set(ref _items, value); }
 
     /// <summary>True until the first page of what is chosen has arrived.</summary>
@@ -73,7 +76,7 @@ public sealed class BrowseModel(string type, Func<CancellationToken, Task<IReadO
         if (generation != _generation) return;
 
         // Movies and shows are a shuffled browse page, so the same titles are not first every time.
-        var merged = HomeSections.DistinctById(Shuffled(lists.SelectMany(l => l)));
+        var merged = Settings.BlockedGenres.Without(HomeSections.DistinctById(Shuffled(lists.SelectMany(l => l))), Blocked).ToList();
         foreach (var item in merged) _seen.Add(item.Id);
         Items = merged;
         if (merged.Count > 0) _cache[CacheKey] = new Snapshot(merged, _page, _hasMore);
@@ -102,7 +105,7 @@ public sealed class BrowseModel(string type, Func<CancellationToken, Task<IReadO
 
         if (generation != _generation) return;
 
-        var fresh = HomeSections.DistinctById(Shuffled(lists.SelectMany(l => l))).Where(item => !_seen.Contains(item.Id)).ToList();
+        var fresh = Settings.BlockedGenres.Without(HomeSections.DistinctById(Shuffled(lists.SelectMany(l => l))), Blocked).Where(item => !_seen.Contains(item.Id)).ToList();
         if (fresh.Count == 0)
         {
             _hasMore = false;

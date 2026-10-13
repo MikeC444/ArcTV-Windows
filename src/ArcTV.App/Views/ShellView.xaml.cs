@@ -7,6 +7,8 @@ using System.Windows.Media;
 using ArcTV.App.Controls;
 using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
+using ArcTV.Core.Player;
+using ArcTV.Core.Settings;
 using ArcTV.Core.Browse;
 using ArcTV.Core.Details;
 using ArcTV.Core.Home;
@@ -28,6 +30,10 @@ public partial class ShellView : UserControl
     private readonly Dictionary<string, BrowseModel> _browse = [];
     private MyListModel? _myList;
     private AddonsModel? _addonsModel;
+    private readonly SettingsModel _settingsModel;
+    private readonly LocalSettings _local = new(Path.Combine(AppPaths.DataFolder(), "settings.json"));
+    private readonly AccountUser _user;
+    private string _blockedKey = "";
     private readonly IDetailExtras _extras;
     private readonly Stack<(UIElement Page, string Place)> _history = [];
     private readonly AddonClient _addonClient = new();
@@ -41,7 +47,10 @@ public partial class ShellView : UserControl
         _account = account;
         _extras = new AccountDetailExtras(account);
         var user = account.Session!.User;
+        _user = user;
         _home = new HomeModel(AccountAddonsAsync, user.Id);
+        _settingsModel = new SettingsModel(new AccountSettingsStore(account));
+        _settingsModel.Changed += ApplySettings;
 
         foreach (var place in Places)
         {
@@ -67,7 +76,9 @@ public partial class ShellView : UserControl
         Loaded += async (_, _) =>
         {
             if (PresentationSource.FromVisual(this) is HwndSource source) source.AddHook(OnWindowMessage);
+            var settings = _settingsModel.LoadAsync(); // at the same time as Home: its rows are reordered and filtered when the settings arrive
             await _home.LoadAsync();
+            await settings;
         };
         Unloaded += (_, _) =>
         {
@@ -141,7 +152,7 @@ public partial class ShellView : UserControl
     /// <summary>One model per kind, kept for the session, so coming back to Movies finds the same titles in the same order.</summary>
     private BrowseModel BrowseFor(string type)
     {
-        if (!_browse.TryGetValue(type, out var model)) _browse[type] = model = new BrowseModel(type, SourcesAsync, _addonClient);
+        if (!_browse.TryGetValue(type, out var model)) _browse[type] = model = new BrowseModel(type, SourcesAsync, _addonClient) { Blocked = _settingsModel.Blocked };
         return model;
     }
 
@@ -158,6 +169,24 @@ public partial class ShellView : UserControl
             await client.RemoveFromWatchlistAsync(token, item);
             return true;
         }));
+
+    /// <summary>The account's settings reached Home, Movies, TV Shows and Search: row order and visibility, and blocked genres (a change in them makes Movies and TV Shows start over).</summary>
+    private void ApplySettings()
+    {
+        _home.Preferences = _settingsModel.RowPreferences;
+        var key = string.Join("|", _settingsModel.Blocked.OrderBy(g => g, StringComparer.OrdinalIgnoreCase));
+        if (key == _blockedKey) return;
+        _blockedKey = key;
+        _home.BlockedGenres = _settingsModel.Blocked;
+        _browse.Clear();
+    }
+
+    /// <summary>What the player follows from Settings: subtitles on at the start, the languages, and how subtitles look.</summary>
+    private PlaybackPreferences PlaybackPrefs()
+    {
+        var s = _settingsModel.Current;
+        return new PlaybackPreferences(s?.SubtitlesEnabled ?? false, s?.DefaultSubtitleLanguage, s?.DefaultAudioLanguage, SubtitleStyle.SizeFrom(_local.SubtitleSize), SubtitleStyle.ColorFrom(_local.SubtitleColor));
+    }
 
     /// <summary>One model for the session. When addons change, what Home, Movies and TV Shows read from them is fetched again.</summary>
     private AddonsModel AddonsFor()
@@ -198,7 +227,7 @@ public partial class ShellView : UserControl
     {
         if (Page.Content is UIElement current) _history.Push((current, _place));
         Bar.Visibility = Visibility.Collapsed;
-        Page.Content = new PlayerView(item, () => new MpvEngine(), GoBack);
+        Page.Content = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack);
     }
 
     private void GoBack()
@@ -224,8 +253,8 @@ public partial class ShellView : UserControl
             "Movies" => new BrowseView("Movies", BrowseFor("movie")),
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
             "My List" => new MyListView(MyListFor()),
-            "Settings" => new SettingsView(AddonsFor()),
-            "Search" => new SearchView(new SearchModel(_account.Session!.User.Id, SourcesAsync, new RecentSearchStore(Path.Combine(AppPaths.DataFolder(), "recent-searches.json")), _addonClient)),
+            "Settings" => new SettingsView(_settingsModel, AddonsFor(), _home, _user, _local, () => _ = _home.LoadAsync(), () => _ = _account.SignOutAsync()),
+            "Search" => new SearchView(new SearchModel(_account.Session!.User.Id, SourcesAsync, new RecentSearchStore(Path.Combine(AppPaths.DataFolder(), "recent-searches.json")), _addonClient) { Blocked = _settingsModel.Blocked }),
             _ => new ComingSoonView(place),
         };
     }

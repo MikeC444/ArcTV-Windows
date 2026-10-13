@@ -22,6 +22,7 @@ public sealed class HomeModel(Func<CancellationToken, Task<IReadOnlyList<SyncedA
     private IReadOnlyList<HomeSection> _sections = [];
     private IReadOnlyList<MetaPreview> _hero = [];
     private HomeRowPreferences _preferences = new();
+    private IReadOnlySet<string> _blocked = new HashSet<string>();
     private SynchronizationContext? _context;
 
     public HomeState State { get => _state; private set => Set(ref _state, value); }
@@ -39,6 +40,17 @@ public sealed class HomeModel(Func<CancellationToken, Task<IReadOnlyList<SyncedA
         set
         {
             _preferences = value;
+            Rebuild();
+        }
+    }
+
+    /// <summary>Genres hidden everywhere (Settings > Blocked Genres): titles in them are left out of every row and the banner.</summary>
+    public IReadOnlySet<string> BlockedGenres
+    {
+        get => _blocked;
+        set
+        {
+            _blocked = value;
             Rebuild();
         }
     }
@@ -100,6 +112,7 @@ public sealed class HomeModel(Func<CancellationToken, Task<IReadOnlyList<SyncedA
     {
         List<HomeSection> raw;
         lock (_lock) raw = _raw.ToList();
+        if (_blocked.Count > 0) raw = raw.Select(s => s with { Items = Settings.BlockedGenres.Without(s.Items, _blocked) }).Where(s => s.Items.Count > 0).ToList();
         var hidden = _preferences.HiddenOrEmpty.ToHashSet();
         var shown = HomeSections.Deduped(HomeSections.Ordered(raw.Where(s => !hidden.Contains(s.Id)).ToList(), _preferences));
         Sections = shown;

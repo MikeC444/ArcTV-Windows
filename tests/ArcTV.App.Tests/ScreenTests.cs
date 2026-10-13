@@ -13,6 +13,7 @@ using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
 using ArcTV.Core.Search;
+using ArcTV.Core.Settings;
 using ArcTV.Core.Sources;
 using ArcTV.Core.Storage;
 using Xunit;
@@ -287,19 +288,33 @@ public class ScreenTests
         public Task RemoveAsync(string manifestUrl, CancellationToken cancel = default) => Task.CompletedTask;
     }
 
-    [Fact]
-    public void SettingsScreenListsAddons() => OnUiThread(async () =>
+    private sealed class FakeSettingsStore : IAccountSettingsStore
     {
-        var model = new AddonsModel(new OneAddonStore(), (link, _) => Task.FromResult(AddonInstall.Parse(link, "{}")));
-        var view = new SettingsView(model);
-        var window = Host(view);
-        await Settle();
-        await Task.Delay(300);
-        await Settle();
-        Assert.True(model.Loaded);
-        Assert.Single(model.Items);
-        Assert.True(view.ActualHeight > 0);
-        window.Close();
+        public Task<AccountSettings> GetAsync(CancellationToken cancel = default) => Task.FromResult(AccountSettings.Default with { BlockedGenres = ["Horror"] });
+
+        public Task<AccountSettings> SaveAsync(AccountSettings settings, CancellationToken cancel = default) => Task.FromResult(settings);
+    }
+
+    [Fact]
+    public void SettingsScreenOpensEveryPlace() => OnUiThread(async () =>
+    {
+        var addons = new AddonsModel(new OneAddonStore(), (link, _) => Task.FromResult(AddonInstall.Parse(link, "{}")));
+        var settings = new SettingsModel(new FakeSettingsStore());
+        var home = new HomeModel(_ => Task.FromResult<IReadOnlyList<SyncedAddon>>([]), "u1");
+        var folder = Path.Combine(Path.GetTempPath(), "arctv-ui-" + Guid.NewGuid());
+        var local = new LocalSettings(Path.Combine(folder, "settings.json"));
+        foreach (var place in new[] { "Account", "Addons", "Home Rows", "Blocked Genres", "Player", "Subtitles", "Audio", "Updates", "Arc TV Plus" })
+        {
+            var view = new SettingsView(settings, addons, home, new AccountUser("u1", "me@x.test", "Me"), local, () => { }, () => { }, place);
+            var window = Host(view);
+            await Settle();
+            await Task.Delay(150);
+            await Settle();
+            Assert.True(view.ActualHeight > 0, place);
+            window.Close();
+        }
+
+        Assert.Contains("horror", settings.Blocked);
     });
 
     [Fact]

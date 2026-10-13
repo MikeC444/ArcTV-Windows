@@ -1,172 +1,125 @@
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using System.Windows.Media;
+using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
+using ArcTV.Core.Home;
+using ArcTV.Core.Settings;
+using ArcTV.Core.Storage;
 
 namespace ArcTV.App.Views;
 
-/// <summary>Settings. For now one section, Addons: what is installed on the account, a switch for each, remove, and add one from a link. More sections follow (profiles, blocked genres, subtitles...).</summary>
+/// <summary>Settings laid out like the web app's: grouped places down the left, the chosen one on the right.</summary>
 public sealed class SettingsView : UserControl
 {
+    private sealed record Place(string Name, string Subtitle, string Glyph, bool Soon = false);
+
+    private static readonly (string Group, Place[] Places)[] Groups =
+    [
+        ("You", [new("Account", "Manage your Arc TV account", "\uE77B"), new("Arc TV Plus", "Extra features for supporters", "\uE734", true), new("Plus settings", "Switches for your Plus features", "\uE713", true),
+            new("Recommendations", "What shapes your Picked for you row", "\uE735", true), new("Your stats", "How much you watch, at a glance", "\uE9D2", true)]),
+        ("Content", [new("Addons", "Manage installed content providers", "\uEA86"), new("Home Rows", "Choose which rows show up on Home", "\uF0E2"), new("Blocked Genres", "Hide genres you don't want to see", "\uE711")]),
+        ("Playback", [new("Player", "Choose how video plays", "\uE714"), new("Subtitles", "Look and language", "\uED1E"), new("Audio", "Preferred audio language", "\uE767")]),
+        ("App", [new("Updates", "Version and updates", "\uE896")]),
+    ];
+
+    private readonly SettingsModel _settings;
     private readonly AddonsModel _addons;
-    private readonly StackPanel _list = new();
-    private readonly TextBlock _message = new() { FontSize = 13, Margin = new Thickness(0, 10, 0, 0), TextWrapping = TextWrapping.Wrap };
-    private readonly TextBox _link = new() { Style = (Style)Application.Current.FindResource("Field") };
-    private readonly Button _add = new() { Content = "Add", Style = (Style)Application.Current.FindResource("PrimaryButton"), Height = 44, Width = 96, Margin = new Thickness(10, 0, 0, 0) };
-    private string? _confirming;
-    private CancellationTokenSource? _run;
+    private readonly HomeModel _home;
+    private readonly AccountUser _user;
+    private readonly Action _refreshHome;
+    private readonly Action _signOut;
+    private readonly LocalSettings _local;
+    private readonly ContentControl _pane = new();
+    private readonly TextBlock _title = new() { FontSize = 28, FontWeight = FontWeights.ExtraBold, Margin = new Thickness(0, 0, 0, 18) };
+    private readonly Dictionary<string, Border> _rows = [];
+    private string _current = "Account";
 
-    private static Brush Res(string key) => (Brush)Application.Current.FindResource(key);
-
-    public SettingsView(AddonsModel addons)
+    public SettingsView(SettingsModel settings, AddonsModel addons, HomeModel home, AccountUser user, LocalSettings local, Action refreshHome, Action signOut, string open = "Account")
     {
+        _settings = settings;
         _addons = addons;
-        Background = Res("BgBrush");
+        _home = home;
+        _user = user;
+        _local = local;
+        _refreshHome = refreshHome;
+        _signOut = signOut;
+        _current = open;
+        Background = Ui.Res("BgBrush");
 
-        var column = new StackPanel { MaxWidth = 780, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(24, 104, 24, 40) };
-        column.Children.Add(new TextBlock { Text = "Settings", FontSize = 34, FontWeight = FontWeights.ExtraBold });
-        column.Children.Add(new TextBlock { Text = "Addons", FontSize = 20, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 22, 0, 0) });
-        column.Children.Add(new TextBlock
-        {
-            Text = "Addons give Arc TV its streams (and catalogues). They are kept on your account, so they follow you to every device.",
-            FontSize = 13, Foreground = Res("Text2Brush"), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 6, 0, 16),
-        });
-
-        var box = new Border { Background = Res("BgElevatedBrush"), BorderBrush = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255)), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(14), Padding = new Thickness(16) };
-        var boxContent = new StackPanel();
-        boxContent.Children.Add(new TextBlock { Text = "Add an addon", FontSize = 15, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 10) });
-        var row = new Grid();
-        row.ColumnDefinitions.Add(new ColumnDefinition());
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        row.Children.Add(_link);
-        Grid.SetColumn(_add, 1);
-        row.Children.Add(_add);
-        boxContent.Children.Add(row);
-        boxContent.Children.Add(new TextBlock { Text = "Paste the addon's link (https:// or stremio://)", FontSize = 12, Foreground = Res("Text3Brush"), Margin = new Thickness(0, 8, 0, 0) });
-        boxContent.Children.Add(_message);
-        box.Child = boxContent;
-        column.Children.Add(box);
-
-        _list.Margin = new Thickness(0, 16, 0, 0);
-        column.Children.Add(_list);
-
-        Content = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = column };
-
-        _add.Click += async (_, _) => await AddAsync();
-        _link.KeyDown += async (_, e) =>
-        {
-            if (e.Key == Key.Enter) await AddAsync();
-        };
-        Loaded += async (_, _) =>
-        {
-            _addons.PropertyChanged -= OnModelChanged;
-            _addons.PropertyChanged += OnModelChanged;
-            Refresh();
-            _run?.Cancel();
-            _run = new CancellationTokenSource();
-            await _addons.LoadAsync(_run.Token);
-        };
-        Unloaded += (_, _) =>
-        {
-            _addons.PropertyChanged -= OnModelChanged;
-            _run?.Cancel();
-        };
-    }
-
-    private async Task AddAsync()
-    {
-        var text = _link.Text;
-        await _addons.InstallAsync(text);
-        if (!_addons.MessageIsError) _link.Clear();
-    }
-
-    private void OnModelChanged(object? sender, PropertyChangedEventArgs e) => Dispatcher.BeginInvoke(Refresh);
-
-    private void Refresh()
-    {
-        _message.Text = _addons.Message ?? "";
-        _message.Visibility = string.IsNullOrEmpty(_addons.Message) ? Visibility.Collapsed : Visibility.Visible;
-        _message.Foreground = _addons.MessageIsError ? new SolidColorBrush(Color.FromRgb(0xFF, 0x6B, 0x8A)) : Res("AccentBrush");
-        _add.Content = _addons.Busy ? "Adding…" : "Add";
-        _add.IsEnabled = !_addons.Busy;
-
-        _list.Children.Clear();
-        if (!_addons.Loaded)
-        {
-            _list.Children.Add(new TextBlock { Text = "Loading your addons…", Foreground = Res("Text2Brush") });
-            return;
-        }
-
-        if (_addons.Items.Count == 0)
-        {
-            _list.Children.Add(new TextBlock { Text = "No addons yet. Paste a link above to add one (Torrentio, for example, gives streams).", Foreground = Res("Text2Brush"), TextWrapping = TextWrapping.Wrap });
-            return;
-        }
-
-        foreach (var addon in _addons.Items) _list.Children.Add(Card(addon));
-    }
-
-    private UIElement Card(SyncedAddon addon)
-    {
-        var card = new Border
-        {
-            Background = Res("BgElevatedBrush"), BorderBrush = new SolidColorBrush(Color.FromArgb(0x22, 255, 255, 255)), BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(14), Padding = new Thickness(16, 14, 16, 14), Margin = new Thickness(0, 0, 0, 10),
-        };
-        var grid = new Grid();
+        var grid = new Grid { Margin = new Thickness(24, 96, 24, 24) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(280) });
         grid.ColumnDefinitions.Add(new ColumnDefinition());
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        var text = new StackPanel();
-        var title = new StackPanel { Orientation = Orientation.Horizontal };
-        title.Children.Add(new TextBlock { Text = addon.Name, FontSize = 15, FontWeight = FontWeights.Bold, Foreground = addon.Enabled ? Res("TextBrush") : Res("Text3Brush") });
-        if (addon.ManifestJson?.Version is { Length: > 0 } version)
-            title.Children.Add(new TextBlock { Text = "v" + version, FontSize = 12, Foreground = Res("Text3Brush"), Margin = new Thickness(8, 3, 0, 0) });
-        text.Children.Add(title);
-        if (addon.ManifestJson?.Description is { Length: > 0 } description)
-            text.Children.Add(new TextBlock { Text = description, FontSize = 12, Foreground = Res("Text2Brush"), TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis, MaxHeight = 34, Margin = new Thickness(0, 4, 0, 0) });
-        text.Children.Add(new TextBlock { Text = AddonsModel.Provides(addon), FontSize = 12, Foreground = Res("Text3Brush"), Margin = new Thickness(0, 4, 0, 0) });
-        grid.Children.Add(text);
-
-        var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(14, 0, 0, 0) };
-        if (_confirming == addon.ManifestUrl)
+        var side = new StackPanel { Margin = new Thickness(12) };
+        foreach (var (group, places) in Groups)
         {
-            right.Children.Add(new TextBlock { Text = "Remove from every device?", FontSize = 12, Foreground = Res("Text2Brush"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 12, 0) });
-            var yes = new Button { Content = "Remove", Style = (Style)Application.Current.FindResource("LinkButton"), Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x6B, 0x8A)), Margin = new Thickness(0, 0, 12, 0) };
-            yes.Click += async (_, _) =>
-            {
-                _confirming = null;
-                await _addons.RemoveAsync(addon);
-            };
-            var no = new Button { Content = "Cancel", Style = (Style)Application.Current.FindResource("LinkButton"), Foreground = Res("Text2Brush") };
-            no.Click += (_, _) =>
-            {
-                _confirming = null;
-                Refresh();
-            };
-            right.Children.Add(yes);
-            right.Children.Add(no);
-        }
-        else
-        {
-            var toggle = new ToggleButton { Style = (Style)Application.Current.FindResource("SwitchToggle"), IsChecked = addon.Enabled, ToolTip = addon.Enabled ? "On: turn it off" : "Off: turn it on" };
-            toggle.Click += async (_, _) => await _addons.SetEnabledAsync(addon, toggle.IsChecked == true);
-            var remove = new Button { Content = "Remove", Style = (Style)Application.Current.FindResource("LinkButton"), Foreground = Res("Text2Brush"), Margin = new Thickness(16, 0, 0, 0), ToolTip = "Take this addon off your account" };
-            remove.Click += (_, _) =>
-            {
-                _confirming = addon.ManifestUrl;
-                Refresh();
-            };
-            right.Children.Add(toggle);
-            right.Children.Add(remove);
+            side.Children.Add(new TextBlock { Text = group.ToUpperInvariant(), FontSize = 11, FontWeight = FontWeights.Bold, Foreground = Ui.Res("Text3Brush"), Margin = new Thickness(12, group == "You" ? 0 : 16, 0, 4) });
+            foreach (var place in places) side.Children.Add(Row(place));
         }
 
-        Grid.SetColumn(right, 1);
-        grid.Children.Add(right);
-        card.Child = grid;
-        return card;
+        var sidebar = new Border
+        {
+            Background = Ui.Res("BgElevatedBrush"), BorderBrush = Ui.Line, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(18), Margin = new Thickness(0, 0, 24, 0),
+            Child = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = side },
+        };
+        grid.Children.Add(sidebar);
+
+        var right = new StackPanel { MaxWidth = 700, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 40) };
+        right.Children.Add(_title);
+        right.Children.Add(_pane);
+        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = right };
+        Grid.SetColumn(scroll, 1);
+        grid.Children.Add(scroll);
+        Content = grid;
+        Show(_current);
+    }
+
+    private Border Row(Place place)
+    {
+        var icon = new Border
+        {
+            Width = 30, Height = 30, CornerRadius = new CornerRadius(8), Background = new SolidColorBrush(Color.FromArgb(0x14, 255, 255, 255)),
+            Child = new TextBlock { Text = place.Glyph, FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 14, Foreground = Ui.Res("AccentBrush"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
+        };
+        var text = new StackPanel { Margin = new Thickness(12, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+        text.Children.Add(new TextBlock { Text = place.Name, FontSize = 14, FontWeight = FontWeights.SemiBold });
+        text.Children.Add(new TextBlock { Text = place.Subtitle, FontSize = 11, Foreground = Ui.Res("Text3Brush"), TextTrimming = TextTrimming.CharacterEllipsis });
+        var line = new DockPanel();
+        DockPanel.SetDock(icon, Dock.Left);
+        line.Children.Add(icon);
+        if (place.Soon)
+        {
+            var tag = new TextBlock { Text = "Soon", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = Ui.Res("AccentBrush"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
+            DockPanel.SetDock(tag, Dock.Right);
+            line.Children.Add(tag);
+        }
+
+        line.Children.Add(text);
+        var row = new Border { Child = line, Padding = new Thickness(8, 6, 8, 6), CornerRadius = new CornerRadius(10), Background = Brushes.Transparent, Cursor = System.Windows.Input.Cursors.Hand, Opacity = place.Soon ? 0.7 : 1 };
+        row.MouseEnter += (_, _) => { if (_current != place.Name) row.Background = new SolidColorBrush(Color.FromArgb(0x0D, 255, 255, 255)); };
+        row.MouseLeave += (_, _) => { if (_current != place.Name) row.Background = Brushes.Transparent; };
+        row.MouseLeftButtonUp += (_, _) => Show(place.Name);
+        _rows[place.Name] = row;
+        return row;
+    }
+
+    private void Show(string name)
+    {
+        _current = name;
+        foreach (var (place, row) in _rows) row.Background = place == name ? new SolidColorBrush(Color.FromArgb(0x1A, 255, 255, 255)) : Brushes.Transparent;
+        _title.Text = name;
+        _pane.Content = name switch
+        {
+            "Account" => new AccountPane(_settings, _user.Email, _user.DisplayName, _refreshHome, _signOut),
+            "Addons" => new AddonsPane(_addons),
+            "Home Rows" => new HomeRowsPane(_settings, _home),
+            "Blocked Genres" => new BlockedGenresPane(_settings),
+            "Player" => new PlayerPane(_settings),
+            "Subtitles" => new SubtitlesPane(_settings, _local),
+            "Audio" => new AudioPane(_settings),
+            "Updates" => new UpdatesPane(_settings),
+            _ => new ComingSoonPane(name),
+        };
     }
 }

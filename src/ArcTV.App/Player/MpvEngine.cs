@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using ArcTV.Core.Settings;
 
 namespace ArcTV.App.Player;
 
@@ -36,11 +37,14 @@ public sealed class MpvEngine : IVideoEngine, IDisposable
 {
     public const string MissingMessage = "The video engine (libmpv) was not found next to the app. Run scripts\\get-libmpv.ps1 (it downloads it), then start Arc TV again.";
 
+    private readonly ArcTV.Core.Player.PlaybackPreferences _preferences;
     private readonly SynchronizationContext? _ui = SynchronizationContext.Current;
     private IntPtr _handle;
     private Thread? _events;
     private volatile bool _stop;
     private bool _disposed;
+
+    public MpvEngine(ArcTV.Core.Player.PlaybackPreferences? preferences = null) => _preferences = preferences ?? new ArcTV.Core.Player.PlaybackPreferences();
 
     public event Action<double>? Position;
 
@@ -105,8 +109,12 @@ public sealed class MpvEngine : IVideoEngine, IDisposable
                 // a bigger read-ahead so a slow patch on the network is ridden out instead of stuttering
                 ("cache", "yes"), ("demuxer-max-bytes", "300MiB"), ("demuxer-max-back-bytes", "100MiB"), ("demuxer-readahead-secs", "60"),
                 ("cache-pause-initial", "no"), ("network-timeout", "30"),
-                ("subs-match-os-language", "yes"), ("subs-fallback", "yes"), ("sid", "no"),
+                ("subs-match-os-language", string.IsNullOrEmpty(_preferences.SubtitleLanguage) ? "yes" : "no"), ("subs-fallback", "yes"),
+                ("sid", _preferences.SubtitlesEnabled ? "auto" : "no"),
+                ("sub-font-size", _preferences.SubtitleSize.MpvFontSize().ToString(CultureInfo.InvariantCulture)), ("sub-color", _preferences.SubtitleColor.Hex()),
             }) Option(name, value);
+            if (!string.IsNullOrEmpty(_preferences.SubtitleLanguage)) Option("slang", _preferences.SubtitleLanguage);
+            if (!string.IsNullOrEmpty(_preferences.AudioLanguage)) Option("alang", _preferences.AudioLanguage);
             if (startAt > 1) Option("start", ((int)startAt).ToString(CultureInfo.InvariantCulture));
 
             if (NativeMpv.mpv_initialize(_handle) < 0)
