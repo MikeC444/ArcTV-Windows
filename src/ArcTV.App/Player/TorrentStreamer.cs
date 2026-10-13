@@ -1,4 +1,5 @@
 using System.IO;
+using System.Net.Http;
 using System.Security.Cryptography;
 using MonoTorrent;
 using MonoTorrent.Client;
