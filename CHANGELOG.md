@@ -201,3 +201,11 @@ own dark, rounded style (`DarkMenu`, `DarkMenuItem`, `DarkMenuSeparator`) with t
 **Follow-up (owner asked where the Home banner's buttons were): banner buttons.** They had never been built (they were on the "not done on Home" list). Each banner slide now has Play (switched off until the
 player exists), More info (opens the title's page) and My List (adds or removes it; reads "In My List" when it is on it, whichever page changed it). Trailer is left out: it needs the account
 server's trailer lookup, which is not ported yet.
+
+**Follow-up (owner asked where the Mac app's other title features were): the account-server extras.** Ported from `Trailers.swift`, `DetailExtras.swift` and the Mac `DetailView`:
+- Trailer (title page and Home banner): the account's server (`/user/trailer`) gives a YouTube id; the button is on only when there is one, and opens it in the browser.
+- A movie's release date (`/user/release-date`) in place of just the year ("Mar 5, 2024   2h 17m"); a show keeps its year.
+- Cast photos and characters (`/user/cast`) filled in by name where the addon sent none (`CastMerge`: accents and letter case ignored).
+- "You May Also Like" at the end of a movie's page: other titles from Home's rows, preferring ones that share a genre (`SimilarTitles`).
+Each of these stays quiet when the server has nothing. Still not on the title page: Play and sources, Download, Like / Not for me and the three-dot menu (Plus), the episode watched ticks and per-episode Play / Download, Resume.
+Still not on Home: Continue Watching, Picked for you, hiding the top bar on scroll.

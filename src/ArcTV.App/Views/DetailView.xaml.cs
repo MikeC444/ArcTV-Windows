@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using ArcTV.App.Controls;
 using ArcTV.Core;
+using ArcTV.Core.Addons;
 using ArcTV.Core.Details;
 using ArcTV.Core.MyList;
 
@@ -18,15 +19,18 @@ public partial class DetailView : UserControl
     private readonly DetailModel _model;
     private readonly MyListModel _list;
     private readonly Action _back;
+    private readonly Func<IReadOnlyList<MetaPreview>>? _similarPool;
+    private bool _similarShown;
     private CancellationTokenSource? _run;
     private IReadOnlyList<int> _seasonsShown = [];
 
-    public DetailView(DetailModel model, MyListModel list, Action back)
+    public DetailView(DetailModel model, MyListModel list, Action back, Func<IReadOnlyList<MetaPreview>>? similarPool = null)
     {
         InitializeComponent();
         _model = model;
         _list = list;
         _back = back;
+        _similarPool = similarPool;
 
         Loaded += async (_, _) =>
         {
@@ -64,9 +68,7 @@ public partial class DetailView : UserControl
         }
 
 
-        var year = detail.Year?.ToString();
-        var length = Format.RuntimeMinutes(detail.Runtime) is { } minutes ? Format.Runtime(minutes) : null;
-        var facts = string.Join("   ", new[] { year, length }.Where(text => !string.IsNullOrEmpty(text)));
+        var facts = _model.Facts;
         FactsText.Text = facts;
         FactsText.Visibility = facts.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
 
@@ -84,6 +86,8 @@ public partial class DetailView : UserControl
 
         RefreshButtons();
         RefreshSeasons();
+        RefreshTrailer();
+        RefreshSimilar();
 
         var cast = _model.Cast;
         CastPanel.Visibility = cast.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -91,6 +95,23 @@ public partial class DetailView : UserControl
     }
 
     private static bool SameCast(IReadOnlyList<CastMember>? shown, IReadOnlyList<CastMember> cast) => shown is not null && shown.SequenceEqual(cast);
+
+    private void RefreshTrailer()
+    {
+        var found = _model.TrailerId is not null;
+        TrailerButton.IsEnabled = found;
+        TrailerButton.ToolTip = found ? "Watch the trailer on YouTube" : _model.Loaded ? "No trailer found for this title" : "Looking for a trailer…";
+    }
+
+    /// <summary>A movie's "You May Also Like": other titles from Home's rows, once the page has its details.</summary>
+    private void RefreshSimilar()
+    {
+        if (_similarShown || _similarPool is null || _model.IsShow || !_model.Loaded) return;
+        _similarShown = true;
+        var similar = SimilarTitles.For(_model.Detail, _similarPool());
+        SimilarPanel.Visibility = similar.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        SimilarList.ItemsSource = similar;
+    }
 
     private void RefreshButtons()
     {
@@ -131,6 +152,11 @@ public partial class DetailView : UserControl
     // ---- buttons ----
 
     private void OnBack(object sender, RoutedEventArgs e) => _back();
+
+    private void OnTrailer(object sender, RoutedEventArgs e)
+    {
+        if (_model.TrailerId is { } id) WebLinks.OpenTrailer(id);
+    }
 
     private async void OnList(object sender, RoutedEventArgs e) => await _list.ToggleSavedAsync(_model.Detail);
 

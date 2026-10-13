@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using ArcTV.App.Controls;
 using ArcTV.Core;
 using ArcTV.Core.Addons;
+using ArcTV.Core.Browse;
 using ArcTV.Core.Details;
 using ArcTV.Core.MyList;
 
@@ -19,13 +20,15 @@ public sealed class HeroBanner : Grid
     private readonly Grid _slide = new();
     private readonly StackPanel _dots = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 36, 78) };
     private readonly MyListModel? _list;
+    private readonly IDetailExtras? _extras;
     private Button? _listButton;
     private int _index;
 
-    public HeroBanner(IReadOnlyList<MetaPreview> items, MyListModel? list = null)
+    public HeroBanner(IReadOnlyList<MetaPreview> items, MyListModel? list = null, IDetailExtras? extras = null)
     {
         _items = items;
         _list = list;
+        _extras = extras;
         ClipToBounds = true;
         Background = (Brush)Application.Current.FindResource("SurfaceBrush");
         Children.Add(_slide);
@@ -69,11 +72,37 @@ public sealed class HeroBanner : Grid
         _listButton.Tag = saved ? "selected" : "";
     }
 
+    /// <summary>Turns the Trailer button on when the account's server knows a trailer for this title (it stays off when there is none).</summary>
+    private async Task FindTrailerAsync(MetaPreview item, Button button)
+    {
+        if (_extras is null) return;
+        try
+        {
+            if (await _extras.TrailerIdAsync(item.Name, item.Type, item.Year()) is { } id)
+            {
+                button.IsEnabled = true;
+                button.ToolTip = "Watch the trailer on YouTube";
+                button.Click += (_, _) => WebLinks.OpenTrailer(id);
+            }
+            else
+            {
+                button.ToolTip = "No trailer found for this title";
+            }
+        }
+        catch (Exception)
+        {
+            button.ToolTip = "No trailer found for this title";
+        }
+    }
+
     /// <summary>Play (not yet), More info (opens the title's page: the page sees the click on a button that stands for a title) and My List.</summary>
     private StackPanel Buttons(MetaPreview item)
     {
         var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 18, 0, 0) };
         row.Children.Add(new Button { Content = "\u25B6  Play", Style = (Style)Application.Current.FindResource("PrimaryButton"), Height = 44, Padding = new Thickness(24, 0, 24, 0), IsEnabled = false, ToolTip = "Playing is coming soon to Arc TV for Windows.", Margin = new Thickness(0, 0, 12, 0) });
+        var trailer = new Button { Content = "Trailer", Style = (Style)Application.Current.FindResource("ChoicePill"), Height = 44, Margin = new Thickness(0, 0, 12, 0), IsEnabled = false, ToolTip = "Looking for a trailer…" };
+        row.Children.Add(trailer);
+        _ = FindTrailerAsync(item, trailer);
         row.Children.Add(new Button { Content = "More info", Style = (Style)Application.Current.FindResource("ChoicePill"), Height = 44, Margin = new Thickness(0, 0, 12, 0), DataContext = item });
         if (_list is not null)
         {

@@ -126,4 +126,69 @@ public class DetailsTests
         await list.ToggleWatchedAsync(title);
         Assert.True(list.IsWatched("tt1")); // put back
     }
+
+    private sealed class FakeExtras(string? trailer = "yt123", string? date = "2024-03-05", params TmdbCast[] cast) : IDetailExtras
+    {
+        public Task<string?> TrailerIdAsync(string title, string type, int? year, CancellationToken cancel = default) => Task.FromResult(trailer);
+
+        public Task<string?> ReleaseDateAsync(string title, int? year, CancellationToken cancel = default) => Task.FromResult(date);
+
+        public Task<IReadOnlyList<TmdbCast>> CastPhotosAsync(string imdbId, string type, CancellationToken cancel = default) => Task.FromResult<IReadOnlyList<TmdbCast>>(cast);
+    }
+
+    [Fact]
+    public void CastKeepsWhatTheAddonSentAndFillsInPhotosByName()
+    {
+        var addon = new[] { new CastMember("Zo\u00EB Salda\u00F1a"), new CastMember("A B", "Hero", "keep.jpg") };
+        var tmdb = new[] { new TmdbCast("Zoe Saldana", "Neytiri", "zoe.jpg"), new TmdbCast("A B", "Other", "other.jpg") };
+        var merged = CastMerge.Merge(addon, tmdb);
+        Assert.Equal(new CastMember("Zo\u00EB Salda\u00F1a", "Neytiri", "zoe.jpg"), merged[0]);
+        Assert.Equal(new CastMember("A B", "Hero", "keep.jpg"), merged[1]);
+        Assert.Equal(new[] { "Zoe Saldana", "A B" }, CastMerge.Merge([], tmdb).Select(m => m.Name));
+        Assert.Equal(addon, CastMerge.Merge(addon, []));
+    }
+
+    [Fact]
+    public async Task ModelAddsTheTrailerReleaseDateAndCastPhotosFromTheAccount()
+    {
+        var card = new MetaPreview("tt0816692", "movie", "Interstellar", ReleaseInfo: "2014", Runtime: "169 min");
+        var model = new DetailModel(card, Client("""{"meta":{"id":"tt0816692","type":"movie","name":"Interstellar","releaseInfo":"2014","runtime":"169 min","cast":["Matthew McConaughey"]}}"""),
+            new FakeExtras(cast: new TmdbCast("Matthew McConaughey", "Cooper", "m.jpg")));
+        Assert.Equal("2014   2h 49m", model.Facts);
+
+        await model.LoadAsync();
+        Assert.Equal("yt123", model.TrailerId);
+        Assert.Equal("Mar 5, 2024   2h 49m", model.Facts);
+        Assert.Equal(new CastMember("Matthew McConaughey", "Cooper", "m.jpg"), model.Cast.Single());
+    }
+
+    [Fact]
+    public async Task ASeriesKeepsItsYearAndNeverAsksForAReleaseDate()
+    {
+        var model = new DetailModel(new MetaPreview("tt2", "series", "Show", ReleaseInfo: "2019-2024"), Client("""{"meta":{"id":"tt2","type":"series","name":"Show","releaseInfo":"2019-2024"}}"""), new FakeExtras());
+        await model.LoadAsync();
+        Assert.Equal("2019", model.Facts);
+    }
+
+    [Fact]
+    public async Task ModelStaysQuietWhenTheAccountHasNothing()
+    {
+        var model = new DetailModel(new MetaPreview("tt1", "movie", "One", ReleaseInfo: "2014"), Client("""{"meta":{"id":"tt1","type":"movie","name":"One","releaseInfo":"2014"}}"""), new FakeExtras(null, null));
+        await model.LoadAsync();
+        Assert.Null(model.TrailerId);
+        Assert.Equal("2014", model.Facts);
+    }
+
+    [Fact]
+    public void SimilarTitlesPreferTheSameGenreAndLeaveOutTheTitleItself()
+    {
+        var title = new MetaDetail("a", "movie", "A", Genres: ["Drama"]);
+        var pool = new[]
+        {
+            new MetaPreview("a", "movie", "A", Genres: ["Drama"]), new MetaPreview("b", "movie", "B", Genres: ["drama"]),
+            new MetaPreview("c", "movie", "C", Genres: ["Comedy"]), new MetaPreview("b", "movie", "B again", Genres: ["Drama"]),
+        };
+        Assert.Equal(new[] { "b" }, SimilarTitles.For(title, pool).Select(i => i.Id));
+        Assert.Equal(new[] { "b", "c" }, SimilarTitles.For(new MetaDetail("a", "movie", "A", Genres: ["Horror"]), pool).Select(i => i.Id)); // none share one: anything else
+    }
 }

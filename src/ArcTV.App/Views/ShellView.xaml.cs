@@ -23,6 +23,7 @@ public partial class ShellView : UserControl
     private readonly HomeModel _home;
     private readonly Dictionary<string, BrowseModel> _browse = [];
     private MyListModel? _myList;
+    private readonly IDetailExtras _extras;
     private readonly Stack<(UIElement Page, string Place)> _history = [];
     private readonly AddonClient _addonClient = new();
     private IReadOnlyList<HomeSource> _sources = [];
@@ -33,6 +34,7 @@ public partial class ShellView : UserControl
     {
         InitializeComponent();
         _account = account;
+        _extras = new AccountDetailExtras(account);
         var user = account.Session!.User;
         _home = new HomeModel(AccountAddonsAsync, user.Id);
 
@@ -131,7 +133,7 @@ public partial class ShellView : UserControl
     private void OpenTitle(MetaPreview item)
     {
         if (Page.Content is UIElement current) _history.Push((current, _place));
-        Page.Content = new DetailView(new DetailModel(item, _addonClient), MyListFor(), GoBack);
+        Page.Content = new DetailView(new DetailModel(item, _addonClient, _extras), MyListFor(), GoBack, () => _home.AllRows.SelectMany(row => row.Items).ToList());
     }
 
     private void GoBack()
@@ -151,7 +153,7 @@ public partial class ShellView : UserControl
         foreach (var (name, pill) in _pills) pill.Tag = name == place ? "selected" : name;
         Page.Content = place switch
         {
-            "Home" => new HomeView(_home, MyListFor()),
+            "Home" => new HomeView(_home, MyListFor(), _extras),
             "Movies" => new BrowseView("Movies", BrowseFor("movie")),
             "TV Shows" => new BrowseView("TV Shows", BrowseFor("series")),
             "My List" => new MyListView(MyListFor()),

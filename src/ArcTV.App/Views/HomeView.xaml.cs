@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using ArcTV.Core.Details;
 using ArcTV.Core.Home;
 using ArcTV.Core.MyList;
 
@@ -11,13 +12,15 @@ public partial class HomeView : UserControl
 {
     private readonly HomeModel _model;
     private readonly MyListModel? _list;
+    private readonly IDetailExtras? _extras;
     private HeroBanner? _hero;
 
-    public HomeView(HomeModel model, MyListModel? list = null)
+    public HomeView(HomeModel model, MyListModel? list = null, IDetailExtras? extras = null)
     {
         InitializeComponent();
         _model = model;
         _list = list;
+        _extras = extras;
         Loaded += (_, _) =>
         {
             _model.PropertyChanged += OnModelChanged;
@@ -59,7 +62,7 @@ public partial class HomeView : UserControl
         else if (_hero is null || !_hero.Shows(hero))
         {
             _hero?.Stop();
-            _hero = new HeroBanner(hero, _list) { Height = HeroHeight(ActualHeight) };
+            _hero = new HeroBanner(hero, _list, _extras) { Height = HeroHeight(ActualHeight) };
             HeroHost.Children.Clear();
             HeroHost.Children.Add(_hero);
             Rows.Margin = new Thickness(0, -60, 0, 40);
