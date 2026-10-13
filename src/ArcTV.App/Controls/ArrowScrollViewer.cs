@@ -42,6 +42,12 @@ public class ArrowScrollViewer : ScrollViewer
 
     private void OnPosterScale(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (!CheckAccess())
+        {
+            PosterMetrics.Instance.PropertyChanged -= OnPosterScale; // a row from a window that is gone (its thread is not this one): it is not listening any more
+            return;
+        }
+
         if (ScalesWithPosters) PlaceArrows();
     }
 

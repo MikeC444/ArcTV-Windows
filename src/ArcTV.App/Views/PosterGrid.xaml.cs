@@ -69,6 +69,12 @@ public partial class PosterGrid : UserControl
     /// <summary>The posters were drawn bigger or smaller (the window changed size): more or fewer now fit across a line.</summary>
     private void OnPosterScale(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (!CheckAccess())
+        {
+            PosterMetrics.Instance.PropertyChanged -= OnPosterScale; // a screen from a window that is gone (its thread is not this one): it is not listening any more
+            return;
+        }
+
         UpdateExtra();
         if (PerRow() != _perRow) Rebuild();
     }
