@@ -50,15 +50,30 @@ public sealed class TorrentStreamer : ITorrentStarter
     /// The engine's defaults are careful (150 connections, 8 being opened at a time, a 5 MB disk cache) and found fewer people, more slowly, than the Mac app's engine does: this opens many more
     /// connections at once, caches more on the way to the disk, and tries to open the router's port so people can connect back.
     /// </summary>
-    private ClientEngine Engine => _engine ??= new ClientEngine(new EngineSettingsBuilder
+    private ClientEngine Engine
     {
-        CacheDirectory = Path.Combine(Root, "cache"),
-        MaximumConnections = 600,
-        MaximumHalfOpenConnections = 100,
-        DiskCacheBytes = 128 * 1024 * 1024,
-        AllowPortForwarding = true,
-        AllowLocalPeerDiscovery = true,
-    }.ToSettings());
+        get
+        {
+            lock (_engineLock)
+            {
+                if (_engine is not null) return _engine;
+                var timer = System.Diagnostics.Stopwatch.StartNew();
+                _engine = new ClientEngine(new EngineSettingsBuilder
+                {
+                    CacheDirectory = Path.Combine(Root, "cache"),
+                    MaximumConnections = 600,
+                    MaximumHalfOpenConnections = 100,
+                    DiskCacheBytes = 128 * 1024 * 1024,
+                    AllowPortForwarding = true,
+                    AllowLocalPeerDiscovery = true,
+                }.ToSettings());
+                PlayerLog.Write($"torrent: engine created in {timer.ElapsedMilliseconds} ms");
+                return _engine;
+            }
+        }
+    }
+
+    private readonly object _engineLock = new();
 
     private readonly SemaphoreSlim _keepLock = new(1, 1);
     private TorrentManager? _keep;
@@ -91,13 +106,15 @@ public sealed class TorrentStreamer : ITorrentStarter
         }
     }
 
-    public void Warm() => _ = KeepEngineRunningAsync();
+    /// <summary>Starts the engine ahead of time. Always on a worker thread: making the engine (and adding its first torrent) takes a moment and must never hold up the window, which is where this is called from.</summary>
+    public void Warm() => _ = Task.Run(KeepEngineRunningAsync);
 
     public async Task<TorrentStart> StartAsync(SourceItem item, PlayTarget target, Action<TorrentProgress> progress, CancellationToken cancel)
     {
         await _one.WaitAsync(cancel).ConfigureAwait(false);
         try
         {
+            await Task.Run(() => _ = Engine, CancellationToken.None).ConfigureAwait(false); // (made off the screen's thread, which this may still be on if nothing above had to wait)
             await StopAsync().ConfigureAwait(false);
             await KeepEngineRunningAsync().ConfigureAwait(false);
             var text = TorrentLink.Magnet(item.Stream) ?? throw new TorrentException("This source has no torrent address. Try another source.");
