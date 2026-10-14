@@ -231,8 +231,17 @@ public partial class PlayerOverlay : Window
     {
         _model.RefreshTracks();
         var rows = new List<(string, bool, Action)> { ("Off", !_model.SubtitleTracks.Any(t => t.Selected), () => _model.SelectSubtitle(null)) };
-        rows.AddRange(_model.SubtitleTracks.Select(track => (track.Label, track.Selected, (Action)(() => _model.SelectSubtitle(track)))));
+        rows.AddRange(_model.OwnSubtitleTracks.Select(track => (track.Label, track.Selected, (Action)(() => _model.SelectSubtitle(track)))));
+        // then the files the addons offer, the preferred language first
+        rows.AddRange(_model.AddonSubtitles.Select(file => (file.MenuTitle, _model.IsShown(file), (Action)(() => PickAddonSubtitle(file)))));
         Open(SubtitlesButton, rows, "No subtitles in this video");
+    }
+
+    private async void PickAddonSubtitle(Core.Addons.AddonSubtitle file)
+    {
+        _model.SelectAddonSubtitle(file);
+        await Task.Delay(1500); // mpv fetches the file from the web: the tick in the list follows once it has loaded
+        _model.RefreshTracks();
     }
 
     private void OnSpeed(object sender, RoutedEventArgs e) =>
@@ -249,7 +258,7 @@ public partial class PlayerOverlay : Window
         }
 
         MenuRows.Children.Clear();
-        if (rows.Count == 0 || (rows.Count == 1 && rows[0].Text == "Off" && emptyText.Length > 0 && !_model.SubtitleTracks.Any()))
+        if (rows.Count == 0 || (rows.Count == 1 && rows[0].Text == "Off" && emptyText.Length > 0 && !_model.SubtitleTracks.Any() && _model.AddonSubtitles.Count == 0))
         {
             MenuRows.Children.Add(new TextBlock { Text = emptyText.Length > 0 ? emptyText : "Nothing to choose", Margin = new Thickness(12, 8, 12, 8), Foreground = (Brush)FindResource("Text2Brush") });
         }

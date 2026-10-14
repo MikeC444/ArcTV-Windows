@@ -261,6 +261,10 @@ public partial class ShellView : UserControl
     }
 
     /// <summary>What the player follows from Settings: subtitles on at the start, the languages, and how subtitles look.</summary>
+    /// <summary>The subtitle files the account's addons offer for the video being played (OpenSubtitles and the like), the preferred language first.</summary>
+    private async Task<IReadOnlyList<ArcTV.Core.Addons.AddonSubtitle>> FindAddonSubtitlesAsync(PlayingItem item, CancellationToken cancel) =>
+        await ArcTV.Core.Addons.SubtitleFinder.FindAsync(await AccountAddonsAsync(cancel), item.Target.Title.Type, item.Target.StreamId, item.Filename, _settingsModel.Current?.DefaultSubtitleLanguage, _addonClient, cancel);
+
     private PlaybackPreferences PlaybackPrefs()
     {
         var s = _settingsModel.Current;
@@ -461,7 +465,7 @@ public partial class ShellView : UserControl
     {
         if (Page.Content is UIElement current && current is not SourcesView { AutoChosen: true }) _history.Push((current, _place));
         Bar.Visibility = Visibility.Collapsed;
-        Page.Content = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack, (target, position, duration) => _ = _continue.ReportAsync(target, position, duration), PlayNext, () => _settingsModel.Current?.AutoplayNextEpisode ?? true, LogoOfAsync, ChooseAnotherSource);
+        Page.Content = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack, (target, position, duration) => _ = _continue.ReportAsync(target, position, duration), PlayNext, () => _settingsModel.Current?.AutoplayNextEpisode ?? true, LogoOfAsync, ChooseAnotherSource, FindAddonSubtitlesAsync, PlaybackPrefs);
     }
 
     /// <summary>The player gives way to this title's source list (a source that hangs, or is not wanted, can be swapped); Back from the list goes where Back from the player would have.</summary>

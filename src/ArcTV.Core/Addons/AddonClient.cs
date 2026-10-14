@@ -32,6 +32,14 @@ public sealed class AddonClient(HttpClient? http = null)
     public async Task<List<Sources.AddonStream>> FetchStreamsAsync(string manifestUrl, string type, string id, CancellationToken cancel = default) =>
         (await GetAsync<Sources.StreamResponse>(AddonUrl.StreamUrl(manifestUrl, type, id), cancel).ConfigureAwait(false)).Streams ?? [];
 
+    /// <summary>The subtitle files an addon offers for a video (<paramref name="addonName"/> is written on each, for the menu). Throws when the addon cannot be reached; <see cref="SubtitleFinder"/> turns that into nothing.</summary>
+    public async Task<List<AddonSubtitle>> FetchSubtitlesAsync(string manifestUrl, string addonName, string type, string id, string? filename = null, CancellationToken cancel = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, AddonUrl.SubtitlesUrl(manifestUrl, type, id, filename));
+        var body = await ApiHttp.SendAsync(request, http, cancel: cancel).ConfigureAwait(false);
+        return AddonSubtitles.Parse(body, addonName);
+    }
+
     public async Task<List<MetaPreview>> FetchCatalogAsync(string manifestUrl, string type, string catalogId, IReadOnlyDictionary<string, string>? extra = null, CancellationToken cancel = default) =>
         (await GetAsync<CatalogResponse>(AddonUrl.CatalogUrl(manifestUrl, type, catalogId, extra), cancel).ConfigureAwait(false)).Metas ?? [];
 

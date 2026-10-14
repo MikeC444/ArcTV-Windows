@@ -271,6 +271,13 @@ public sealed class MpvEngine : IVideoEngine, IDisposable
 
     public void SetAudioTrack(int? id) => SetString("aid", id?.ToString(CultureInfo.InvariantCulture) ?? "no");
 
+    public void AddSubtitleFile(string url, string title, string? language)
+    {
+        // sub-add <file> <flags> <title> <lang>: "select" shows it at once; mpv fetches the web address itself
+        var rc = string.IsNullOrEmpty(language) ? Command("sub-add", url, "select", title) : Command("sub-add", url, "select", title, language);
+        PlayerLog.Write($"subtitle file added rc={rc}: {title}");
+    }
+
     public void SetSubtitleTrack(int? id) => SetString("sid", id?.ToString(CultureInfo.InvariantCulture) ?? "no");
 
     public void Shutdown() => Dispose();

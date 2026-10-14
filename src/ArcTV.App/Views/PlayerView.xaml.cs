@@ -29,6 +29,9 @@ public partial class PlayerView : UserControl
     private readonly Action<PlayTarget>? _chooseSource;
     private DispatcherTimer? _startWatch;
     private CancellationTokenSource? _prepareRun;
+    private CancellationTokenSource? _subtitleRun;
+    private readonly Func<PlayingItem, CancellationToken, Task<IReadOnlyList<Core.Addons.AddonSubtitle>>>? _findSubtitles;
+    private readonly Func<PlaybackPreferences>? _preferences;
     private Action? _release;
     private DispatcherTimer? _resizeDone;
     private bool _resizing;
@@ -39,8 +42,11 @@ public partial class PlayerView : UserControl
     private DispatcherTimer? _waitForVideoWindow;
     private (WindowStyle Style, WindowState State, ResizeMode Resize, bool Topmost)? _beforeFullscreen;
 
-    public PlayerView(PlayingItem item, Func<IVideoEngine> makeEngine, Action back, Action<PlayTarget, double, double>? report = null, Action<PlayTarget>? playNext = null, Func<bool>? autoplayNext = null, Func<Core.Details.MetaDetail, Task<string?>>? logoLookup = null, Action<PlayTarget>? chooseSource = null)
+    public PlayerView(PlayingItem item, Func<IVideoEngine> makeEngine, Action back, Action<PlayTarget, double, double>? report = null, Action<PlayTarget>? playNext = null, Func<bool>? autoplayNext = null, Func<Core.Details.MetaDetail, Task<string?>>? logoLookup = null, Action<PlayTarget>? chooseSource = null,
+        Func<PlayingItem, CancellationToken, Task<IReadOnlyList<Core.Addons.AddonSubtitle>>>? findSubtitles = null, Func<PlaybackPreferences>? preferences = null)
     {
+        _findSubtitles = findSubtitles;
+        _preferences = preferences;
         _logoLookup = logoLookup;
         _chooseSource = chooseSource;
         _report = report;
@@ -67,6 +73,13 @@ public partial class PlayerView : UserControl
 
         var engine = _engine = _makeEngine();
         var model = _model = new PlayerModel(engine) { RuntimeMinutes = Core.Details.Format.RuntimeMinutes(_item.Target.Title.Runtime) };
+        if (_preferences?.Invoke() is { } prefs)
+        {
+            model.PreferredSubtitleLanguage = prefs.SubtitleLanguage;
+            model.SubtitlesEnabled = prefs.SubtitlesEnabled;
+        }
+
+        _ = LoadAddonSubtitlesAsync(model); // ask the addons for subtitle files now, while the video is still getting ready
         engine.Position += model.OnPosition;
         engine.Duration += model.OnDuration;
         engine.Paused += model.OnPaused;
@@ -110,6 +123,28 @@ public partial class PlayerView : UserControl
         _reportTimer.Tick += (_, _) => ReportProgress();
         _reportTimer.Start();
 
+    }
+
+    /// <summary>Asks the addons that offer subtitles which files they have for this video; the Subtitles menu lists them (best language first). Never in the video's way: nothing found, or a failure, is just no files.</summary>
+    private async Task LoadAddonSubtitlesAsync(PlayerModel model)
+    {
+        if (_findSubtitles is null) return;
+        var run = _subtitleRun = new CancellationTokenSource();
+        try
+        {
+            var found = await _findSubtitles(_item, run.Token);
+            if (run.IsCancellationRequested || !ReferenceEquals(_model, model)) return;
+            model.SetAddonSubtitles(found);
+            PlayerLog.Write($"subtitles: {found.Count} file(s) from the addons");
+        }
+        catch (OperationCanceledException)
+        {
+            // the player was closed
+        }
+        catch (Exception ex)
+        {
+            PlayerLog.Write($"subtitles: could not ask the addons ({ex.Message})");
+        }
     }
 
     /// <summary>
@@ -197,6 +232,7 @@ public partial class PlayerView : UserControl
     {
         _item.OnClose?.Invoke();
         _prepareRun?.Cancel(); // (a torrent still being got ready is dropped)
+        _subtitleRun?.Cancel();
         _release?.Invoke(); // a torrent streamed for this video stops with it
         _release = null;
         _waitForVideoWindow?.Stop();

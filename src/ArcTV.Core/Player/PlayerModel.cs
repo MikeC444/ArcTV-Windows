@@ -1,11 +1,12 @@
 using System.Globalization;
 using System.Text.Json;
+using ArcTV.Core.Addons;
 using ArcTV.Core.Mvvm;
 
 namespace ArcTV.Core.Player;
 
 /// <summary>An audio or subtitle track in the file being played.</summary>
-public sealed record MediaTrack(int Id, string Type, string Title, string? Language, bool Selected)
+public sealed record MediaTrack(int Id, string Type, string Title, string? Language, bool Selected, string? ExternalFilename = null)
 {
     public string Label
     {
@@ -36,6 +37,9 @@ public interface IPlayerCommands
 
     /// <summary>The subtitle track to show, or null for none.</summary>
     void SetSubtitleTrack(int? id);
+
+    /// <summary>Loads a subtitle file (a web address) next to the video and shows it at once.</summary>
+    void AddSubtitleFile(string url, string title, string? language);
 
     /// <summary>A property of what is playing as text (the track list is JSON), or null.</summary>
     string? GetString(string property);
@@ -117,6 +121,22 @@ public sealed class PlayerModel(IPlayerCommands commands) : ObservableObject
 
     public IReadOnlyList<MediaTrack> SubtitleTracks { get => _subtitleTracks; private set => Set(ref _subtitleTracks, value); }
 
+    private IReadOnlyList<AddonSubtitle> _addonSubtitles = [];
+    private bool _addonAutoPicked;
+
+    /// <summary>The subtitle files the person's addons offer for this video (best language first), as found by <see cref="SubtitleFinder"/>.</summary>
+    public IReadOnlyList<AddonSubtitle> AddonSubtitles { get => _addonSubtitles; private set => Set(ref _addonSubtitles, value); }
+
+    /// <summary>The language Settings asks for ("en"), and whether subtitles are switched on there: with both, an addon's file in that language is shown when the video has no subtitles of its own showing.</summary>
+    public string? PreferredSubtitleLanguage { get; set; }
+
+    public bool SubtitlesEnabled { get; set; }
+
+    /// <summary>The subtitle tracks that are the video's own (or came from beside it), not an addon's file loaded by <see cref="SelectAddonSubtitle"/>.</summary>
+    public IReadOnlyList<MediaTrack> OwnSubtitleTracks => SubtitleTracks.Where(track => track.ExternalFilename is null || !AddonSubtitles.Any(file => file.Url == track.ExternalFilename)).ToList();
+
+    public bool IsShown(AddonSubtitle file) => SubtitleTracks.Any(track => track.Selected && track.ExternalFilename == file.Url);
+
     /// <summary>The title's runtime, set by the screen, to recognise such a slate once the length is known.</summary>
     public int? RuntimeMinutes
     {
@@ -143,6 +163,7 @@ public sealed class PlayerModel(IPlayerCommands commands) : ObservableObject
         commands.SetVolume(Volume);
         if (Math.Abs(Speed - 1) > 0.001) commands.SetSpeed(Speed);
         RefreshTracks();
+        AutoPickAddonSubtitle();
         Raise(nameof(Loading));
     }
 
@@ -237,6 +258,36 @@ public sealed class PlayerModel(IPlayerCommands commands) : ObservableObject
         RefreshTracks();
     }
 
+    /// <summary>The addons' subtitle files arrived (once per video, well before anyone opens the menu).</summary>
+    public void SetAddonSubtitles(IReadOnlyList<AddonSubtitle> files)
+    {
+        AddonSubtitles = files;
+        if (HasStarted) AutoPickAddonSubtitle();
+    }
+
+    /// <summary>Loads an addon's subtitle file next to the video and shows it (or, if it was loaded before, just switches back to it).</summary>
+    public void SelectAddonSubtitle(AddonSubtitle file)
+    {
+        RefreshTracks();
+        if (SubtitleTracks.FirstOrDefault(track => track.ExternalFilename == file.Url) is { } known)
+        {
+            SelectSubtitle(known);
+            return;
+        }
+
+        commands.AddSubtitleFile(file.Url, file.MenuTitle, SubtitleLanguage.Key(file.LanguageCode) ?? (file.LanguageCode.Length == 0 ? null : file.LanguageCode));
+        RefreshTracks(); // (the file may take a moment to load: the menu reads the list again when it opens)
+    }
+
+    /// <summary>The preferred subtitle language is wanted (Settings: subtitles on) but the video has none of its own showing: use the addons' file in that language, once.</summary>
+    private void AutoPickAddonSubtitle()
+    {
+        if (_addonAutoPicked || !HasStarted || AddonSubtitles.Count == 0 || !SubtitlesEnabled || SubtitleTracks.Any(track => track.Selected)) return;
+        if (SubtitleLanguage.Key(PreferredSubtitleLanguage) is not { } wanted) return;
+        _addonAutoPicked = true;
+        if (AddonSubtitles.FirstOrDefault(file => SubtitleLanguage.Key(file.LanguageCode) == wanted) is { } match) SelectAddonSubtitle(match);
+    }
+
     /// <summary>The audio and subtitle tracks in the player's track list (a JSON array).</summary>
     public static (List<MediaTrack> Audio, List<MediaTrack> Subtitles) ParseTracks(string? json)
     {
@@ -251,7 +302,7 @@ public sealed class PlayerModel(IPlayerCommands commands) : ObservableObject
             {
                 if (entry.ValueKind != JsonValueKind.Object || !entry.TryGetProperty("id", out var id) || id.ValueKind != JsonValueKind.Number || !entry.TryGetProperty("type", out var type) || type.ValueKind != JsonValueKind.String) continue;
                 string? Text(string name) => entry.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
-                var track = new MediaTrack(id.GetInt32(), type.GetString()!, Text("title") ?? "", Text("lang"), entry.TryGetProperty("selected", out var selected) && selected.ValueKind == JsonValueKind.True);
+                var track = new MediaTrack(id.GetInt32(), type.GetString()!, Text("title") ?? "", Text("lang"), entry.TryGetProperty("selected", out var selected) && selected.ValueKind == JsonValueKind.True, Text("external-filename"));
                 if (track.Type == "audio") audio.Add(track);
                 else if (track.Type == "sub") subtitles.Add(track);
             }

@@ -25,6 +25,8 @@ public class PlayerTests
 
         public void SetSubtitleTrack(int? id) => Calls.Add($"sub {id?.ToString() ?? "none"}");
 
+        public void AddSubtitleFile(string url, string title, string? language) => Calls.Add($"subfile {url} | {title} | {language}");
+
         public string? GetString(string property) => property == "track-list" ? TrackList : null;
 
         public void Shutdown() => Calls.Add("shutdown");
@@ -137,5 +139,59 @@ public class PlayerTests
         model.Stop();
         Assert.Equal(new[] { "pause False", "volume 100", "speed 1.5", "audio 3", "sub none", "shutdown" }, commands.Calls);
         Assert.Equal(100, model.Volume); // never past 100
+    }
+
+    private static readonly ArcTV.Core.Addons.AddonSubtitle English = new("OpenSubtitles", "eng", "English", "https://s.test/en.srt");
+    private static readonly ArcTV.Core.Addons.AddonSubtitle French = new("OpenSubtitles", "fre", "French", "https://s.test/fr.srt");
+
+    [Fact]
+    public void AnAddonsSubtitleFileIsLoadedOnceAndSwitchedBackToAfterwards()
+    {
+        var commands = new FakeCommands { TrackList = "[]" };
+        var model = new PlayerModel(commands);
+        model.OnPosition(1);
+        model.SetAddonSubtitles([English, French]);
+        model.SelectAddonSubtitle(French);
+        Assert.Equal("subfile https://s.test/fr.srt | French · OpenSubtitles | fr", commands.Calls.Last());
+
+        // mpv has loaded it: it is a track now, told apart by its address
+        commands.TrackList = """[{"id":3,"type":"sub","title":"French · OpenSubtitles","lang":"fr","selected":true,"external":true,"external-filename":"https://s.test/fr.srt"},{"id":1,"type":"sub","title":"Forced","lang":"en","selected":false}]""";
+        model.RefreshTracks();
+        Assert.True(model.IsShown(French));
+        Assert.False(model.IsShown(English));
+        Assert.Equal(["Forced"], model.OwnSubtitleTracks.Select(t => t.Title)); // the addon's file is listed once, among the addons' files
+        var before = commands.Calls.Count(c => c.StartsWith("subfile", StringComparison.Ordinal));
+        model.SelectAddonSubtitle(French);
+        Assert.Equal(before, commands.Calls.Count(c => c.StartsWith("subfile", StringComparison.Ordinal))); // not loaded twice
+        Assert.Equal("sub 3", commands.Calls.Last());
+    }
+
+    [Fact]
+    public void ThePreferredLanguageIsShownFromAnAddonOnlyWhenTheVideoHasNoSubtitlesOfItsOwnShowing()
+    {
+        // wanted (subtitles on, French) and nothing showing: the French file is loaded, once
+        var commands = new FakeCommands { TrackList = "[]" };
+        var model = new PlayerModel(commands) { PreferredSubtitleLanguage = "fr", SubtitlesEnabled = true };
+        model.SetAddonSubtitles([English, French]); // the files can arrive before the first picture
+        Assert.DoesNotContain(commands.Calls, c => c.StartsWith("subfile", StringComparison.Ordinal));
+        model.OnPosition(1);
+        Assert.Single(commands.Calls, c => c.StartsWith("subfile https://s.test/fr.srt", StringComparison.Ordinal));
+        model.OnPosition(2);
+        model.SetAddonSubtitles([English, French]);
+        Assert.Single(commands.Calls, c => c.StartsWith("subfile", StringComparison.Ordinal)); // only once
+
+        // the video's own subtitles are already showing: left alone
+        var own = new FakeCommands { TrackList = """[{"id":1,"type":"sub","title":"English","lang":"en","selected":true}]""" };
+        var second = new PlayerModel(own) { PreferredSubtitleLanguage = "fr", SubtitlesEnabled = true };
+        second.OnPosition(1);
+        second.SetAddonSubtitles([French]);
+        Assert.DoesNotContain(own.Calls, c => c.StartsWith("subfile", StringComparison.Ordinal));
+
+        // subtitles off in Settings, or no preference: left alone
+        var off = new FakeCommands { TrackList = "[]" };
+        var third = new PlayerModel(off) { PreferredSubtitleLanguage = "fr", SubtitlesEnabled = false };
+        third.OnPosition(1);
+        third.SetAddonSubtitles([French]);
+        Assert.DoesNotContain(off.Calls, c => c.StartsWith("subfile", StringComparison.Ordinal));
     }
 }

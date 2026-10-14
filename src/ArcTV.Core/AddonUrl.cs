@@ -50,5 +50,9 @@ public static class AddonUrl
     public static string MetaUrl(string manifestUrl, string type, string id) => $"{ResourceBase(manifestUrl)}/meta/{Encode(type)}/{EncodeId(id)}.json";
 
     /// <summary><c>&lt;base&gt;/stream/&lt;type&gt;/&lt;id&gt;.json</c>: the streams an addon offers for a title or episode.</summary>
+    /// <summary>An addon's subtitles for a video: <c>/subtitles/{type}/{id}.json</c>, with the file name as an extra (<c>/subtitles/{type}/{id}/filename=....json</c>) when it is known, which addons use to match a release.</summary>
+    public static string SubtitlesUrl(string manifestUrl, string type, string id, string? filename = null) =>
+        $"{ResourceBase(manifestUrl)}/subtitles/{Encode(type)}/{EncodeId(id)}{(string.IsNullOrEmpty(filename) ? "" : $"/filename={Encode(filename)}")}.json";
+
     public static string StreamUrl(string manifestUrl, string type, string id) => $"{ResourceBase(manifestUrl)}/stream/{Encode(type)}/{EncodeId(id)}.json";
 }

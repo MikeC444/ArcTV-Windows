@@ -28,6 +28,24 @@ public sealed record AddonManifest(
         return false;
     }
 
+    /// <summary>
+    /// Whether this addon offers subtitles for a title of <paramref name="type"/> ("movie" or "series") with this id. Unlike streams, an addon that does not list "subtitles" among its resources is
+    /// not asked, so catalogue addons never get a request they cannot answer. A resource's own types and id prefixes ("tt" for IMDb ids) apply, else the manifest's; none listed means anything.
+    /// </summary>
+    public bool OffersSubtitles(string type, string titleId)
+    {
+        foreach (var resource in (Resources ?? []).Where(r => r.Name == "subtitles"))
+        {
+            var allowedTypes = resource.Types is { Count: > 0 } ? resource.Types : Types;
+            var prefixes = resource.IdPrefixes is { Count: > 0 } ? resource.IdPrefixes : IdPrefixes;
+            if (allowedTypes is { Count: > 0 } && !allowedTypes.Contains(type)) continue;
+            if (prefixes is { Count: > 0 } && !prefixes.Any(p => titleId.StartsWith(p, StringComparison.Ordinal))) continue;
+            return true;
+        }
+
+        return false;
+    }
+
     public bool OffersCatalog(string type, string catalogId) => (Catalogs ?? []).Any(c => c.Type == type && c.Id == catalogId);
 }
 

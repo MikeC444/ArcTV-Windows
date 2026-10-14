@@ -714,3 +714,18 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 
 **Follow-up (owner: Play on something watched before went straight to the player, not the source list).** `AutoPick.Choose` started the source a title or episode was last watched on without showing the list (the "last source" shortcut, from the Mac's design). It now only skips the list for the next episode of a binge (`AutoPick`), or with Plus smart picking when the person turned that setting on; `ChooseSource` still always shows it. `LastSourceStore` still records what was used, now to mark that row "Last watched" in the list (`SourcesView.BuildRow`), when it is sure which source it was (`LastSource.Match`). Core test rewritten for the new rules; built, not seen on screen. The Mac app has the old shortcut: open for the Mac, if the owner wants the same there.
 
+## Subtitles from addons (a Mac feature, ported)
+
+**Status:** Built and unit tested in the sandbox (257 Core tests pass; a screen test for the player was added and runs on CI). Not seen on screen, and no real addon was asked: the OpenSubtitles addon's answer shape is taken from the Stremio protocol and the Mac app's reader.
+
+**Context:** the Mac player offers the subtitle files addons list (`/subtitles/{type}/{id}.json`); the Windows player only offered tracks inside the video file.
+
+**Changes:**
+- Core: `AddonSubtitle`, `SubtitleLanguage` (an addon's "eng" / "pt-BR" / "German" read as a two-letter code and a name, never a blank), `AddonSubtitles.Parse` (only web addresses, one per address, tolerant of odd entries) and `Rank` (preferred language first, then A to Z, at most 5 a language and 60 in all), `AddonManifest.OffersSubtitles` (only addons that list a "subtitles" resource for that kind of title and id are asked), `AddonUrl.SubtitlesUrl` (with `/filename=...` so an addon can match the release), `AddonClient.FetchSubtitlesAsync`, `SubtitleFinder.FindAsync` (all addons at once, 8 s each; a slow or broken addon adds nothing and never gets in the video's way).
+- Player: `IPlayerCommands.AddSubtitleFile` (mpv `sub-add <url> select <title> <lang>`); `PlayerModel` keeps the files, loads one on request, tells an addon's file from the video's own tracks by mpv's `external-filename`, switches back to a file already loaded instead of adding it twice, and, when Settings has subtitles on with a language and nothing is showing, shows the addon's file in that language once. `PlayerView` asks as soon as the player opens (while a torrent is still getting ready); the Subtitles menu lists Off, the video's own tracks, then the addons' files (the tick follows once mpv has fetched the file).
+- Wiring: `ShellView.FindAddonSubtitlesAsync` and `PlaybackPrefs`.
+
+**Tests performed:** language reading; parsing (bad entries, duplicates, non-web addresses); ranking; which addons are asked; the addresses; the finder against stub addons (good, broken, disabled, streams-only, slow, cancelled); the model loading a file once and switching back, the auto-pick (and its no-ops); a player screen that asks and keeps the list.
+
+**Issues discovered:** none. **Open:** whether mpv's `sub-add` shows a file from a web address before the menu's tick appears (the tick re-reads the track list after 1.5 s); an addon that needs a video hash or size is not given one (the Mac does not either); subtitle files are not remembered between plays.
+

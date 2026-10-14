@@ -252,6 +252,7 @@ public class ScreenTests
         public void SetSpeed(double speed) { }
         public void SetAudioTrack(int? id) { }
         public void SetSubtitleTrack(int? id) { }
+        public void AddSubtitleFile(string url, string title, string? language) { }
         public string? GetString(string property) => null;
         public void Shutdown() { }
 
@@ -275,6 +276,35 @@ public class ScreenTests
         Assert.NotEqual(IntPtr.Zero, engine.StartedIn);
         Assert.NotNull(view.Model);
         Assert.False(view.Model!.Loading);
+        window.Close();
+        await Settle();
+    });
+
+    [Fact]
+    public void PlayerScreenAsksTheAddonsForSubtitleFilesAndKeepsThemForItsMenu() => OnUiThread(async () =>
+    {
+        var engine = new FakeEngine();
+        var target = new PlayTarget(new MetaDetail("tt1", "movie", "Film"));
+        var file = new AddonSubtitle("OpenSubtitles", "eng", "English", "https://s.test/en.srt");
+        PlayingItem? asked = null;
+        var view = new PlayerView(new PlayingItem(new Uri("https://cdn.test/f.mkv"), "Film", "Addon", target, "Film.1080p.mkv"), () => engine, () => { },
+            findSubtitles: (item, _) =>
+            {
+                asked = item;
+                return Task.FromResult<IReadOnlyList<AddonSubtitle>>([file]);
+            },
+            preferences: () => new ArcTV.Core.Player.PlaybackPreferences(true, "en"));
+        var window = Host(view);
+        for (var i = 0; i < 40 && view.Model?.AddonSubtitles.Count != 1; i++)
+        {
+            await Task.Delay(50);
+            await Settle();
+        }
+
+        Assert.Equal("Film.1080p.mkv", asked?.Filename); // the release's file name goes along, so an addon can match it
+        Assert.Equal([file], view.Model!.AddonSubtitles);
+        Assert.Equal("en", view.Model.PreferredSubtitleLanguage);
+        Assert.True(view.Model.SubtitlesEnabled);
         window.Close();
         await Settle();
     });
