@@ -93,6 +93,7 @@ public sealed class MpvEngine : IVideoEngine, IDisposable
             // our own controls, our own keys: the engine only draws the picture
             Option("log-file", PlayerLog.MpvFile); // mpv's own account of what it is doing, for when a video will not start
             Option("msg-level", "all=info");
+            Option("load-scripts", "no"); // mpv's bundled scripts (stats, console, select...) are not used; our own controls draw everything
             Option("osc", "no");
             Option("input-default-bindings", "no");
             Option("input-vo-keyboard", "no");

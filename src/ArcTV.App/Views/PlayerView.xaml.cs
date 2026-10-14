@@ -28,6 +28,13 @@ public partial class PlayerView : UserControl
     private bool _leaving;
     private readonly Action<PlayTarget>? _chooseSource;
     private DispatcherTimer? _startWatch;
+    private DispatcherTimer? _stallWatch;
+
+    /// <summary>Set by the shell: starts this video again in a fresh player (used once when mpv shows no picture soon after starting).</summary>
+    public Action<PlayingItem>? RetryStart { get; set; }
+
+    /// <summary>How long mpv gets to show a first picture before the player is rebuilt once.</summary>
+    public static readonly TimeSpan StallTimeout = TimeSpan.FromSeconds(12);
     private CancellationTokenSource? _prepareRun;
     private CancellationTokenSource? _subtitleRun;
     private readonly Func<PlayingItem, CancellationToken, Task<IReadOnlyList<Core.Addons.AddonSubtitle>>>? _findSubtitles;
@@ -211,6 +218,21 @@ public partial class PlayerView : UserControl
             if (_model is { HasStarted: false, Failure: null } waiting) waiting.OnFailed("This source isn't starting. It may be slow, or the link may have stopped working. Try another source.");
         };
         _startWatch.Start();
+        if (_item.Attempt == 0 && RetryStart is not null)
+        {
+            // mpv sometimes sits silent on the first start of a player (starting the same source again from a new player always worked): rebuild it once
+            _stallWatch = new DispatcherTimer { Interval = StallTimeout };
+            _stallWatch.Tick += (_, _) =>
+            {
+                _stallWatch?.Stop();
+                if (_leaving || _model is not { HasStarted: false, Failure: null }) return;
+                PlayerLog.Write("no picture yet; starting the video again in a fresh player");
+                _leaving = true;
+                RetryStart?.Invoke(_item with { Attempt = 1 });
+            };
+            _stallWatch.Start();
+        }
+
         engine.Start(Video.WindowHandle, url, _item.Target.StartAt);
     }
 
@@ -266,6 +288,7 @@ public partial class PlayerView : UserControl
         _waitForVideoWindow?.Stop();
         _resizeDone?.Stop();
         _startWatch?.Stop();
+        _stallWatch?.Stop();
         _reportTimer?.Stop();
         ReportProgress();
         if (_window is not null)

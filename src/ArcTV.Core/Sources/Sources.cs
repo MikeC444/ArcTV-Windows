@@ -283,6 +283,9 @@ public sealed record PlayingItem(Uri Url, string Heading, string SourceName, Pla
     /// <summary>Called when the player is closed: a torrent being streamed for it is stopped and its files removed.</summary>
     public Action? OnClose { get; init; }
 
+    /// <summary>0 for the first start of this video; 1 when the player started it again by itself because no picture came.</summary>
+    public int Attempt { get; init; }
+
     /// <summary>
     /// For a source that needs getting ready first (a torrent): the player opens at once with its loading cover, calls this (it reports what is going on as words) and plays the address it
     /// returns, calling the returned action when it is closed. <see cref="Url"/> is only a placeholder then.

@@ -573,7 +573,14 @@ public partial class ShellView : UserControl
     {
         if (Page.Content is UIElement current && current is not SourcesView { AutoChosen: true }) _history.Push((current, _place));
         Bar.Visibility = Visibility.Collapsed;
-        Page.Content = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack, (target, position, duration) => _ = _continue.ReportAsync(target, position, duration), PlayNext, () => _settingsModel.Current?.AutoplayNextEpisode ?? true, LogoOfAsync, ChooseAnotherSource, FindAddonSubtitlesAsync, PlaybackPrefs);
+        Page.Content = MakePlayer(item);
+    }
+
+    private PlayerView MakePlayer(PlayingItem item)
+    {
+        var view = new PlayerView(item, () => new MpvEngine(PlaybackPrefs()), GoBack, (target, position, duration) => _ = _continue.ReportAsync(target, position, duration), PlayNext, () => _settingsModel.Current?.AutoplayNextEpisode ?? true, LogoOfAsync, ChooseAnotherSource, FindAddonSubtitlesAsync, PlaybackPrefs);
+        view.RetryStart = again => { if (ReferenceEquals(Page.Content, view)) Page.Content = MakePlayer(again); };
+        return view;
     }
 
     /// <summary>The player gives way to this title's source list (a source that hangs, or is not wanted, can be swapped); Back from the list goes where Back from the player would have.</summary>
