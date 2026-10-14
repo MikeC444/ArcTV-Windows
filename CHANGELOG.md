@@ -856,3 +856,11 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 **Tests performed:** unpacked the LGPL package: its configuration line has `-Dgpl=false` and its feature list no `gpl`; the check's pattern matches a GPL feature line and not this library.
 
 **Issues discovered:** the LGPL build leaves out a few optional parts (rubberband pitch correction, DVD navigation, OpenAL). The licences of the libraries inside it were not checked one by one. A `libmpv-2.dll` already in `src/ArcTV.App/libmpv` is kept as it is: delete that folder's DLL to fetch the LGPL one. **Issues fixed:** the GPL build in releases.
+
+## README rewritten to match the Mac app's (owner asked)
+
+**Status:** Docs only; nothing built or run.
+
+**Changes:** `README.md` now follows the Mac app's: download links, a Home screenshot (`docs/images/screenshot-windows-home.webp`, the owner's), a features list for what the Windows app has, the "Arc TV everywhere" table, installing (installer or zip, the unsigned SmartScreen warning), Windows questions (firewall for torrents, the log files, ARM and older Windows), and developer notes (building, layout, the release workflow and its trial run). The "work in progress" banner is replaced by an early-version note.
+
+**Tests performed:** none (text only). **Issues discovered:** the Windows on ARM answer is "not tested", not a claim that it fails. **Issues fixed:** none.
