@@ -790,3 +790,5 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 **Issues fixed:** none confirmed yet.
 
 **Follow-up (owner's next logs: the same stall).** The new log lines showed the link resolved in 0.5 s and mpv given the real file address, then 45 s of nothing (`gave up waiting for the first picture`), and mpv.log again ended at `loadfile`: so the link was not the cause; mpv itself stays silent on the first start of a player. Changes: mpv's bundled scripts are off (`load-scripts=no`; ours draw everything), and `PlayerView` starts the video again once, in a fresh player (`RetryStart`, `PlayingItem.Attempt`), when there is no picture 12 s after mpv started (what going Sources > same source did by hand). The cause of mpv's silence is still not known; `player.log` says "no picture yet; starting the video again" when the retry fires. Not seen on screen.
+
+**Follow-up (owner: keep the top-right logo relevant to the window's size).** `PlayerOverlay` scales the top-right logo block (logo or title, episode line) with the window: full size from 1600 pixels wide, down to 40% at 640 and below. Not seen on screen.

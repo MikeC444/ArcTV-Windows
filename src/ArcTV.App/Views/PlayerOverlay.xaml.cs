@@ -60,6 +60,10 @@ public partial class PlayerOverlay : Window
         _isFullscreen = isFullscreen;
         _handleKey = handleKey;
 
+        var titleScale = new ScaleTransform(1, 1);
+        TitleEnd.LayoutTransform = titleScale;
+        Root.SizeChanged += (_, e) => titleScale.ScaleX = titleScale.ScaleY = Math.Clamp(e.NewSize.Width / 1600, 0.4, 1); // the top-right logo follows the window's size (full size from 1600 wide)
+
         var title = item.Target.Title;
         CoverPicture.Url = Artwork.Bigger(title.Background ?? title.Poster);
         CoverPicture.FallbackUrl = title.Background ?? title.Poster;
