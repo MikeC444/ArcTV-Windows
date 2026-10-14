@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- A source from the list now starts the first time you pick it: the app waits for the link to be ready (with "Getting the file ready..." on the loading screen) instead of sitting on Loading until you pick it again.
 - In the player, the title logo at the top right now fades away with the controls instead of staying on screen.
 - Your default subtitle language (and default audio language) in Settings now picks the right track in the player: it was missed for most video files, and when the video had no subtitles in your language, the player stayed on another one. Now it uses your language from the video if there is one, otherwise from your addons.
 - No sources found? A step-by-step guide now walks you through setting them up (a debrid service, then Torrentio, then Arc TV), opened from that page.

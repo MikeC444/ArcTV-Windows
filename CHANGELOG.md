@@ -774,3 +774,17 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 **Tests performed:** `dotnet build`.
 
 **Issues discovered:** none. **Issues fixed:** the logo staying on screen.
+
+## Sources that only played on the second try (owner's player.log and mpv.log)
+
+**Status:** Built and unit-tested here; not seen on screen, and the cause is inferred from the logs, not proven.
+
+**Context:** Picking a source from the list showed Loading for ever; going Sources > same source again played it. This happened with torrents and debrid links alike. The logs of a stuck first try (a Torrentio / TorBox `/resolve/` link): the player reached `loadfile rc=0`, then mpv wrote nothing more (no "Opening", no error), until the owner gave up.
+
+**Changes:** `Core/Sources/StreamResolver` follows the resolve link's redirect itself (3 tries of 30 s, up to 6 hops, GET with Range 0-0, headers only) and `PlayerView.BeginAsync` plays the address it finds, showing "Getting the file ready..." under the loading symbol and logging "link resolved in N s" to `player.log`. Any failure hands mpv the original address, as before.
+
+**Tests performed:** `StreamResolverTests` (redirect followed, retry after an error, direct file untouched, never answering returns the original).
+
+**Issues discovered:** mpv's own log gives no sign of a slow redirect; if it is not the cause, the new "link resolved" line in `player.log` will show whether resolving was slow or instant.
+
+**Issues fixed:** none confirmed yet.

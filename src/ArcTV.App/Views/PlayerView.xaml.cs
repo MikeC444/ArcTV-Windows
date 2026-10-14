@@ -183,6 +183,24 @@ public partial class PlayerView : UserControl
             }
         }
 
+        if (_item.Prepare is null)
+        {
+            // a debrid "resolve" link answers with a redirect that can be slow the first time: wait for it here, behind the loading cover, not inside mpv (which sat silent on it)
+            var run = _prepareRun = new CancellationTokenSource();
+            var began = DateTime.UtcNow;
+            try
+            {
+                url = await Core.Sources.StreamResolver.ResolveAsync(url, text => Dispatcher.BeginInvoke(new Action(() => _overlay?.ShowStatus(text))), run.Token);
+                PlayerLog.Write($"link resolved in {(DateTime.UtcNow - began).TotalSeconds:0.0} s: host={url.Host}");
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            if (_engine is null || run.IsCancellationRequested) return;
+        }
+
         _overlay?.ShowStatus("");
         // a source that never starts must not leave the loading symbol turning for ever: after a while the player says so and offers another source
         _startWatch = new DispatcherTimer { Interval = _item.Prepare is null ? StartTimeout : TorrentStartTimeout }; // (a torrent may still be fetching its first parts when the player is given it)
