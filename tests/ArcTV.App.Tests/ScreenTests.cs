@@ -661,7 +661,7 @@ public class ScreenTests
             await Settle();
         }
 
-        var overlay = System.Windows.Application.Current.Windows.OfType<PlayerOverlay>().Single();
+        var overlay = view.Overlay!;
         var pill = Descendants<System.Windows.Controls.Button>(overlay).Single(b => b.Content is "Episodes");
         Assert.Equal(Visibility.Visible, pill.Visibility);
         Click(pill);

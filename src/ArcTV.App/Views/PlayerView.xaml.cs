@@ -71,6 +71,9 @@ public partial class PlayerView : UserControl
     /// <summary>What the player is showing (for the tests).</summary>
     public PlayerModel? Model => _model;
 
+    /// <summary>The controls window laid over the picture (for the tests).</summary>
+    public PlayerOverlay? Overlay => _overlay;
+
     public bool IsFullscreen => _beforeFullscreen is not null;
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -188,24 +191,6 @@ public partial class PlayerView : UserControl
                 if (!run.IsCancellationRequested) model.OnFailed(ex is TorrentException ? ex.Message : "This source could not be started. Try another source.");
                 return;
             }
-        }
-
-        if (_item.Prepare is null)
-        {
-            // a debrid "resolve" link answers with a redirect that can be slow the first time: wait for it here, behind the loading cover, not inside mpv (which sat silent on it)
-            var run = _prepareRun = new CancellationTokenSource();
-            var began = DateTime.UtcNow;
-            try
-            {
-                url = await Core.Sources.StreamResolver.ResolveAsync(url, text => Dispatcher.BeginInvoke(new Action(() => _overlay?.ShowStatus(text))), run.Token);
-                PlayerLog.Write($"link resolved in {(DateTime.UtcNow - began).TotalSeconds:0.0} s: host={url.Host}");
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-
-            if (_engine is null || run.IsCancellationRequested) return;
         }
 
         _overlay?.ShowStatus("");
