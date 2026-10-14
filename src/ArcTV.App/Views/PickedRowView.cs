@@ -25,6 +25,13 @@ public sealed class PickedRowView : StackPanel
     {
         Children.Clear();
         var row = _model.Row;
+        if (row is null && _model.Working)
+        {
+            Visibility = Visibility.Visible;
+            Children.Add(Skeleton.PosterRow(8)); // grey posters until the picks are worked out
+            return;
+        }
+
         Visibility = row is null ? Visibility.Collapsed : Visibility.Visible;
         if (row is null) return;
         Margin = new Thickness(0, 0, 0, 44);

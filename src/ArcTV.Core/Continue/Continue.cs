@@ -139,6 +139,11 @@ public sealed class ContinueModel(IContinueStore store, Func<MetaDetail, Task>? 
 
     public IReadOnlyList<ContinueItem> Items { get => _items; private set => Set(ref _items, value); }
 
+    private bool _loaded;
+
+    /// <summary>False until the list has been asked for once (it came back, or failed), so the row can show grey placeholders instead of vanishing while it loads.</summary>
+    public bool Loaded { get => _loaded; private set => Set(ref _loaded, value); }
+
     /// <summary>The title logo of each item (by title id), looked up after the list is read: the account keeps the poster and backdrop of a title but not its logo.</summary>
     public IReadOnlyDictionary<string, string> Logos { get => _logos; private set => Set(ref _logos, value); }
 
@@ -153,9 +158,11 @@ public sealed class ContinueModel(IContinueStore store, Func<MetaDetail, Task>? 
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            Loaded = true;
             return;
         }
 
+        Loaded = true;
         await LoadLogosAsync(cancel).ConfigureAwait(true);
     }
 

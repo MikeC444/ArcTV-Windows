@@ -98,6 +98,21 @@ public class ContinueTests
     }
 
     [Fact]
+    public async Task LoadedIsFalseUntilTheListHasComeBackOrFailed()
+    {
+        var store = new FakeStore();
+        var model = new ContinueModel(store);
+        Assert.False(model.Loaded);
+        await model.LoadAsync();
+        Assert.True(model.Loaded);
+
+        store.Fail = true;
+        var failing = new ContinueModel(store);
+        await failing.LoadAsync();
+        Assert.True(failing.Loaded); // a failed read ends the placeholders too
+    }
+
+    [Fact]
     public async Task TooLittleToSayIsNotReportedAndNinetyTwoPercentIsFinished()
     {
         var store = new FakeStore();

@@ -27,6 +27,13 @@ public sealed class ContinueRow : StackPanel
     {
         Children.Clear();
         var items = _model.Items;
+        if (!_model.Loaded && items.Count == 0)
+        {
+            Visibility = Visibility.Visible;
+            Children.Add(Skeleton.WideRow()); // grey cards until the list has come back
+            return;
+        }
+
         Visibility = items.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         if (items.Count == 0) return;
         Margin = new Thickness(0, 0, 0, 44);

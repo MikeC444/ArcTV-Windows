@@ -64,10 +64,7 @@
         <TextBlock Text="Search for movies and TV shows across your installed addons." FontSize="14" Foreground="{StaticResource Text2Brush}" Margin="24,0" />
       </StackPanel>
 
-      <StackPanel x:Name="SearchingPanel" Margin="24,16,24,0" HorizontalAlignment="Left" Visibility="Collapsed">
-        <TextBlock Text="Searching your addons…" FontSize="16" Foreground="{StaticResource Text2Brush}" />
-        <ProgressBar IsIndeterminate="True" Height="3" Width="220" Margin="0,14,0,0" HorizontalAlignment="Left" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
-      </StackPanel>
+<ContentControl x:Name="SearchingPanel" IsHitTestVisible="False" />
 
       <StackPanel x:Name="NonePanel" Margin="24,50,24,0" HorizontalAlignment="Center" Visibility="Collapsed">
         <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="40" Foreground="{StaticResource Text3Brush}" HorizontalAlignment="Center" />

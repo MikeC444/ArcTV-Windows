@@ -71,7 +71,8 @@ public partial class SearchView : UserControl
     {
         var state = _model.State;
         IdlePanel.Visibility = state == SearchState.Idle ? Visibility.Visible : Visibility.Collapsed;
-        SearchingPanel.Visibility = state == SearchState.Searching ? Visibility.Visible : Visibility.Collapsed;
+        if (state == SearchState.Searching) SearchingPanel.Content ??= Skeleton.PosterGridPage(12); // grey posters while the addons answer
+        else SearchingPanel.Content = null;
         NonePanel.Visibility = state == SearchState.None ? Visibility.Visible : Visibility.Collapsed;
         ErrorText.Visibility = state == SearchState.Error ? Visibility.Visible : Visibility.Collapsed;
         CheckingPanel.Visibility = state == SearchState.Results && _model.StillChecking ? Visibility.Visible : Visibility.Collapsed;

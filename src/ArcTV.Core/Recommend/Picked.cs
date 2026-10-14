@@ -127,6 +127,11 @@ public sealed class PickedModel(Func<PickedInputs> inputs, FeatureLoader loader,
     /// <summary>The row for Home, or null when there is none (no Plus, nothing picked yet).</summary>
     public PickedRow? Row { get => _row; private set => Set(ref _row, value); }
 
+    private bool _working;
+
+    /// <summary>True while an account with Plus is waiting for its first row to be worked out (the row shows grey placeholders meanwhile); false when there is a row, no Plus, or nothing to pick.</summary>
+    public bool Working { get => _working; private set => Set(ref _working, value); }
+
     private int Seed
     {
         get
@@ -151,12 +156,14 @@ public sealed class PickedModel(Func<PickedInputs> inputs, FeatureLoader loader,
             _result = null;
             _key = "";
             Row = null;
+            Working = false;
             return;
         }
 
         if (!x.Ready)
         {
             Row = Build(x);
+            Working = Row is null && _result is null;
             return;
         }
 
@@ -185,6 +192,7 @@ public sealed class PickedModel(Func<PickedInputs> inputs, FeatureLoader loader,
         }
 
         Row = Build(x);
+        Working = Row is null && _result is null;
     }
 
     private async Task RunAsync(EngineInput input, IReadOnlyList<MetaPreview> pool, CancellationTokenSource run)
@@ -196,6 +204,7 @@ public sealed class PickedModel(Func<PickedInputs> inputs, FeatureLoader loader,
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            if (!run.IsCancellationRequested) Working = false;
             return;
         }
 
@@ -209,6 +218,7 @@ public sealed class PickedModel(Func<PickedInputs> inputs, FeatureLoader loader,
         }
 
         Row = Build(inputs());
+        Working = false;
     }
 
     private PickedRow? Build(PickedInputs x)

@@ -76,6 +76,25 @@ public class Skeleton : RoundedBorder
         return row;
     }
 
+    /// <summary>A row of wide cards (Continue Watching's size) under a row title's shape.</summary>
+    public static StackPanel WideRow(int count = 6)
+    {
+        var row = new StackPanel { Margin = new Thickness(0, 0, 0, 44), IsHitTestVisible = false };
+        row.Children.Add(Box(300, 30, 8, new Thickness(24, 4, 0, 6)));
+        var cards = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(24, 0, 0, 0) };
+        for (var i = 0; i < count; i++)
+        {
+            var card = new StackPanel { Width = 440, Margin = new Thickness(0, 10, 16, 10) };
+            card.Children.Add(Box(440, 248, 16));
+            card.Children.Add(Box(220, 20, 6, new Thickness(2, 10, 0, 0)));
+            PosterMetrics.Apply(card);
+            cards.Children.Add(card);
+        }
+
+        row.Children.Add(new ScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, Content = cards, IsHitTestVisible = false });
+        return row;
+    }
+
     /// <summary>The whole of Home before its rows arrive: a big banner shape with a title, a line and buttons on it, then a few rows of posters.</summary>
     public static Grid HomePage()
     {

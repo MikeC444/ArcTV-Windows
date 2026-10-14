@@ -19,10 +19,7 @@
         <Popup x:Name="SortPopup" PlacementTarget="{Binding ElementName=SortButton}" Placement="Bottom" VerticalOffset="6" StaysOpen="False" AllowsTransparency="True" Closed="OnSortClosed" />
       </Grid>
 
-      <StackPanel x:Name="LoadingPanel" Margin="24,12,24,0" HorizontalAlignment="Left">
-        <TextBlock Text="Getting your list…" FontSize="16" Foreground="{StaticResource Text2Brush}" />
-        <ProgressBar IsIndeterminate="True" Height="3" Width="220" Margin="0,14,0,0" HorizontalAlignment="Left" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
-      </StackPanel>
+<ContentControl x:Name="LoadingPanel" IsHitTestVisible="False" />
 
       <StackPanel x:Name="ErrorPanel" Margin="24,12,24,0" HorizontalAlignment="Left" Visibility="Collapsed">
         <TextBlock x:Name="ErrorText" FontSize="15" TextWrapping="Wrap" Foreground="{StaticResource Text2Brush}" />

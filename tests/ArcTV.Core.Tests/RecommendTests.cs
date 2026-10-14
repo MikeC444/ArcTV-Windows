@@ -282,6 +282,22 @@ public class RecommendTests
     }
 
     [Fact]
+    public async Task WorkingIsTrueOnlyWhileAPlusAccountWaitsForItsFirstRow()
+    {
+        var current = Inputs(active: false);
+        var model = new PickedModel(() => current, ActionLoader(), new FakePickedStore());
+        model.Refresh();
+        Assert.False(model.Working); // no Plus: no row, no placeholders
+        current = Inputs(ready: false);
+        model.Refresh();
+        Assert.True(model.Working);
+        current = Inputs();
+        model.Refresh();
+        await WaitForRow(model);
+        Assert.False(model.Working);
+    }
+
+    [Fact]
     public async Task ATitleRatedAfterwardsDisappearsFromTheRowAtOnce()
     {
         var current = Inputs();

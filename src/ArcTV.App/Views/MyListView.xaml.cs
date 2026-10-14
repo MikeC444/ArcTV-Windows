@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using ArcTV.App.Controls;
 using ArcTV.Core.MyList;
 
 namespace ArcTV.App.Views;
@@ -48,7 +49,8 @@ public partial class MyListView : UserControl
     {
         var all = _model.Items;
         var failed = all is null && _model.Error is not null;
-        LoadingPanel.Visibility = all is null && !failed ? Visibility.Visible : Visibility.Collapsed;
+        if (all is null && !failed) LoadingPanel.Content ??= Skeleton.PosterGridPage(12); // grey posters until the list arrives
+        else LoadingPanel.Content = null;
         ErrorPanel.Visibility = failed ? Visibility.Visible : Visibility.Collapsed;
         ErrorText.Text = _model.Error ?? "";
         ListControls.Visibility = all is not null ? Visibility.Visible : Visibility.Collapsed;
