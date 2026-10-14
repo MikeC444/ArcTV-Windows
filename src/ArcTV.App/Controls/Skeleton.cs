@@ -11,15 +11,25 @@ namespace ArcTV.App.Controls;
 /// </summary>
 public class Skeleton : RoundedBorder
 {
-    private static readonly SolidColorBrush Pulse = new(Color.FromRgb(0x1C, 0x1C, 0x20));
-    private static readonly ColorAnimation Breathe = new(Color.FromRgb(0x1C, 0x1C, 0x20), Color.FromRgb(0x2A, 0x2A, 0x31), TimeSpan.FromMilliseconds(900))
-    {
-        AutoReverse = true,
-        RepeatBehavior = RepeatBehavior.Forever,
-        EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
-    };
+    // one brush per UI thread (a brush cannot be used from a second thread, and the screen tests each run on their own); the animation is frozen so any thread may share it
+    [ThreadStatic] private static SolidColorBrush? _pulse;
+    [ThreadStatic] private static int _onScreen;
 
-    private static int _onScreen;
+    private static readonly ColorAnimation Breathe = MakeBreathe();
+
+    private static ColorAnimation MakeBreathe()
+    {
+        var animation = new ColorAnimation(Color.FromRgb(0x1C, 0x1C, 0x20), Color.FromRgb(0x2A, 0x2A, 0x31), TimeSpan.FromMilliseconds(900))
+        {
+            AutoReverse = true,
+            RepeatBehavior = RepeatBehavior.Forever,
+            EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
+        };
+        animation.Freeze();
+        return animation;
+    }
+
+    private static SolidColorBrush Pulse => _pulse ??= new SolidColorBrush(Color.FromRgb(0x1C, 0x1C, 0x20));
 
     public Skeleton()
     {
