@@ -844,3 +844,15 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 **Issues discovered:** the first real run will be the test of the Inno step and of pushing the notes commit to `main` (needs the `API_BASE_URL` repository secret to exist or the baked-in address is empty). **Issues fixed:** none.
 
 **Follow-up (trial run).** `release.yml` has a `publish` option for a manual run (default off): the installer and zip are built and kept as downloads of the run (14 days), nothing is published and the notes are not filed. A version tag still publishes.
+
+## The video engine is now the LGPL build of mpv (owner: the licence question)
+
+**Status:** Script and workflow changed; the LGPL library itself was downloaded and inspected here (Linux), but `get-libmpv.ps1` was **never run** (no PowerShell here) and the player was not run with this build.
+
+**Context:** The app was using the standard libmpv build, which lists `gpl` among its features (seen in the owner's `mpv.log`): shipping it would bind the app to the GPL. zhongfly/mpv-winbuild publishes `mpv-dev-lgpl-x86_64-...` (configured `-Dgpl=false`, no `gpl` feature in its list; checked on the 2026-10-14 build).
+
+**Changes:** `scripts/get-libmpv.ps1` looks for that LGPL build first (zhongfly, then shinchiro), uses the standard build only when LGPL is not required and none is found; with `-RequireLgpl` it fails instead and also refuses a library whose feature list has `gpl`. `release.yml` passes `-RequireLgpl`. THIRD_PARTY_NOTICES.md says what is used and why.
+
+**Tests performed:** unpacked the LGPL package: its configuration line has `-Dgpl=false` and its feature list no `gpl`; the check's pattern matches a GPL feature line and not this library.
+
+**Issues discovered:** the LGPL build leaves out a few optional parts (rubberband pitch correction, DVD navigation, OpenAL). The licences of the libraries inside it were not checked one by one. A `libmpv-2.dll` already in `src/ArcTV.App/libmpv` is kept as it is: delete that folder's DLL to fetch the LGPL one. **Issues fixed:** the GPL build in releases.

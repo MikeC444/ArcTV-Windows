@@ -69,12 +69,13 @@ jobs:
             echo "Bug fixes and improvements." > "$RUNNER_TEMP/release_notes.md"
           fi
 
-      # The video player's engine is not in git: without it the published app could not play anything, so this step must succeed here.
+      # The video player's engine is not in git: without it the published app could not play anything, so this step must succeed here. A release must carry the LGPL build
+      # of it (-RequireLgpl: the step fails rather than ship a GPL one).
       - name: Get libmpv
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./scripts/get-libmpv.ps1
+        run: ./scripts/get-libmpv.ps1 -RequireLgpl
 
       - name: Build
         run: dotnet build ArcTV.sln -c Release
