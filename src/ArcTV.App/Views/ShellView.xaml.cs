@@ -445,14 +445,14 @@ public partial class ShellView : UserControl
     }
 
     /// <summary>
-    /// The source page for a target. It skips itself (and the player starts) when a source can be picked without asking: the next episode of a binge, the one this title was last
-    /// watched on, or (with Plus) the best one when smart source picking is on.
+    /// The source page for a target. It skips itself (and the player starts) only when a source can be picked without asking: the next episode of a binge, or (with Plus) the best one
+    /// when smart source picking is on. Playing something watched before shows the list, with the source last used marked.
     /// </summary>
     private SourcesView SourcesPage(PlayTarget target)
     {
         var store = new LastSourceStore(Path.Combine(AppPaths.DataFolder(), "last-sources.json"), _account.Scope!);
         var smart = _plus.Active && _local.SmartPicking;
-        var model = new SourcesModel(target, AccountAddonsAsync, _addonClient, items => AutoPick.Choose(target, items, store.Get(target.Title.Id, target.Season, target.Episode), smart));
+        var model = new SourcesModel(target, AccountAddonsAsync, _addonClient, items => AutoPick.Choose(target, items, smart));
         return new SourcesView(model, store, GoBack, OpenPlayer, LogoOfAsync, TorrentEngines.Shared);
     }
 

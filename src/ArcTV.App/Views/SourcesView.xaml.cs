@@ -139,7 +139,9 @@ public partial class SourcesView : UserControl
         SortButton.Content = $"Sort by: {_model.Sort.Label()}  \u25BE";
 
         SourceList.Children.Clear();
-        foreach (var item in arranged) SourceList.Children.Add(BuildRow(item, item.Id == _model.RecommendedId));
+        var target = _model.Target;
+        var lastUsed = _store?.Get(target.Title.Id, target.Season, target.Episode)?.Match(result.Items); // the source this was last watched on, if it is sure which one that was
+        foreach (var item in arranged) SourceList.Children.Add(BuildRow(item, item.Id == _model.RecommendedId, lastUsed is not null && item.Id == lastUsed.Id));
         ShowAllLink.Visibility = arranged.Count <= 1 && _model.Filter != SourceFilter.All ? Visibility.Visible : Visibility.Collapsed;
 
         StatusLines.Children.Clear();
@@ -163,7 +165,7 @@ public partial class SourcesView : UserControl
     private static TextBlock Line(string text, double size, Brush brush, FontWeight? weight = null) =>
         new() { Text = text, FontSize = size, Foreground = brush, FontWeight = weight ?? FontWeights.Normal, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Thickness(0, 2, 0, 0) };
 
-    private Button BuildRow(SourceItem item, bool recommended)
+    private Button BuildRow(SourceItem item, bool recommended, bool lastWatched = false)
     {
         var dim = (Brush)FindResource("Text2Brush");
         var faint = (Brush)FindResource("Text3Brush");
@@ -187,6 +189,8 @@ public partial class SourcesView : UserControl
         heading.Children.Add(new TextBlock { Text = item.Headline, FontSize = 14, FontWeight = FontWeights.Bold, Foreground = item.CanStream ? (Brush)FindResource("TextBrush") : faint, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 420 });
         if (recommended)
             heading.Children.Add(new Border { CornerRadius = new CornerRadius(9), Background = (Brush)FindResource("AccentBrush"), Padding = new Thickness(9, 1, 9, 1), Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, Child = new TextBlock { Text = "\u2605 Recommended", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = Brushes.Black } });
+        if (lastWatched)
+            heading.Children.Add(new Border { CornerRadius = new CornerRadius(9), BorderBrush = (Brush)FindResource("AccentBrush"), BorderThickness = new Thickness(1), Padding = new Thickness(9, 0, 9, 0), Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, Child = new TextBlock { Text = "Last watched", FontSize = 11, FontWeight = FontWeights.SemiBold, Foreground = (Brush)FindResource("AccentBrush") } });
         middle.Children.Add(heading);
         if (item.CodecText is { } codec) middle.Children.Add(Line(codec, 12, dim));
         var facts = new List<string>();

@@ -85,25 +85,18 @@ public class PlaybackTests
         var other = Direct("B", "Other 720p", 1);
         var torrent = Torrent("T", "Torrent 1080p", "abc", 2);
         IReadOnlyList<SourceItem> items = [best, other, torrent];
-        var last = new LastSource("B", "Other 720p");
-
-        // the next episode of a binge: the best that plays, whatever was used before
-        Assert.Same(best, AutoPick.Choose(new PlayTarget(show, 1, 2, AutoPick: true), items, last, false));
-        // otherwise the source last watched on
-        Assert.Same(other, AutoPick.Choose(new PlayTarget(show, 1, 2), items, last, false));
-        // nothing remembered and no smart picking: the person chooses
-        Assert.Null(AutoPick.Choose(new PlayTarget(show, 1, 2), items, null, false));
-        // smart picking: the best that plays
-        Assert.Same(best, AutoPick.Choose(new PlayTarget(show, 1, 2), items, null, true));
+        // the next episode of a binge: the best that plays
+        Assert.Same(best, AutoPick.Choose(new PlayTarget(show, 1, 2, AutoPick: true), items, false));
+        // playing something watched before still shows the list: nothing is picked from what was used last time
+        Assert.Null(AutoPick.Choose(new PlayTarget(show, 1, 2), items, false));
+        // smart picking (a setting the person turns on): the best that plays
+        Assert.Same(best, AutoPick.Choose(new PlayTarget(show, 1, 2), items, true));
         // asking for the list always gets it
-        Assert.Null(AutoPick.Choose(new PlayTarget(show, 1, 2, ChooseSource: true), items, last, true));
-        // a remembered torrent is found and picked too (a torrent can play now)
-        Assert.Same(torrent, AutoPick.Choose(new PlayTarget(show, 1, 2), items, new LastSource("T", "Torrent 1080p", "abc"), false));
-        Assert.Same(torrent, AutoPick.Choose(new PlayTarget(show, 1, 2), items, new LastSource("T", "Torrent 1080p", "abc"), true));
+        Assert.Null(AutoPick.Choose(new PlayTarget(show, 1, 2, ChooseSource: true), items, true));
         // a torrent is the best when it is all there is
-        Assert.Same(torrent, AutoPick.Choose(new PlayTarget(show, 1, 2, AutoPick: true), [torrent], null, true));
+        Assert.Same(torrent, AutoPick.Choose(new PlayTarget(show, 1, 2, AutoPick: true), [torrent], true));
         // nothing can play (no link and no torrent): show the list
-        Assert.Null(AutoPick.Choose(new PlayTarget(show, 1, 2, AutoPick: true), [Item("N", "nothing")], null, true));
+        Assert.Null(AutoPick.Choose(new PlayTarget(show, 1, 2, AutoPick: true), [Item("N", "nothing")], true));
     }
 
     [Fact]

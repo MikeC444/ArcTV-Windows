@@ -3,8 +3,8 @@ using System.Text.Json;
 namespace ArcTV.Core.Sources;
 
 /// <summary>
-/// What a title (or episode) was last watched on, kept on this PC only (not part of the synced account data), so "Play" and "Resume" can carry on with the same
-/// release instead of going back to the source list. It keeps what the source was (addon, release name, torrent hash) because an addon can hand out new links
+/// What a title (or episode) was last watched on, kept on this PC only (not part of the synced account data), so the source list can mark it ("Last watched"). It no longer
+/// starts by itself: Play always shows the list. It keeps what the source was (addon, release name, torrent hash) because an addon can hand out new links
 /// between two requests.
 /// </summary>
 public sealed record LastSource(string AddonName, string ReleaseTitle, string? InfoHash = null, string? Signature = null)

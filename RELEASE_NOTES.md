@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Play always shows the source list now, even for something you have watched before (it no longer jumps straight into the player). The source you used last time is marked "Last watched". The next episode of a show still starts by itself when an episode ends.
 - Torrents now play with libtorrent, the same engine as the Mac app, to find people and start faster. Settings > Player > Torrent engine switches back to the old one (MonoTorrent) if anything misbehaves, and the app uses it by itself if libtorrent can't load.
 - Downloads: every episode has its own Download arrow on its picture.
 - Downloads: each file now says if your debrid service already has it ready ("Cached on Real-Debrid") or still has to fetch it first, and shows HDR / Dolby Vision and a warning when a file is unusually small.
@@ -36,7 +37,6 @@ under its version automatically.
 - The source list no longer has a Copy link button.
 - Resizing the window while a video plays is smooth now: the controls step aside while you drag and come back when you stop. They also follow the window when you move it.
 - The episode line in the player shows the season and episode once, even for titles saved earlier with it twice.
-- Continue Watching now starts the same source you used last time, or shows the list when it cannot be sure which one that was, instead of starting a different one that might not play.
 - The top bar is bigger: a larger logo, bigger menu buttons and a bigger profile button.
 - A slow or unreachable server no longer closes the app.
 - The player's controls now sit at the very bottom of the picture on every screen, and clicking the Audio, Subtitles or Speed button again closes its list.
@@ -46,7 +46,6 @@ under its version automatically.
 - Resuming an episode no longer shows its number twice.
 - Profiles (Arc TV Plus): "Who's watching?" appears when you sign in, with pictures to choose from and a PIN for profiles that have one. Manage Profiles adds, edits and removes them, and "Switch profile" in the account menu comes back to it. Each profile keeps its own list, ratings, Continue Watching and settings, and a kids profile hides mature genres.
 - The app no longer starts over by itself when your sign-in is renewed in the background.
-- Play carries on with the source you used last time, without asking again. A new "Sources" button on a title lets you pick a different one.
 - Smart source picking (Arc TV Plus) starts the best source that can play, once every addon has answered.
 - The next episode starts by itself when one ends (if Auto Play Next Episode is on), and a Next episode button shows in the last minute.
 - Episodes show a tick when watched and a bar for how far you got. Click the tick to mark one watched, or use Mark season watched. Play starts the next episode you have not seen.
