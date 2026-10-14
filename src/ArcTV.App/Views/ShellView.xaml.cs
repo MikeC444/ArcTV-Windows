@@ -363,6 +363,7 @@ public partial class ShellView : UserControl
         var ease = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut };
         move.BeginAnimation(TranslateTransform.YProperty, new System.Windows.Media.Animation.DoubleAnimation(shown ? 0 : -Bar.ActualHeight, TimeSpan.FromMilliseconds(220)) { EasingFunction = ease });
         Bar.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(shown ? 1 : 0, TimeSpan.FromMilliseconds(220)));
+        PageChrome.Instance.BeginAnimation(PageChrome.InsetProperty, new System.Windows.Media.Animation.DoubleAnimation(shown ? PageChrome.BarHeight : PageChrome.HiddenGap, TimeSpan.FromMilliseconds(220)) { EasingFunction = ease }); // pages' headings follow the bar
     }
 
     // ---- the card menu ----

@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- On Movies, TV Shows, Search and My List, the page heading moves up into the space when the top bar slides away, instead of leaving a big empty black strip.
 - A title's page has fewer buttons: Play, Trailer, My List, a Download icon and a menu (the three dots) holding Mark as watched, Like and Not for me.
 - Grey placeholder shapes now show while Home, Movies, TV Shows and a title's page load, instead of a plain loading bar, so the page keeps its shape as things arrive.
 - The window's title bar is dark now, to match the app.

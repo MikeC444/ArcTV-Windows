@@ -10,7 +10,8 @@
     </Grid.RowDefinitions>
 
     <StackPanel Grid.Row="0">
-      <StackPanel Orientation="Horizontal" Margin="24,124,24,12">
+      <Border Height="{Binding Inset, Source={x:Static c:PageChrome.Instance}}" />
+      <StackPanel Orientation="Horizontal" Margin="24,0,24,12">
         <TextBlock x:Name="TitleText" FontSize="34" FontWeight="ExtraBold" VerticalAlignment="Center" Margin="0,0,18,0" />
         <Button x:Name="GenreButton" Style="{StaticResource ChoicePill}" Click="OnGenreButton" />
         <Popup x:Name="GenrePopup" PlacementTarget="{Binding ElementName=GenreButton}" Placement="Bottom" VerticalOffset="6" StaysOpen="False" AllowsTransparency="True" Closed="OnGenreClosed" />
