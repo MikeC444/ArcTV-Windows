@@ -8,7 +8,9 @@
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/file_storage.hpp>
 #include <libtorrent/magnet_uri.hpp>
+#include <libtorrent/posix_disk_io.hpp>
 #include <libtorrent/session.hpp>
+#include <libtorrent/session_params.hpp>
 #include <libtorrent/settings_pack.hpp>
 #include <libtorrent/torrent_flags.hpp>
 #include <libtorrent/torrent_handle.hpp>
@@ -32,7 +34,16 @@ struct ct_engine {
         return pack;
     }
 
-    ct_engine() : session(makePack()) {}
+    // Plain file reads and writes (posix_disk_io), not libtorrent's default memory-mapped files. Arc TV's video server reads the file with an ordinary file read as soon as libtorrent says a piece
+    // has arrived; on Windows a memory-mapped write is not always visible to a separate read yet (the file's valid length lags behind: the read gets zeros), and that showed up as a corrupt
+    // picture in the real-transfer test on CI. With ordinary writes, what libtorrent has written is what a read sees.
+    static lt::session_params makeParams() {
+        lt::session_params params(makePack());
+        params.disk_io_constructor = lt::posix_disk_io_constructor;
+        return params;
+    }
+
+    ct_engine() : session(makeParams()) {}
 };
 
 // libtorrent 2.1 (what vcpkg builds) calls the torrent's file list layout(); 2.0 (what apt has) calls it files()
