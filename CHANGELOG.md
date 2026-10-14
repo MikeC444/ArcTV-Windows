@@ -818,3 +818,15 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 **Issues discovered:** a title only counts as blocked when its catalogue entry lists genres. **Issues fixed:** the banner.
 
 **Follow-up (CI: the Episodes screen test, second failure).** It found the episode row by searching the row button's visual tree, which is empty for a popup that is never laid out in the test; it now reads the row's own content. Test only.
+
+## Download use reported to the web admin dashboard (owner asked)
+
+**Status:** Built and unit-tested here; not run against the real server.
+
+**Context:** The web app reports Download use to `POST /user/player-events/download` (server `downloadEvents` schema; the admin dashboard's Downloads page reads it). The Windows app sent nothing (nor any other player event; those are still not sent).
+
+**Changes:** `Core/Downloads/DownloadEvents` (`DownloadEvent` and `ReportDownloadAsync`). `DownloadPanelView` reports "opened" when the panel opens (Plus) or "popup" when it shows the Plus popup (no Plus), so every press of Download counts once, and "file" when a file is pressed, with its quality label and whether the debrid service had it cached. `ShellView.ReportDownload` sends it fire-and-forget; a failure is ignored. No title, content id, release name or address is sent.
+
+**Tests performed:** `DownloadEventTests` (the body for each kind). Not tried against the server.
+
+**Issues discovered:** the other web-app events (`/player-events/external`, `/player-events/playback`) are not sent from Windows. **Issues fixed:** none.

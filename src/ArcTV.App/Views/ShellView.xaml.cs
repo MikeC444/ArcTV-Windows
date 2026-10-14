@@ -490,7 +490,24 @@ public partial class ShellView : UserControl
             {
                 _settingsPane = "Arc TV Plus";
                 Open("Settings");
-            }, CloseCardMenu, _ => { }, OpenDownloadsPage);
+            }, CloseCardMenu, _ => { }, OpenDownloadsPage, ReportDownload);
+    }
+
+    /// <summary>Tells the web admin dashboard about Download use (fire and forget: a failure is never shown).</summary>
+    private async void ReportDownload(DownloadEvent entry)
+    {
+        try
+        {
+            await _account.AuthorizedAsync(async (client, token) =>
+            {
+                await client.ReportDownloadAsync(token, entry);
+                return true;
+            });
+        }
+        catch (Exception)
+        {
+            // the dashboard is not worth interrupting anyone for
+        }
     }
 
     /// <summary>The "How to set up your sources" guide, over the page that is open (Back puts that page back).</summary>

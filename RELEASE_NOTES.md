@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Download use is counted on the Arc TV web admin dashboard, as it is for the web app: pressing Download, and picking a file to save.
 - A genre you block no longer shows up on the Home banner: a title already picked for it is swapped for another.
 - The dark shade behind the top bar is gone: the pictures now show right up to the top.
 - A source from the list now starts the first time you pick it: if the picture still has not come after a few seconds it starts the player again by itself instead of sitting on Loading until you pick the source again.

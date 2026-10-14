@@ -43,11 +43,12 @@ public sealed class DownloadPanelView : Grid
     private readonly Dictionary<string, (Border Button, TextBlock Glyph, Border Row)> _rows = [];
     private readonly Dictionary<DownloadJob, ProgressBar> _bars = [];
     private PlayTarget _target;
+    private readonly Action<DownloadEvent>? _report;
     private CancellationTokenSource? _run;
 
-    public DownloadPanelView(PlayTarget target, Func<PlayTarget, CancellationToken, Task<SourceResult>> find, DownloadManager manager, LocalSettings local, bool plus, Action seePlus, Action close, Action<PlayTarget> saved, Action? seeAll = null)
+    public DownloadPanelView(PlayTarget target, Func<PlayTarget, CancellationToken, Task<SourceResult>> find, DownloadManager manager, LocalSettings local, bool plus, Action seePlus, Action close, Action<PlayTarget> saved, Action? seeAll = null, Action<DownloadEvent>? report = null)
     {
-        (_target, _find, _manager, _local, _plus, _seePlus, _close, _saved, _seeAll) = (target, find, manager, local, plus, seePlus, close, saved, seeAll);
+        (_target, _find, _manager, _local, _plus, _seePlus, _close, _saved, _seeAll, _report) = (target, find, manager, local, plus, seePlus, close, saved, seeAll, report);
 
         var dim = new Border { Background = new SolidColorBrush(Color.FromArgb(0xB3, 0, 0, 0)) };
         dim.MouseLeftButtonDown += (_, e) =>
@@ -103,6 +104,7 @@ public sealed class DownloadPanelView : Grid
             _manager.Jobs.CollectionChanged += OnJobsChanged;
             foreach (var job in _manager.Jobs) job.PropertyChanged += OnJobChanged;
             RebuildJobs();
+            Report(_plus ? DownloadEvent.Opened : DownloadEvent.Popup); // every press of Download is counted: the panel opened, or (without Plus) the Plus popup shown
             if (_plus) Reload();
             else ShowNotPlus();
         };
@@ -394,10 +396,14 @@ public sealed class DownloadPanelView : Grid
         Child = new TextBlock { Text = text, FontSize = 11, FontWeight = bold ? FontWeights.Bold : FontWeights.Medium, Foreground = colour ?? (bold ? Ui.Res("TextBrush") : Ui.Res("Text2Brush")) },
     };
 
+    private void Report(string kind, string? resolution = null, bool? cached = null) =>
+        _report?.Invoke(new DownloadEvent(kind, _target.Title.Type == "movie", _target.Season is not null, resolution, cached));
+
     /// <summary>Starts saving a file; the button turns into a tick at once, so a click always visibly does something.</summary>
     private void Save(SourceItem item)
     {
         if (item.PlayUrl is not { } url) return;
+        Report(DownloadEvent.File, item.Quality.Label(), DownloadChoices.Debrid(item)?.Cached);
         _manager.Start(url, DownloadChoices.FileName(item.Headline, url));
         _started.Add(item.Id);
         Mark(item.Id, true);
