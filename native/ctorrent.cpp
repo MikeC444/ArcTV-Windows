@@ -14,6 +14,7 @@
 #include <libtorrent/torrent_handle.hpp>
 #include <libtorrent/torrent_info.hpp>
 #include <libtorrent/torrent_status.hpp>
+#include <libtorrent/version.hpp>
 #include <libtorrent/session_params.hpp>
 
 struct ct_engine {
@@ -33,6 +34,15 @@ struct ct_engine {
 
     ct_engine() : session(makePack()) {}
 };
+
+// libtorrent 2.1 (what vcpkg builds) calls the torrent's file list layout(); 2.0 (what apt has) calls it files()
+static const lt::file_storage &files_of(const lt::torrent_info &info) {
+#if LIBTORRENT_VERSION_NUM >= 20100
+    return info.layout();
+#else
+    return info.files();
+#endif
+}
 
 static std::shared_ptr<const lt::torrent_info> info_of(ct_engine *e) {
     if (!e->handle.is_valid()) return nullptr;
@@ -100,7 +110,7 @@ CT_API void ct_get_status(ct_engine *engine, ct_status *out) {
         out->progress = status.progress;
         out->download_rate = status.download_payload_rate;
         auto info = info_of(engine);
-        out->file_count = info ? info->files().num_files() : 0;
+        out->file_count = info ? files_of(*info).num_files() : 0;
         out->num_connections = status.num_connections;
         out->list_peers = status.list_peers;
         try {
@@ -116,14 +126,14 @@ CT_API void ct_get_status(ct_engine *engine, ct_status *out) {
 CT_API int ct_file_info(ct_engine *engine, int index, char *name, int name_len, long long *size) {
     try {
         auto info = info_of(engine);
-        if (!info || index < 0 || index >= info->files().num_files()) return -1;
+        if (!info || index < 0 || index >= files_of(*info).num_files()) return -1;
         lt::file_index_t file{index};
-        std::string path = info->files().file_path(file);
+        std::string path = files_of(*info).file_path(file);
         if (name && name_len > 0) {
             std::strncpy(name, path.c_str(), static_cast<size_t>(name_len) - 1);
             name[name_len - 1] = 0;
         }
-        if (size) *size = info->files().file_size(file);
+        if (size) *size = files_of(*info).file_size(file);
         return 0;
     } catch (...) {
         return -2;
@@ -133,8 +143,8 @@ CT_API int ct_file_info(ct_engine *engine, int index, char *name, int name_len, 
 CT_API int ct_file_path(ct_engine *engine, int index, char *path, int path_len) {
     try {
         auto info = info_of(engine);
-        if (!info || index < 0 || index >= info->files().num_files() || !path || path_len <= 0) return -1;
-        std::string full = engine->save_path + "/" + info->files().file_path(lt::file_index_t{index});
+        if (!info || index < 0 || index >= files_of(*info).num_files() || !path || path_len <= 0) return -1;
+        std::string full = engine->save_path + "/" + files_of(*info).file_path(lt::file_index_t{index});
         std::strncpy(path, full.c_str(), static_cast<size_t>(path_len) - 1);
         path[path_len - 1] = 0;
         return 0;
@@ -146,8 +156,8 @@ CT_API int ct_file_path(ct_engine *engine, int index, char *path, int path_len) 
 CT_API int ct_select_file(ct_engine *engine, int index) {
     try {
         auto info = info_of(engine);
-        if (!info || index < 0 || index >= info->files().num_files()) return -1;
-        for (int i = 0; i < info->files().num_files(); i++) {
+        if (!info || index < 0 || index >= files_of(*info).num_files()) return -1;
+        for (int i = 0; i < files_of(*info).num_files(); i++) {
             engine->handle.file_priority(lt::file_index_t{i}, i == index ? lt::default_priority : lt::dont_download);
         }
         return 0;
@@ -159,9 +169,9 @@ CT_API int ct_select_file(ct_engine *engine, int index) {
 CT_API int ct_have_range(ct_engine *engine, int index, long long offset, long long length) {
     try {
         auto info = info_of(engine);
-        if (!info || index < 0 || index >= info->files().num_files() || length <= 0) return 0;
+        if (!info || index < 0 || index >= files_of(*info).num_files() || length <= 0) return 0;
         lt::file_index_t file{index};
-        long long size = info->files().file_size(file);
+        long long size = files_of(*info).file_size(file);
         if (offset < 0 || offset >= size) return 0;
         long long last = std::min(offset + length, size) - 1;
         int first_piece = static_cast<int>(info->map_file(file, offset, 1).piece);
@@ -178,9 +188,9 @@ CT_API int ct_have_range(ct_engine *engine, int index, long long offset, long lo
 CT_API void ct_stream_from(ct_engine *engine, int index, long long offset, int pieces) {
     try {
         auto info = info_of(engine);
-        if (!info || index < 0 || index >= info->files().num_files()) return;
+        if (!info || index < 0 || index >= files_of(*info).num_files()) return;
         lt::file_index_t file{index};
-        long long size = info->files().file_size(file);
+        long long size = files_of(*info).file_size(file);
         if (offset < 0 || offset >= size) return;
         int first_piece = static_cast<int>(info->map_file(file, offset, 1).piece);
         int last_piece = static_cast<int>(info->map_file(file, size - 1, 1).piece);

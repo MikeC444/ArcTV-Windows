@@ -23,12 +23,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Keep built packages between runs
-        uses: actions/cache@v4
+      - name: Restore the built packages
+        id: packages
+        uses: actions/cache/restore@v4
         with:
           path: ${{ github.workspace }}\vcpkg-cache
           key: vcpkg-libtorrent-x64-windows-v1
-          restore-keys: vcpkg-libtorrent-x64-windows-
 
       - name: Install libtorrent (vcpkg)
         shell: pwsh
@@ -36,6 +36,14 @@ jobs:
           New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
           & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install libtorrent:x64-windows --clean-after-build
           if ($LASTEXITCODE -ne 0) { throw "vcpkg could not install libtorrent" }
+
+      # saved right after the slow step, whatever happens later: a failure further down must not throw away 20 minutes of libtorrent and Boost
+      - name: Keep the built packages for next time
+        if: always() && steps.packages.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ github.workspace }}\vcpkg-cache
+          key: vcpkg-libtorrent-x64-windows-v1
 
       - name: Build ctorrent
         shell: pwsh

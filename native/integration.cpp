@@ -17,6 +17,7 @@
 #include <libtorrent/torrent_info.hpp>
 #include <libtorrent/torrent_status.hpp>
 #include <libtorrent/hex.hpp>
+#include "testsupport.hpp"
 #include <filesystem>
 
 // End to end on one machine, no internet: a second libtorrent session seeds a 12 MB file on the loopback address; ctorrent is given a magnet link that names that seeder as a peer.
@@ -44,17 +45,9 @@ int main() {
     { std::ofstream(root / "seed" / "Movie" / "film.mkv", std::ios::binary).write(data.data(), static_cast<std::streamsize>(data.size())); }
     { std::ofstream(root / "seed" / "Movie" / "readme.txt") << "hello"; }
 
-    lt::file_storage storage;
-    lt::add_files(storage, (root / "seed" / "Movie").string());
-    lt::create_torrent creator(storage, 256 * 1024);
-    lt::error_code ec;
-    lt::set_piece_hashes(creator, (root / "seed").string(), ec);
-    if (ec) { std::printf("hashing failed: %s\n", ec.message().c_str()); return 1; }
-    lt::entry entry = creator.generate();
-    std::vector<char> buffer;
-    lt::bencode(std::back_inserter(buffer), entry);
-    auto info = std::make_shared<lt::torrent_info>(buffer.data(), static_cast<int>(buffer.size()), ec);
-    if (ec) { std::printf("torrent_info failed: %s\n", ec.message().c_str()); return 1; }
+    lt::add_torrent_params seed_params;
+    try { seed_params = make_test_torrent(root / "seed" / "Movie", 256 * 1024); } catch (const std::exception &e) { std::printf("%s\n", e.what()); return 1; }
+    auto info = seed_params.ti;
 
     lt::settings_pack pack;
     pack.set_str(lt::settings_pack::listen_interfaces, "127.0.0.1:0");
@@ -64,8 +57,6 @@ int main() {
     pack.set_bool(lt::settings_pack::enable_natpmp, false);
     pack.set_int(lt::settings_pack::alert_mask, 0);
     lt::session seeder(pack);
-    lt::add_torrent_params seed_params;
-    seed_params.ti = info;
     seed_params.save_path = (root / "seed").string();
     seed_params.flags |= lt::torrent_flags::seed_mode;
     seeder.add_torrent(seed_params);

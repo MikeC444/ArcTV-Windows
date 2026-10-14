@@ -13,6 +13,7 @@
 #include <libtorrent/session.hpp>
 #include <libtorrent/settings_pack.hpp>
 #include <libtorrent/torrent_info.hpp>
+#include "testsupport.hpp"
 
 // A test helper: seeds one made-up 12 MB video on the loopback address, prints "MAGNET <link>" and "FILE <path of the original>" and keeps seeding until its input ends. The C# tests
 // start it, give the link to LibTorrentSession and compare what arrives with the original.
@@ -29,15 +30,9 @@ int main(int argc, char **argv) {
     { std::ofstream(original, std::ios::binary).write(data.data(), static_cast<std::streamsize>(data.size())); }
     { std::ofstream(root / "seed" / "Show.S01E02.1080p" / "info.nfo") << "nfo"; }
 
-    lt::file_storage storage;
-    lt::add_files(storage, (root / "seed" / "Show.S01E02.1080p").string());
-    lt::create_torrent creator(storage, 256 * 1024);
-    lt::error_code ec;
-    lt::set_piece_hashes(creator, (root / "seed").string(), ec);
-    std::vector<char> buffer;
-    lt::bencode(std::back_inserter(buffer), creator.generate());
-    auto info = std::make_shared<lt::torrent_info>(buffer.data(), static_cast<int>(buffer.size()), ec);
-    if (ec) return 1;
+    lt::add_torrent_params params;
+    try { params = make_test_torrent(root / "seed" / "Show.S01E02.1080p", 256 * 1024); } catch (const std::exception &) { return 1; }
+    auto info = params.ti;
 
     lt::settings_pack pack;
     pack.set_str(lt::settings_pack::listen_interfaces, "127.0.0.1:0");
@@ -47,8 +42,6 @@ int main(int argc, char **argv) {
     pack.set_bool(lt::settings_pack::enable_natpmp, false);
     pack.set_int(lt::settings_pack::alert_mask, 0);
     lt::session session(pack);
-    lt::add_torrent_params params;
-    params.ti = info;
     params.save_path = (root / "seed").string();
     params.flags |= lt::torrent_flags::seed_mode;
     session.add_torrent(params);
