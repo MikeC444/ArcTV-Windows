@@ -2,7 +2,7 @@ name: Build and test (Arc TV Windows)
 
 # Runs on every push to any branch and on pull requests: compiles the app, runs the tests, and keeps the app as a downloadable zip so a branch can be
 # tried without cutting a release (unzip it and run ArcTV.exe: it carries everything it needs, no .NET install). Nothing ships to users from here:
-# see release.yml (added with the first release).
+# see release.yml (a version tag or a manual run only).
 on:
   push:
     branches: ["**"]

@@ -1,0 +1,148 @@
+name: Build and publish release (Arc TV Windows)
+
+# Fires only on a pushed version tag (v0.1.0, ...), or manually via workflow_dispatch -- never on an ordinary push, so nothing ships until a release is
+# cut on purpose. The installer and zip are unsigned: Windows shows an "unknown publisher" warning (see README / installer/ArcTV.iss).
+# The app's own update check reads this repository's latest release and offers its .exe (the installer), or the zip if there is none.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 0.1.0) -- only used for a manual run; a tag push derives this from the tag itself"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            RAW="${{ github.ref_name }}"
+          else
+            RAW="${{ github.event.inputs.version }}"
+          fi
+          NAME="${RAW#v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$NAME"
+          if [ -z "$MAJOR" ] || [ -z "$MINOR" ] || [ -z "$PATCH" ]; then
+            echo "Version '$NAME' isn't in major.minor.patch form" >&2
+            exit 1
+          fi
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "tag=v$NAME" >> "$GITHUB_OUTPUT"
+
+      # RELEASE_NOTES.md becomes this release's notes (and what the app's update pop-up shows): a "## <version>" section, else "## Unreleased", else a plain line.
+      - name: Extract release notes for this version
+        shell: bash
+        run: |
+          VER="${{ steps.version.outputs.name }}"
+          section() {
+            awk -v head="## $1" '
+              $0 == head { found=1; next }
+              /^## / { if (found) exit }
+              found { print }
+            ' RELEASE_NOTES.md
+          }
+          has_text() { grep -q '[^[:space:]]' "$1"; }
+          section "$VER" > "$RUNNER_TEMP/release_notes.md"
+          if ! has_text "$RUNNER_TEMP/release_notes.md"; then
+            section "Unreleased" > "$RUNNER_TEMP/release_notes.md"
+          fi
+          if ! has_text "$RUNNER_TEMP/release_notes.md"; then
+            echo "Bug fixes and improvements." > "$RUNNER_TEMP/release_notes.md"
+          fi
+
+      # The video player's engine is not in git: without it the published app could not play anything, so this step must succeed here.
+      - name: Get libmpv
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/get-libmpv.ps1
+
+      - name: Build
+        run: dotnet build ArcTV.sln -c Release
+
+      - name: Test
+        run: dotnet test ArcTV.sln -c Release --no-build
+
+      - name: Publish the app (self-contained, so no .NET install is needed on the PC)
+        shell: bash
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+        run: >
+          dotnet publish src/ArcTV.App/ArcTV.App.csproj -c Release -r win-x64 --self-contained true
+          -p:Version=${{ steps.version.outputs.name }} -p:ArcTVApiBaseUrl="$API_BASE_URL" -o publish
+
+      - name: Check the player engine is in the publish
+        shell: pwsh
+        run: |
+          if (-not (Test-Path publish/libmpv-2.dll)) { throw "libmpv-2.dll is missing from the publish: the released app could not play video." }
+          if (-not (Test-Path publish/ArcTV.exe)) { throw "ArcTV.exe is missing from the publish." }
+
+      - name: Zip
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Compress-Archive -Path publish/* -DestinationPath "out/ArcTV-win-x64-${{ steps.version.outputs.name }}.zip"
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup --no-progress -y; $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          & $iscc "/DAppVersion=${{ steps.version.outputs.name }}" "/DSourceDir=$((Resolve-Path publish).Path)" installer/ArcTV.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
+          Copy-Item "installer-out/ArcTV-Setup-${{ steps.version.outputs.name }}.exe" out/
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          body_path: ${{ runner.temp }}/release_notes.md
+          files: |
+            out/ArcTV-Setup-${{ steps.version.outputs.name }}.exe
+            out/ArcTV-win-x64-${{ steps.version.outputs.name }}.zip
+
+      # The notes that shipped are filed under this version in RELEASE_NOTES.md and a fresh, empty "## Unreleased" is left above, but only if Unreleased
+      # on main is still exactly what shipped (so nothing added meanwhile is lost).
+      - name: File the shipped notes under this version
+        shell: bash
+        run: |
+          set -e
+          VER="${{ steps.version.outputs.name }}"
+          git fetch origin main
+          git checkout -B main origin/main
+          awk '
+            $0 == "## Unreleased" { found=1; next }
+            /^## / { if (found) exit }
+            found { print }
+          ' RELEASE_NOTES.md > "$RUNNER_TEMP/main_unreleased.md"
+          if ! diff -q <(sed -e 's/[[:space:]]*$//' "$RUNNER_TEMP/main_unreleased.md") <(sed -e 's/[[:space:]]*$//' "$RUNNER_TEMP/release_notes.md") >/dev/null; then
+            echo "Unreleased on main changed since this release was built; leaving RELEASE_NOTES.md alone"
+            exit 0
+          fi
+          awk -v ver="$VER" '
+            $0 == "## Unreleased" && !done { print; print ""; print "## " ver; done=1; skip=1; next }
+            skip && /^## / { skip=0 }
+            { print }
+          ' RELEASE_NOTES.md > "$RUNNER_TEMP/notes_new.md"
+          cp "$RUNNER_TEMP/notes_new.md" RELEASE_NOTES.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add RELEASE_NOTES.md
+          git commit -m "Release notes: the notes under Unreleased shipped as $VER" || exit 0
+          git push origin main

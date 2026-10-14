@@ -830,3 +830,15 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 **Tests performed:** `DownloadEventTests` (the body for each kind). Not tried against the server.
 
 **Issues discovered:** the other web-app events (`/player-events/external`, `/player-events/playback`) are not sent from Windows. **Issues fixed:** none.
+
+## Installer and release workflow (owner asked; no release cut)
+
+**Status:** Written and the workflow file checked for valid YAML; **never run**. No release has been published and no tag pushed. The installer script was not compiled here (no Inno Setup in the sandbox).
+
+**Context:** The app's update check reads this repository's latest release (and offers its `.exe`, else its zip), but nothing could produce one.
+
+**Changes:** `.github/workflows/release.yml` (runs only on a `v*.*.*` tag or a manual run; mirrors the Mac app's release workflow): resolves the version, takes the release notes from RELEASE_NOTES.md (version section, else Unreleased), gets libmpv (must succeed), builds, tests, publishes self-contained win-x64 (version stamped, `API_BASE_URL` secret baked in), checks `libmpv-2.dll` and `ArcTV.exe` are in the publish, makes the zip, builds the installer with Inno Setup (`installer/ArcTV.iss`: per user, no admin rights, Start menu shortcut, optional desktop shortcut, unsigned), publishes both to a GitHub Release, then files the shipped notes under the version in RELEASE_NOTES.md.
+
+**Tests performed:** YAML parse; the notes-extraction awk run on this repo's RELEASE_NOTES.md.
+
+**Issues discovered:** the first real run will be the test of the Inno step and of pushing the notes commit to `main` (needs the `API_BASE_URL` repository secret to exist or the baked-in address is empty). **Issues fixed:** none.
