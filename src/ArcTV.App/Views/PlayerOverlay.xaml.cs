@@ -33,13 +33,21 @@ public partial class PlayerOverlay : Window
     private DateTime _menuClosedAt = DateTime.MinValue;
     private double _volumeBeforeMute = 100;
     private readonly EpisodeInfo? _next;
+    private readonly Action<EpisodeInfo>? _playEpisode;
+    private readonly MetaDetail _title;
+    private readonly PlayTarget _target;
+    private int? _episodeSeason;
     private bool? _flashedPaused;
     private readonly Action? _chooseSource;
     private readonly Action? _playNext;
 
-    public PlayerOverlay(PlayerModel model, PlayingItem item, Action back, Action toggleFullscreen, Func<bool> isFullscreen, Func<Key, bool> handleKey, EpisodeInfo? next = null, Action? playNext = null, Func<MetaDetail, Task<string?>>? logoLookup = null, Action? chooseSource = null)
+    public PlayerOverlay(PlayerModel model, PlayingItem item, Action back, Action toggleFullscreen, Func<bool> isFullscreen, Func<Key, bool> handleKey, EpisodeInfo? next = null, Action? playNext = null, Func<MetaDetail, Task<string?>>? logoLookup = null, Action? chooseSource = null, Action<EpisodeInfo>? playEpisode = null)
     {
         InitializeComponent();
+        _playEpisode = playEpisode;
+        _title = item.Target.Title;
+        _target = item.Target;
+        EpisodesButton.Visibility = playEpisode is not null && _title.SeasonNumbers.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         _chooseSource = chooseSource;
         SourcesButton.Visibility = chooseSource is null ? Visibility.Collapsed : Visibility.Visible;
         AnotherSourceButton.Visibility = chooseSource is null ? Visibility.Collapsed : Visibility.Visible;
@@ -242,6 +250,61 @@ public partial class PlayerOverlay : Window
         _model.SelectAddonSubtitle(file);
         await Task.Delay(1500); // mpv fetches the file from the web: the tick in the list follows once it has loaded
         _model.RefreshTracks();
+    }
+
+    /// <summary>
+    /// The Episodes list: the seasons as numbers along the top and the chosen season's episodes under them. Picking an episode gives way to that episode's source page (the video stops, as it
+    /// does for the next episode), where the source is chosen.
+    /// </summary>
+    private void OnEpisodes(object sender, RoutedEventArgs e)
+    {
+        if (_menuAnchor == EpisodesButton && (MenuPopup.IsOpen || DateTime.UtcNow - _menuClosedAt < TimeSpan.FromMilliseconds(250)))
+        {
+            MenuPopup.IsOpen = false;
+            _menuAnchor = null;
+            return;
+        }
+
+        _episodeSeason ??= _target.Season is { } playing && _title.SeasonNumbers.Contains(playing) ? playing : _title.SeasonNumbers.FirstOrDefault(1);
+        FillEpisodes();
+        MenuPopup.PlacementTarget = EpisodesButton;
+        _menuAnchor = EpisodesButton;
+        _menuOpen = true;
+        MenuPopup.IsOpen = true;
+    }
+
+    private void FillEpisodes()
+    {
+        MenuRows.Children.Clear();
+        var seasons = new WrapPanel { Margin = new Thickness(6, 4, 6, 8), MaxWidth = 420 };
+        foreach (var number in _title.SeasonNumbers)
+        {
+            var circle = new Button { Content = number.ToString(), Style = (Style)FindResource("SeasonCircle"), Width = 38, Height = 38, FontSize = 14, Margin = new Thickness(0, 0, 8, 6), Focusable = false, Tag = number == _episodeSeason ? "selected" : "", ToolTip = $"Season {number}" };
+            var chosen = number;
+            circle.Click += (_, _) =>
+            {
+                _episodeSeason = chosen;
+                FillEpisodes(); // the popup stays open on the other season
+            };
+            seasons.Children.Add(circle);
+        }
+
+        MenuRows.Children.Add(seasons);
+        foreach (var episode in _title.Seasons.TryGetValue(_episodeSeason ?? 1, out var list) ? list : [])
+        {
+            var playing = episode.Season == _target.Season && episode.Episode == _target.Episode;
+            var line = new Grid();
+            line.Children.Add(new TextBlock { Text = $"{episode.Episode ?? 0}. {episode.DisplayTitle}", FontSize = 14, FontWeight = playing ? FontWeights.Bold : FontWeights.Normal, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 330, Margin = new Thickness(0, 0, 28, 0) });
+            if (playing) line.Children.Add(new TextBlock { Text = "✓", FontWeight = FontWeights.Bold, Foreground = (Brush)FindResource("AccentBrush"), HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center });
+            var button = new Button { Style = (Style)FindResource("SuggestionRow"), Content = line, MinWidth = 340, Focusable = false };
+            var picked = episode;
+            button.Click += (_, _) =>
+            {
+                MenuPopup.IsOpen = false;
+                if (!playing) _playEpisode?.Invoke(picked);
+            };
+            MenuRows.Children.Add(button);
+        }
     }
 
     private void OnSpeed(object sender, RoutedEventArgs e) =>

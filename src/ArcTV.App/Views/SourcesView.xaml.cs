@@ -18,6 +18,8 @@ public partial class SourcesView : UserControl
 {
     private readonly SourcesModel _model;
     private readonly LastSourceStore? _store;
+    private readonly Action? _openGuide;
+    private readonly Action? _openAddons;
     private readonly Action _back;
     private readonly Action<PlayingItem>? _play;
     private CancellationTokenSource? _run;
@@ -29,8 +31,10 @@ public partial class SourcesView : UserControl
     /// <summary>True when a source was picked without asking, so this page was only a way through to the player.</summary>
     public bool AutoChosen => _model.AutoChosen is not null;
 
-    public SourcesView(SourcesModel model, LastSourceStore? store, Action back, Action<PlayingItem>? play = null, Func<ArcTV.Core.Details.MetaDetail, Task<string?>>? logoLookup = null, ITorrentStarter? torrents = null)
+    public SourcesView(SourcesModel model, LastSourceStore? store, Action back, Action<PlayingItem>? play = null, Func<ArcTV.Core.Details.MetaDetail, Task<string?>>? logoLookup = null, ITorrentStarter? torrents = null, Action? openGuide = null, Action? openAddons = null)
     {
+        _openGuide = openGuide;
+        _openAddons = openAddons;
         _torrents = torrents;
         InitializeComponent();
         _model = model;
@@ -70,6 +74,10 @@ public partial class SourcesView : UserControl
         var run = _run = new CancellationTokenSource();
         await _model.LoadAsync(run.Token);
     }
+
+    private void OnGuide(object sender, RoutedEventArgs e) => _openGuide?.Invoke();
+
+    private void OnManageAddons(object sender, RoutedEventArgs e) => _openAddons?.Invoke();
 
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
 
@@ -127,6 +135,8 @@ public partial class SourcesView : UserControl
         EmptyPanel.Visibility = !loading && !any ? Visibility.Visible : Visibility.Collapsed;
         EmptyText.Text = _model.EmptyMessage;
         RetryButton.Visibility = result.Failures.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        AddonsButton.Visibility = _openAddons is not null ? Visibility.Visible : Visibility.Collapsed;
+        GuideHeading.Visibility = GuideButton.Visibility = _openGuide is not null ? Visibility.Visible : Visibility.Collapsed;
 
         FilterPills.Children.Clear();
         foreach (var option in SourceListing.Filters)

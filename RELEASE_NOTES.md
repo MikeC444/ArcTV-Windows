@@ -5,6 +5,10 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- No sources found? A step-by-step guide now walks you through setting them up (a debrid service, then Torrentio, then Arc TV), opened from that page.
+- The player has an Episodes list for shows: pick another season and episode without going back to the title.
+- When a newer version of Arc TV is out, a card tells you what is new, with Download, Later and Skip this version.
+- New Plus members get a short welcome card showing what Plus gives them.
 - Subtitles from your addons are here: the player's Subtitles menu now lists the subtitle files your addons offer (OpenSubtitles, for example), your language first. If you have subtitles switched on in Settings and the video has none of its own, one in your language is shown for you.
 - Play always shows the source list now, even for something you have watched before (it no longer jumps straight into the player). The source you used last time is marked "Last watched". The next episode of a show still starts by itself when an episode ends.
 - Torrents now play with libtorrent, the same engine as the Mac app, to find people and start faster. Settings > Player > Torrent engine switches back to the old one (MonoTorrent) if anything misbehaves, and the app uses it by itself if libtorrent can't load.

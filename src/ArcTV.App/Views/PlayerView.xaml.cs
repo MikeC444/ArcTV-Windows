@@ -95,7 +95,7 @@ public partial class PlayerView : UserControl
         };
         engine.Failed += model.OnFailed;
 
-        _overlay = new PlayerOverlay(model, _item, _back, ToggleFullscreen, () => IsFullscreen, HandleKey, NextEpisode(), _playNext is null ? null : (Action)PlayNext, _logoLookup, _chooseSource is null ? null : (Action)ChooseAnotherSource) { Owner = _window };
+        _overlay = new PlayerOverlay(model, _item, _back, ToggleFullscreen, () => IsFullscreen, HandleKey, NextEpisode(), _playNext is null ? null : (Action)PlayNext, _logoLookup, _chooseSource is null ? null : (Action)ChooseAnotherSource, _playNext is null ? null : PlayEpisode) { Owner = _window };
         _overlay.Show();
         PlaceOverlay();
         if (_window is not null)
@@ -219,6 +219,15 @@ public partial class PlayerView : UserControl
         _leaving = true;
         var title = _item.Target.Title;
         _playNext?.Invoke(new PlayTarget(title, next.Season, next.Episode, $"S{next.Season ?? 0} E{next.Episode ?? 0} {next.DisplayTitle}", AutoPick: true));
+    }
+
+    /// <summary>Another episode of the show, picked from the Episodes list: this player gives way to that episode's source page.</summary>
+    private void PlayEpisode(EpisodeInfo episode)
+    {
+        if (_leaving) return;
+        _leaving = true;
+        ReportProgress(); // where this one was left is not lost
+        _playNext?.Invoke(new PlayTarget(_item.Target.Title, episode.Season, episode.Episode, $"S{episode.Season ?? 0} E{episode.Episode ?? 0} {episode.DisplayTitle}"));
     }
 
     private void ReportProgress()

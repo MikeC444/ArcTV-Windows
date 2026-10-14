@@ -203,4 +203,38 @@ public class SettingsTests
             File.Delete(path);
         }
     }
+
+    [Fact]
+    public void OncePopupsAndASkippedUpdateAreRememberedOnThisPc()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "arctv-popups-" + Guid.NewGuid().ToString("N") + ".json");
+        var settings = new ArcTV.Core.Storage.LocalSettings(path);
+        Assert.Null(settings.PopupSeen("plus-welcome-u1"));
+        Assert.Null(settings.SkippedUpdate);
+        settings.MarkPopupSeen("plus-welcome-u1", "id-1");
+        settings.MarkPopupSeen("plus-welcome-u2", "id-2");
+        settings.SkippedUpdate = "0.2.0";
+        var again = new ArcTV.Core.Storage.LocalSettings(path);
+        Assert.Equal("id-1", again.PopupSeen("plus-welcome-u1"));
+        Assert.Equal("id-2", again.PopupSeen("plus-welcome-u2")); // each account has its own
+        Assert.Equal("0.2.0", again.SkippedUpdate);
+        again.ServerUrl = "https://x.test"; // another setting does not lose them
+        Assert.Equal("id-1", new ArcTV.Core.Storage.LocalSettings(path).PopupSeen("plus-welcome-u1"));
+        File.Delete(path);
+    }
+
+    [Fact]
+    public void TheWelcomeShowsOnceUntilItsContentChangesAndAnUpdateIsOfferedUnlessSkipped()
+    {
+        Assert.True(ArcTV.Core.Plus.PlusPopups.WelcomeDue(null));
+        Assert.True(ArcTV.Core.Plus.PlusPopups.WelcomeDue("an-older-welcome"));
+        Assert.False(ArcTV.Core.Plus.PlusPopups.WelcomeDue(ArcTV.Core.Plus.PlusPopups.WelcomeId));
+        Assert.NotEqual(ArcTV.Core.Plus.PlusPopups.WelcomeKey("a"), ArcTV.Core.Plus.PlusPopups.WelcomeKey("b"));
+
+        var release = new ArcTV.Core.ReleaseInfo("0.3.0", "Notes", "https://page", "https://download");
+        Assert.True(ArcTV.Core.UpdateCheck.Due(new ArcTV.Core.UpdateResult(true, "0.3.0", release), null));
+        Assert.True(ArcTV.Core.UpdateCheck.Due(new ArcTV.Core.UpdateResult(true, "0.3.0", release), "0.2.0")); // an older skip does not hide a newer version
+        Assert.False(ArcTV.Core.UpdateCheck.Due(new ArcTV.Core.UpdateResult(true, "0.3.0", release), "0.3.0"));
+        Assert.False(ArcTV.Core.UpdateCheck.Due(new ArcTV.Core.UpdateResult(false, "0.1.0", null), null));
+    }
 }

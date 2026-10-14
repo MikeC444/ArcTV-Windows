@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using ArcTV.App.Controls;
+using ArcTV.Core;
 using ArcTV.Core.Account;
 using ArcTV.Core.Addons;
 using ArcTV.Core.Player;
@@ -70,6 +71,7 @@ public partial class ShellView : UserControl
         _user = user;
         var scope = account.Scope ?? user.Id; // what this PC's local copies are filed under: the account, and the profile when it is not the account's own
         _home = new HomeModel(AccountAddonsAsync, scope, cache: new HomeCache(AppPaths.DataFolder())); // the last rows show at once while the fresh ones load
+        _kids = profile is { IsKids: true };
         _settingsModel = new SettingsModel(new AccountSettingsStore(account)) { AlsoBlocked = profile is { IsKids: true } ? Profile.KidsBlockedGenres : [] };
         _settingsModel.Changed += ApplySettings;
         _plus = plus;
@@ -135,11 +137,80 @@ public partial class ShellView : UserControl
             await settings;
             await plus;
             _picked.Refresh();
+            if (ShowOffers) await CheckForOffersAsync(); // a newer version of the app, and the Plus welcome, once Home is up
         };
         Unloaded += (_, _) =>
         {
             if (PresentationSource.FromVisual(this) is HwndSource source) source.RemoveHook(OnWindowMessage);
         };
+    }
+
+    // ---- popups that offer something: a newer version, and the Plus welcome (as on the Mac) ----
+
+    /// <summary>False in the tests, so a shell that opens does not go and ask GitHub.</summary>
+    public static bool ShowOffers { get; set; } = true;
+
+    private readonly bool _kids;
+    private ReleaseInfo? _pendingUpdate;
+    private bool _checkedForUpdate;
+    private bool _welcomeShown;
+
+    /// <summary>Asks GitHub once per launch whether a newer version is out (quiet when offline, or when that version was skipped), then shows whatever is due.</summary>
+    private async Task CheckForOffersAsync()
+    {
+        if (!_checkedForUpdate)
+        {
+            _checkedForUpdate = true;
+            try
+            {
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+                var result = await UpdateCheck.CheckAsync(AppInfo.Version, http);
+                if (UpdateCheck.Due(result, _local.SkippedUpdate)) _pendingUpdate = result.Release;
+            }
+            catch (Exception)
+            {
+                // offline, or no release yet: nothing to offer
+            }
+        }
+
+        ShowDueOffers();
+    }
+
+    /// <summary>One card at a time, only over Home with nothing else open: the update first, then (for members, once) the Plus welcome. Called again whenever one is closed and whenever Home is shown.</summary>
+    private void ShowDueOffers()
+    {
+        if (MenuLayer.Content is not null || Page.Content is not HomeView) return;
+        if (_pendingUpdate is { } release)
+        {
+            _pendingUpdate = null;
+            MenuLayer.Content = new UpdateOfferView(release, AppInfo.Version, skip =>
+            {
+                if (skip) _local.SkippedUpdate = release.Version;
+                CloseCardMenu();
+                ShowDueOffers();
+            }, found =>
+            {
+                var address = found.DownloadUrl ?? found.PageUrl;
+                if (address is not null) WebLinks.Open(address);
+            });
+            return;
+        }
+
+        if (_welcomeShown || _kids || !_plus.StatusKnown || !_plus.Active) return;
+        var key = PlusPopups.WelcomeKey(_user.Id);
+        if (!PlusPopups.WelcomeDue(_local.PopupSeen(key))) return;
+        _welcomeShown = true; // once a launch
+        void Done()
+        {
+            _local.MarkPopupSeen(key, PlusPopups.WelcomeId); // seen for good, whichever way it was closed
+            CloseCardMenu();
+        }
+
+        MenuLayer.Content = new PlusWelcomeView(Done, () =>
+        {
+            Done();
+            OpenSettingsPane("Plus settings");
+        });
     }
 
     private const int WmMouseHWheel = 0x020E;
@@ -422,6 +493,21 @@ public partial class ShellView : UserControl
             }, CloseCardMenu, _ => { }, OpenDownloadsPage);
     }
 
+    /// <summary>The "How to set up your sources" guide, over the page that is open (Back puts that page back).</summary>
+    private void OpenSetupGuide()
+    {
+        ShowBar(true);
+        if (Page.Content is UIElement current && current is not SetupGuideView) _history.Push((current, _place));
+        Page.Content = new SetupGuideView(GoBack, () => OpenSettingsPane("Addons"));
+    }
+
+    /// <summary>Settings, opened on one of its pages.</summary>
+    private void OpenSettingsPane(string pane)
+    {
+        _settingsPane = pane;
+        Open("Settings");
+    }
+
     /// <summary>The Downloads page, over the one that is open (Back puts that page back).</summary>
     private void OpenDownloadsPage()
     {
@@ -457,7 +543,7 @@ public partial class ShellView : UserControl
         var store = new LastSourceStore(Path.Combine(AppPaths.DataFolder(), "last-sources.json"), _account.Scope!);
         var smart = _plus.Active && _local.SmartPicking;
         var model = new SourcesModel(target, AccountAddonsAsync, _addonClient, items => AutoPick.Choose(target, items, smart));
-        return new SourcesView(model, store, GoBack, OpenPlayer, LogoOfAsync, TorrentEngines.Shared);
+        return new SourcesView(model, store, GoBack, OpenPlayer, LogoOfAsync, TorrentEngines.Shared, OpenSetupGuide, () => OpenSettingsPane("Addons"));
     }
 
     /// <summary>The player, over the sources page; the top bar is out of the way while it plays, and Back returns to the sources (or, when the source was picked without asking, to the page before).</summary>
@@ -515,5 +601,6 @@ public partial class ShellView : UserControl
             "Search" => new SearchView(new SearchModel(_account.Scope!, SourcesAsync, new RecentSearchStore(Path.Combine(AppPaths.DataFolder(), "recent-searches.json")), _addonClient) { Blocked = _settingsModel.Blocked }),
             _ => new ComingSoonView(place),
         };
+        if (place == "Home") Dispatcher.BeginInvoke(ShowDueOffers); // a waiting offer shows when Home does
     }
 }

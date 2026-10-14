@@ -44,6 +44,7 @@ public class ScreenTests
     private static void OnUiThread(Func<Task> body)
     {
         Exception? failure = null;
+        ShellView.ShowOffers = false; // a shell that opens here must not go and ask GitHub for updates
         var thread = new Thread(() =>
         {
             try
@@ -578,5 +579,108 @@ public class ScreenTests
         Assert.Empty(Descendants<ArcTV.App.Controls.Skeleton>(view)); // arrived: the real page
         Assert.Contains(Descendants<System.Windows.Controls.TextBlock>(view), t => t.Text == "Nothing is blocked.");
         window.Close();
+    });
+
+    private static void Click(System.Windows.Controls.Button button) => button.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+
+    [Fact]
+    public void SetupGuideHasItsThreePartsAndItsButtonsWork() => OnUiThread(async () =>
+    {
+        var wentBack = false;
+        var wentToAddons = false;
+        var guide = new SetupGuideView(() => wentBack = true, () => wentToAddons = true);
+        var window = Host(guide);
+        await Settle();
+        var words = Descendants<System.Windows.Controls.TextBlock>(guide).Select(t => t.Text).ToList();
+        Assert.Contains("How to set up your sources", words);
+        Assert.Contains("PART 1 OF 3", words);
+        Assert.Contains("PART 2 OF 3", words);
+        Assert.Contains("PART 3 OF 3", words);
+        Assert.Contains("Something went wrong?", words);
+        var buttons = Descendants<System.Windows.Controls.Button>(guide).ToList();
+        Assert.Contains(buttons, b => b.Content is "real-debrid.com");
+        Assert.Contains(buttons, b => b.Content is "torrentio.strem.fun/configure");
+        Click(buttons.Single(b => b.Content is "Go to Settings > Addons"));
+        Assert.True(wentToAddons);
+        Click(buttons.Single(b => b.Content is string text && text.EndsWith("Back", StringComparison.Ordinal)));
+        Assert.True(wentBack);
+        window.Close();
+    });
+
+    [Fact]
+    public void TheUpdateCardShowsTheNotesAndItsThreeChoicesWork() => OnUiThread(async () =>
+    {
+        var release = new ArcTV.Core.ReleaseInfo("0.3.0", "Subtitles from addons!", "https://page", "https://download");
+        var results = new List<string>();
+        var card = new UpdateOfferView(release, "0.2.0", skip => results.Add(skip ? "skip" : "close"), found => results.Add("download " + found.Version));
+        var window = Host(card);
+        await Settle();
+        var words = Descendants<System.Windows.Controls.TextBlock>(card).Select(t => t.Text).ToList();
+        Assert.Contains("Arc TV 0.3.0 is out", words);
+        Assert.Contains("You have 0.2.0. Here is what is new:", words);
+        Assert.Contains("Subtitles from addons!", words);
+        var buttons = Descendants<System.Windows.Controls.Button>(card).ToList();
+        Click(buttons.Single(b => b.Content is "Later"));
+        Click(buttons.Single(b => b.Content is "Skip this version"));
+        Click(buttons.Single(b => b.Content is string text && text.EndsWith("Download", StringComparison.Ordinal)));
+        Assert.Equal(["close", "skip", "download 0.3.0", "close"], results); // Download opens the release and closes the card without skipping it
+        window.Close();
+    });
+
+    [Fact]
+    public void ThePlusWelcomeListsWhatPlusGivesAndBothButtonsAreWired() => OnUiThread(async () =>
+    {
+        var results = new List<string>();
+        var card = new PlusWelcomeView(() => results.Add("close"), () => results.Add("settings"));
+        var window = Host(card);
+        await Settle();
+        var words = Descendants<System.Windows.Controls.TextBlock>(card).Select(t => t.Text).ToList();
+        Assert.Contains("Everything in Arc TV Plus.", words);
+        foreach (var (_, title, _) in PlusWelcomeView.Benefits) Assert.Contains(title, words);
+        var buttons = Descendants<System.Windows.Controls.Button>(card).ToList();
+        Click(buttons.Single(b => b.Content is "Close"));
+        Click(buttons.Single(b => b.Content is string text && text.StartsWith("See my Plus settings", StringComparison.Ordinal)));
+        Assert.Equal(["close", "settings"], results);
+        window.Close();
+    });
+
+    [Fact]
+    public void ThePlayerHasAnEpisodesListForAShowAndPickingOneGivesWayToIt() => OnUiThread(async () =>
+    {
+        var engine = new FakeEngine();
+        var show = new MetaDetail("tt9", "series", "A Show", Videos:
+        [
+            new EpisodeInfo("tt9:1:1", "Pilot", Season: 1, Episode: 1), new EpisodeInfo("tt9:1:2", "Second", Season: 1, Episode: 2), new EpisodeInfo("tt9:2:1", "Again", Season: 2, Episode: 1),
+        ]);
+        var asked = new List<PlayTarget>();
+        var view = new PlayerView(new PlayingItem(new Uri("https://cdn.test/f.mkv"), "A Show", "Addon", new PlayTarget(show, 1, 1, "S1 E1 Pilot")), () => engine, () => { }, playNext: asked.Add);
+        var window = Host(view);
+        for (var i = 0; i < 40 && engine.Url is null; i++)
+        {
+            await Task.Delay(50);
+            await Settle();
+        }
+
+        var overlay = System.Windows.Application.Current.Windows.OfType<PlayerOverlay>().Single();
+        var pill = Descendants<System.Windows.Controls.Button>(overlay).Single(b => b.Content is "Episodes");
+        Assert.Equal(Visibility.Visible, pill.Visibility);
+        Click(pill);
+        var rows = (System.Windows.Controls.StackPanel)overlay.FindName("MenuRows");
+        var seasons = Descendants<System.Windows.Controls.Button>(rows).Where(b => b.Content is "1" or "2").ToList();
+        Assert.Equal(2, seasons.Count); // a circle for each season
+        var episodes = rows.Children.OfType<System.Windows.Controls.Button>().ToList();
+        Assert.Equal(2, episodes.Count); // season 1's episodes
+        Click(seasons.Single(b => b.Content is "2")); // another season: the list changes in place
+        episodes = rows.Children.OfType<System.Windows.Controls.Button>().ToList();
+        Assert.Single(episodes);
+        Click(seasons.First()); // (those circles were rebuilt; go back to season 1 through the new ones)
+        Click(Descendants<System.Windows.Controls.Button>(rows).First(b => b.Content is "1"));
+        var second = rows.Children.OfType<System.Windows.Controls.Button>().Single(b => Descendants<System.Windows.Controls.TextBlock>(b).Any(t => t.Text == "2. Second"));
+        Click(second);
+        var target = Assert.Single(asked);
+        Assert.Equal((1, 2), (target.Season, target.Episode));
+        Assert.False(target.AutoPick); // the source list shows for it, as for any episode picked by hand
+        window.Close();
+        await Settle();
     });
 }

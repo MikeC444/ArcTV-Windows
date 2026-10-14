@@ -108,6 +108,7 @@
           <Button x:Name="AudioButton" Content="Audio" Style="{StaticResource ChoicePill}" Margin="0,0,10,0" Click="OnAudio" Focusable="False" />
           <Button x:Name="SubtitlesButton" Content="Subtitles" Style="{StaticResource ChoicePill}" Margin="0,0,10,0" Click="OnSubtitles" Focusable="False" />
           <Button x:Name="SpeedButton" Style="{StaticResource ChoicePill}" Click="OnSpeed" Focusable="False" />
+          <Button x:Name="EpisodesButton" Content="Episodes" Style="{StaticResource ChoicePill}" Margin="10,0,0,0" Click="OnEpisodes" Focusable="False" Visibility="Collapsed" ToolTip="Pick another episode of this show" />
           <Button x:Name="SourcesButton" Content="Sources" Style="{StaticResource ChoicePill}" Margin="10,0,0,0" Click="OnChooseSource" Focusable="False" Visibility="Collapsed" ToolTip="Pick a different source for this title" />
         </StackPanel>
       </StackPanel>

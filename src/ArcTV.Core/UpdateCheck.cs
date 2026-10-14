@@ -11,6 +11,9 @@ public sealed record UpdateResult(bool Available, string? Latest, ReleaseInfo? R
 
 public static class UpdateCheck
 {
+    /// <summary>Whether the update popup should offer this release: a newer one, unless the person skipped exactly this version.</summary>
+    public static bool Due(UpdateResult result, string? skippedVersion) => result is { Available: true, Release: { } release } && !string.Equals(release.Version, skippedVersion, StringComparison.OrdinalIgnoreCase);
+
     public const string LatestReleaseUrl = "https://api.github.com/repos/MikeC444/ArcTV-Windows/releases/latest";
 
     /// <summary>True when <paramref name="candidate"/> is a higher version than <paramref name="current"/>. Accepts a leading "v" and ignores anything after a "-" (like "-beta").</summary>

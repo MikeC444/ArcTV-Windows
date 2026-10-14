@@ -729,3 +729,18 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 
 **Issues discovered:** none. **Open:** whether mpv's `sub-add` shows a file from a web address before the menu's tick appears (the tick re-reads the track list after 1.5 s); an addon that needs a video hash or size is not given one (the Mac does not either); subtitle files are not remembered between plays.
 
+## Four more Mac features: setup guide, Episodes menu, update card, Plus welcome
+
+**Status:** Built and tested in the sandbox (259 Core tests pass). Screen tests added for the guide, both cards and the Episodes list; they run on CI only. Not seen on screen.
+
+**Changes:**
+- **Setup guide** (`Views/SetupGuideView`): the Mac's "How to set up your sources" (a short version, Part 1 debrid, Part 2 Torrentio, Part 3 Arc TV, and a "Something went wrong?" list), with Windows' wording where it differs (the source list shows on Play; the poster menu has Choose source). Opened from the "No sources found" page (`SourcesView`: a "Manage addons" button and "New to this? Step-by-step guide..."); its last part has a button to Settings > Addons. Back returns to the page it was opened from.
+- **Episodes menu** (`PlayerOverlay`, `PlayerView.PlayEpisode`): for a show, an Episodes pill beside Speed opens a list with the seasons as numbered circles and the chosen season's episodes under them (the one playing ticked). Picking one stops the video and shows that episode's source page (the same hand-over as the next episode, but without picking the source for you). Progress is reported first. The Mac's **Player** menu (mpv or Apple's own player) has no Windows equivalent: there is one engine.
+- **Update card** (`Views/OfferViews.UpdateOfferView`, `ShellView.CheckForOffersAsync`): once per launch, after Home is up, the app asks GitHub for the latest release; if it is newer and not the version "Skip this version" was pressed for (`LocalSettings.SkippedUpdate`, `UpdateCheck.Due`), a card shows the notes with Download (opens the installer, else the release page), Later and Skip. Quiet when offline or when there is no release. `ShellView.ShowOffers` is false in the tests.
+- **Plus welcome** (`PlusWelcomeView`, `PlusPopups`, `LocalSettings.PopupSeen`): members see "Everything in Arc TV Plus" once (per account, until `PlusPopups.WelcomeId` changes), not on a kids profile, with five benefits and a button to Settings > Plus settings. The Mac's other Plus popups (an invitation for non-members, and one from a Download button) are not ported: the Download panel already invites.
+- Both cards show one at a time, only over Home with nothing else open (update first), and again whenever Home is shown.
+
+**Tests performed:** Core: popups remembered per account and a skipped update survive other settings changes; the welcome shows once until its id changes; an update is offered unless that exact version was skipped. Screen (CI): the guide's parts and buttons; the update card's text and three choices (Download opens the release and closes without skipping); the welcome's benefits and buttons; the Episodes list (a circle for each season, switching season in place, picking an episode calls the hand-over with no auto-pick).
+
+**Issues discovered:** none. **Open:** nothing checks for an update again after launch; the update card can only be tried with a real release (none exists yet); the setup guide names Torrentio and two debrid services as the Mac's does (prices and screens on their sites change).
+

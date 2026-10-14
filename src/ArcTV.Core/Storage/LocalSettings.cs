@@ -5,7 +5,7 @@ namespace ArcTV.Core.Storage;
 /// <summary>Small per-PC choices kept in settings.json (not secret).</summary>
 public sealed class LocalSettings(string path)
 {
-    private sealed record Data(string? ServerUrl, string? SubtitleSize = null, string? SubtitleColor = null, bool SmartPicking = false, string? TorrentBuffer = null, int TorrentStorageGb = 50, string? DownloadFolder = null, string? TorrentEngine = null);
+    private sealed record Data(string? ServerUrl, string? SubtitleSize = null, string? SubtitleColor = null, bool SmartPicking = false, string? TorrentBuffer = null, int TorrentStorageGb = 50, string? DownloadFolder = null, string? TorrentEngine = null, Dictionary<string, string>? Popups = null, string? SkippedUpdate = null);
 
     public string? ServerUrl
     {
@@ -45,6 +45,24 @@ public sealed class LocalSettings(string path)
     {
         get => Read().TorrentEngine;
         set => Write(Read() with { TorrentEngine = value });
+    }
+
+    /// <summary>What was last shown of a once-only popup (by name, e.g. "plus-welcome-<account>"); null if never. Kept on this PC.</summary>
+    public string? PopupSeen(string key) => Read().Popups is { } seen && seen.TryGetValue(key, out var value) ? value : null;
+
+    public void MarkPopupSeen(string key, string value)
+    {
+        var data = Read();
+        var seen = data.Popups is null ? [] : new Dictionary<string, string>(data.Popups);
+        seen[key] = value;
+        Write(data with { Popups = seen });
+    }
+
+    /// <summary>The version the person chose "Skip this version" for in the update popup; it is not offered again.</summary>
+    public string? SkippedUpdate
+    {
+        get => Read().SkippedUpdate;
+        set => Write(Read() with { SkippedUpdate = value });
     }
 
     /// <summary>The most disk space (in gigabytes) a torrent may use while it plays; 0 is no limit.</summary>
