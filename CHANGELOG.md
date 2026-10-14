@@ -816,3 +816,5 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 **Tests performed:** `HomeModelTests.BlockingAGenreAfterTheBannerWasChosenChoosesTheBannerAgain`.
 
 **Issues discovered:** a title only counts as blocked when its catalogue entry lists genres. **Issues fixed:** the banner.
+
+**Follow-up (CI: the Episodes screen test, second failure).** It found the episode row by searching the row button's visual tree, which is empty for a popup that is never laid out in the test; it now reads the row's own content. Test only.

@@ -675,7 +675,7 @@ public class ScreenTests
         Assert.Single(episodes);
         Click(seasons.First()); // (those circles were rebuilt; go back to season 1 through the new ones)
         Click(Descendants<System.Windows.Controls.Button>(rows).First(b => b.Content is "1"));
-        var second = rows.Children.OfType<System.Windows.Controls.Button>().Single(b => Descendants<System.Windows.Controls.TextBlock>(b).Any(t => t.Text == "2. Second"));
+        var second = rows.Children.OfType<System.Windows.Controls.Button>().Single(b => b.Content is System.Windows.Controls.Grid line && line.Children.OfType<System.Windows.Controls.TextBlock>().Any(t => t.Text == "2. Second")); // (the popup is never laid out here, so its buttons have no visual children to search)
         Click(second);
         var target = Assert.Single(asked);
         Assert.Equal((1, 2), (target.Season, target.Episode));
