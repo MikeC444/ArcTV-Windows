@@ -18,14 +18,13 @@
 
       <StackPanel x:Name="SortPills" Orientation="Horizontal" Margin="24,0,24,12" Visibility="Collapsed" />
 
-      <StackPanel x:Name="LoadingPanel" Margin="24,12,24,0" HorizontalAlignment="Left" Visibility="Collapsed">
-        <TextBlock Text="Getting titles ready…" FontSize="16" Foreground="{StaticResource Text2Brush}" />
-        <ProgressBar IsIndeterminate="True" Height="3" Width="220" Margin="0,14,0,0" HorizontalAlignment="Left" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
-      </StackPanel>
+
 
       <TextBlock x:Name="Message" Margin="24,12,24,0" FontSize="15" TextWrapping="Wrap" Foreground="{StaticResource Text2Brush}" Visibility="Collapsed" />
     </StackPanel>
 
     <v:PosterGrid x:Name="Posters" Grid.Row="1" />
+    <!-- grey posters while the first page loads; filled in code -->
+    <ContentControl x:Name="LoadingPanel" Grid.Row="1" VerticalAlignment="Top" IsHitTestVisible="False" />
   </Grid>
 </UserControl>

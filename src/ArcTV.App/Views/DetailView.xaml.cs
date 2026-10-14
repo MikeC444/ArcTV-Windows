@@ -124,7 +124,7 @@ public partial class DetailView : UserControl
 
         RatingText.Text = detail.ImdbRating ?? "";
         RatingBox.Visibility = string.IsNullOrEmpty(detail.ImdbRating) ? Visibility.Collapsed : Visibility.Visible;
-        LoadingBar.Visibility = _model.Loaded ? Visibility.Collapsed : Visibility.Visible;
+        LoadingBar.Content = _model.Loaded ? null : LoadingBar.Content ?? Skeleton.DetailRows(); // made only while loading, so its pulse runs only then
 
         RefreshButtons();
         RefreshSeasons();

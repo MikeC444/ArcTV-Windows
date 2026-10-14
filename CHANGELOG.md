@@ -618,3 +618,19 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 
 **Follow-up (owner: choose where downloads go; no top bar coming and going while scrolling the popup; a bigger list).** A "Save to" line with a Change button (a folder picker) at the top of the Downloads panel, kept on this PC (the Windows Downloads folder until chosen); the panel's scrolling no longer reaches the page, so the top bar stays put; the panel is drawn up to 1.3 times its size (less in a small window), so the list is bigger. Not seen on screen.
 
+## Loading placeholders (skeletons) and dark title bar
+
+**Status:** Built and unit tested in the Linux sandbox (.NET 8, `CI=true`): 0 warnings, 0 errors. Not run on a screen.
+
+**Context:** Open item 1 in CLAUDE.md. Home showed a centred "Getting your rows ready" with a progress bar, Movies / TV Shows a bar, and a title's page a thin bar under the buttons. The owner also asked for the white window title bar to be a different colour.
+
+**Changes:**
+- `Controls/Skeleton.cs`: a rounded grey shape; all of them share one brush that gently brightens and dims, and the pulse runs only while one is on screen. Builders for Home (banner with title, lines and buttons, then three poster rows), a poster grid (Movies / TV Shows first page) and the rows under a title's buttons. Posters follow `PosterMetrics` like the real ones.
+- `HomeView`, `BrowseView`, `DetailView`: the old loading bars are now a `ContentControl` filled with the skeleton while loading and emptied after (so the pulse stops).
+- `MainWindow`: asks Windows (DWM) for a dark title bar, coloured as the app background on Windows 11.
+
+**Tests performed:** `dotnet build ArcTV.sln` (0 warnings, 0 errors) and `dotnet test`: 226 Core tests pass; the App tests project is Windows-only and cannot run on Linux (left to CI). No UI tests; neither the skeletons nor the title bar have been seen on screen.
+
+**Issues discovered:** none. **Issues fixed:** none.
+
+**Still open:** skeletons for Search, My List and the Continue Watching / Picked for you rows; the dark title bar colour only applies on Windows 10 20H1 and newer (Windows 11 for the exact colour).

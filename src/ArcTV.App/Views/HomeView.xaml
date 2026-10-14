@@ -42,10 +42,8 @@
       </StackPanel>
     </ScrollViewer>
 
-    <StackPanel x:Name="LoadingPanel" HorizontalAlignment="Center" VerticalAlignment="Center">
-      <TextBlock Text="Getting your rows ready…" FontSize="16" Foreground="{StaticResource Text2Brush}" />
-      <ProgressBar IsIndeterminate="True" Height="3" Width="220" Margin="0,14,0,0" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
-    </StackPanel>
+    <!-- grey shapes where the banner and rows will be; filled in code while Home loads -->
+    <ContentControl x:Name="LoadingPanel" IsHitTestVisible="False" />
 
     <StackPanel x:Name="EmptyPanel" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" MaxWidth="420">
       <TextBlock Text="Nothing to show yet" FontSize="26" FontWeight="ExtraBold" HorizontalAlignment="Center" />

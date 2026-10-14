@@ -5,6 +5,8 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Grey placeholder shapes now show while Home, Movies, TV Shows and a title's page load, instead of a plain loading bar, so the page keeps its shape as things arrive.
+- The window's title bar is dark now, to match the app.
 - Downloads (Arc TV Plus): choose which folder files are saved in, and the list is bigger. A Download button on a title's page lists the files from your debrid service, best quality at the smallest size first, and saves the one you choose to your Downloads folder, with progress. For a show you can choose the season and episode.
 - Settings > Player has Torrent buffer (Small, Normal, Large: how much of a torrent's start must arrive before it plays) and a Torrent storage limit. Torrents now start once that much has arrived, not after the very start and end of the file.
 - "Who's watching?" looks like the Mac app's: the logo, a welcome, and rounded square pictures.

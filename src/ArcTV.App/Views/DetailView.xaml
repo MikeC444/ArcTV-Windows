@@ -185,7 +185,8 @@
           </Border>
         </Grid>
 
-        <ProgressBar x:Name="LoadingBar" IsIndeterminate="True" Height="3" Width="160" HorizontalAlignment="Left" Margin="24,22,0,0" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
+        <!-- grey shapes for the rows below the buttons until the title's details arrive; filled in code -->
+        <ContentControl x:Name="LoadingBar" Margin="0,34,0,0" IsHitTestVisible="False" />
 
         <!-- a show's seasons and episodes -->
         <StackPanel x:Name="SeasonsPanel" Margin="0,34,0,0" Visibility="Collapsed">

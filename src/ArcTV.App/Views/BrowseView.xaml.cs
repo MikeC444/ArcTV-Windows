@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using ArcTV.App.Controls;
 using ArcTV.Core.Browse;
 using ArcTV.Core.Home;
 
@@ -76,7 +77,8 @@ public partial class BrowseView : UserControl
         Posters.Show([new PosterSection(null, null, _sort.Apply(_model.Items))]);
         var items = _model.Items.Count;
         var firstPage = _model.Loading && items == 0;
-        LoadingPanel.Visibility = firstPage ? Visibility.Visible : Visibility.Collapsed;
+        if (!firstPage) LoadingPanel.Content = null;
+        else LoadingPanel.Content ??= Skeleton.PosterGridPage();
         SortPills.Visibility = items > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         string? message = null;

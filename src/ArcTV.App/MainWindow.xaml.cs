@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using ArcTV.App.Controls;
 using ArcTV.App.Views;
 using ArcTV.Core.Plus;
@@ -14,9 +16,23 @@ public partial class MainWindow : Window
     private ProfilesModel? _profiles;
     private bool _signedIn;
 
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr window, int attribute, ref int value, int size);
+
+    /// <summary>Asks Windows to draw the title bar dark (and its buttons light) so it matches the app, not a white strip across the top. Windows 10 20H1 and newer; older ones ignore it.</summary>
+    private void DarkTitleBar()
+    {
+        var handle = new WindowInteropHelper(this).Handle;
+        var on = 1;
+        if (DwmSetWindowAttribute(handle, 20, ref on, sizeof(int)) != 0) DwmSetWindowAttribute(handle, 19, ref on, sizeof(int)); // 20 is the current number; 19 on the first builds that had it
+        var colour = 0x0A0808; // the app's background (#08080A) as a Windows colour, blue-green-red; only Windows 11 draws it
+        DwmSetWindowAttribute(handle, 35, ref colour, sizeof(int));
+    }
+
     public MainWindow()
     {
         InitializeComponent();
+        SourceInitialized += (_, _) => DarkTitleBar();
         App.Account.PropertyChanged += (_, args) =>
         {
             // the account announces this every time its token is renewed too: only signing in or out changes what is shown

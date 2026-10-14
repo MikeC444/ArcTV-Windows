@@ -111,7 +111,9 @@ public partial class HomeView : UserControl
     {
         var showRows = _model.Sections.Count > 0;
         PageScroll.Visibility = showRows ? Visibility.Visible : Visibility.Collapsed;
-        LoadingPanel.Visibility = !showRows && _model.State is HomeState.Idle or HomeState.Loading ? Visibility.Visible : Visibility.Collapsed;
+        var loading = !showRows && _model.State is HomeState.Idle or HomeState.Loading;
+        if (!loading) LoadingPanel.Content = null;
+        else LoadingPanel.Content ??= Skeleton.HomePage(); // made only while it shows, so its pulse runs only then
         EmptyPanel.Visibility = !showRows && _model.State == HomeState.Empty ? Visibility.Visible : Visibility.Collapsed;
         RefreshContinue();
         RefreshPicked();
