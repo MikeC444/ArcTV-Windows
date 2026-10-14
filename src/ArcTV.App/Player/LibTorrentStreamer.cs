@@ -30,37 +30,38 @@ public sealed class LibTorrentStreamer : ITorrentStarter
 
     private static string Root => Path.Combine(AppPaths.DataFolder(), "torrents-lt");
 
-    /// <summary>The session, made on first use. Making it loads the native library and opens the engine's ports, so it is always done off the screen's thread.</summary>
-    private LibTorrentSession Session()
+    /// <summary>
+    /// The session, made on first use (or why it could not be made: no exception leaves here, so nothing crosses a worker thread's edge, where Visual Studio would stop on it). Making it loads
+    /// the native library and opens the engine's ports, so it is always done off the screen's thread.
+    /// </summary>
+    private (LibTorrentSession? Session, string? Problem) TrySession()
     {
         lock (_sessionLock)
         {
-            if (_session is not null) return _session;
+            if (_session is not null) return (_session, null);
+            if (_problem is not null) return (null, _problem); // already tried: it will not load by being asked again
             try
             {
                 var timer = System.Diagnostics.Stopwatch.StartNew();
                 _session = new LibTorrentSession();
                 PlayerLog.Write($"torrent: libtorrent session created in {timer.ElapsedMilliseconds} ms");
-                return _session;
+                return (_session, null);
             }
             catch (Exception ex) when (ex is DllNotFoundException or BadImageFormatException or EntryPointNotFoundException or InvalidOperationException)
             {
-                throw new LibTorrentUnavailableException($"{ex.GetType().Name}: {ex.Message}");
+                _problem = $"{ex.GetType().Name}: {ex.Message}";
+                return (null, _problem);
             }
         }
     }
 
+    private string? _problem;
+
     /// <summary>Starts the engine ahead of time, so its peer finding (the DHT) is already going when a torrent is chosen. libtorrent keeps it going while the session lives.</summary>
     public void Warm() => _ = Task.Run(() =>
     {
-        try
-        {
-            Session();
-        }
-        catch (LibTorrentUnavailableException ex)
-        {
-            PlayerLog.Write($"torrent: libtorrent is not available ({ex.Message})");
-        }
+        var (session, problem) = TrySession();
+        if (session is null) PlayerLog.Write($"torrent: libtorrent is not available ({problem})");
     });
 
     public async Task<TorrentStart> StartAsync(SourceItem item, PlayTarget target, Action<TorrentProgress> progress, CancellationToken cancel)
@@ -69,7 +70,8 @@ public sealed class LibTorrentStreamer : ITorrentStarter
         try
         {
             // off the screen's thread from here on (every wait below says ConfigureAwait(false))
-            var session = await Task.Run(Session, CancellationToken.None).ConfigureAwait(false);
+            var (made, problem) = await Task.Run(TrySession, CancellationToken.None).ConfigureAwait(false);
+            var session = made ?? throw new LibTorrentUnavailableException(problem ?? "libtorrent is not available");
             await StopAsync().ConfigureAwait(false);
             var text = TorrentLink.Magnet(item.Stream) ?? throw new TorrentException("This source has no torrent address. Try another source.");
             _folder = Path.Combine(Root, "data", Guid.NewGuid().ToString("N"));
