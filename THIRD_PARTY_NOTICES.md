@@ -6,6 +6,4 @@
   the alternative is an LGPL build of libmpv from another source.
 - **QRCoder** (MIT), for the sign-in QR code.
 - **MonoTorrent** (MIT, https://github.com/alanmcgovern/monotorrent), the torrent engine: it finds the people sharing a torrent, downloads its video in the order it is watched and serves it to the player over a local address.
-- **libtorrent-rasterbar** (BSD-3-Clause, https://libtorrent.org), the other torrent engine, through `ctorrent.dll` (our own small C layer over it, in `native/`), loaded as a separate file next to `ArcTV.exe`. Built with vcpkg together with
-  **Boost** (Boost Software License 1.0), **OpenSSL** (Apache-2.0) and **zlib** (zlib licence), whose DLLs sit beside it, and the Microsoft Visual C++ runtime.
 

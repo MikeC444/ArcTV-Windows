@@ -748,3 +748,17 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 
 **Follow-up (owner: the default subtitle language in Settings was not chosen automatically in the player).** Two causes. (1) `MpvEngine` gave mpv the setting as it is kept ("fr", two letters) for `--slang` and `--alang`; mpv compares language codes literally and a Matroska file tags its tracks with three letters ("fre" or "fra"), so a two-letter code matched nothing and mpv fell back to its own choice (`subs-fallback`, a default track). `SubtitleLanguage.MpvList` now gives every code for the language ("fr,fra,fre"). (2) The addon auto-pick written earlier left things alone whenever any subtitle was showing, so with mpv on a fallback in another language it never loaded the addons' file in the wanted language. `PlayerModel.AutoPickAddonSubtitle` now checks what is showing: already the wanted language, done; the video has a track in that language mpv did not pick, select it; otherwise, once the addons have answered, their file in that language (a failed search counts as an answer). It still only runs when Settings has Subtitles switched on, as before: with that switch off no subtitles start, whatever the language. Tests: the codes (every language in Settings starts with its own code), and the auto-pick in seven situations (nothing showing, mpv fell back to another language, an own track not picked, already right, no file in that language, switch off, no language chosen). Not seen on screen.
 
+
+## Drop the libtorrent engine (owner asked)
+
+**Status:** Done. Built and the Core tests run in the sandbox; the Windows build is read on CI.
+
+**Context:** The libtorrent engine never got past Windows CI (its real-transfer test) and was never seen working. The owner asked to keep only MonoTorrent.
+
+**Changes:** Removed `native/`, `native.yml`, `get-libtorrent.ps1`, `LibTorrentSession`, `LocalVideoServer`, `LibTorrentStreamer`, `TorrentEngines`, their tests, the csproj and build.yml download steps, the Settings "Torrent engine" choice and the `TorrentEngine` setting (an old settings.json that has it still loads). Torrents go straight to `TorrentStreamer`. Also fixed: the player's Episodes button was missing for shows opened from Continue Watching or the Home banner (they carry no episode list); the source list now fetches the show's details first (4 s at most).
+
+**Tests performed:** `dotnet test` on the Core tests.
+
+**Issues discovered:** the Episodes button and "next episode" need the full episode list, which Continue Watching and the banner do not have.
+
+**Issues fixed:** that.

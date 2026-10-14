@@ -5,7 +5,7 @@ namespace ArcTV.Core.Storage;
 /// <summary>Small per-PC choices kept in settings.json (not secret).</summary>
 public sealed class LocalSettings(string path)
 {
-    private sealed record Data(string? ServerUrl, string? SubtitleSize = null, string? SubtitleColor = null, bool SmartPicking = false, string? TorrentBuffer = null, int TorrentStorageGb = 50, string? DownloadFolder = null, string? TorrentEngine = null, Dictionary<string, string>? Popups = null, string? SkippedUpdate = null);
+    private sealed record Data(string? ServerUrl, string? SubtitleSize = null, string? SubtitleColor = null, bool SmartPicking = false, string? TorrentBuffer = null, int TorrentStorageGb = 50, string? DownloadFolder = null, Dictionary<string, string>? Popups = null, string? SkippedUpdate = null);
 
     public string? ServerUrl
     {
@@ -40,12 +40,6 @@ public sealed class LocalSettings(string path)
         set => Write(Read() with { TorrentBuffer = value });
     }
 
-    /// <summary>"libtorrent" (the default) or "monotorrent": which engine plays torrents. Null until chosen.</summary>
-    public string? TorrentEngine
-    {
-        get => Read().TorrentEngine;
-        set => Write(Read() with { TorrentEngine = value });
-    }
 
     /// <summary>What was last shown of a once-only popup (by name, e.g. "plus-welcome-<account>"); null if never. Kept on this PC.</summary>
     public string? PopupSeen(string key) => Read().Popups is { } seen && seen.TryGetValue(key, out var value) ? value : null;

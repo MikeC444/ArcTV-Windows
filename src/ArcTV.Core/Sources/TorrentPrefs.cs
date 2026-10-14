@@ -20,14 +20,6 @@ public static class TorrentBuffers
         _ => 6L * 1_048_576,
     };
 
-    /// <summary>How many pieces after the playing spot the libtorrent engine asks for first (the Mac app's numbers).</summary>
-    public static int PiecesAhead(this TorrentBuffer buffer) => buffer switch
-    {
-        TorrentBuffer.Small => 12,
-        TorrentBuffer.Large => 64,
-        _ => 24,
-    };
-
     public static string Detail(this TorrentBuffer buffer) => buffer switch
     {
         TorrentBuffer.Small => "Starts soonest; may stall on slow torrents.",
@@ -48,13 +40,4 @@ public static class TorrentStorage
 
     /// <summary>True when a file of <paramref name="size"/> bytes is allowed under <paramref name="gigabytes"/> (0 means anything).</summary>
     public static bool Allows(long size, int gigabytes) => gigabytes == 0 || size <= gigabytes * 1_073_741_824L;
-}
-
-/// <summary>Which torrent engine plays torrents: libtorrent (the default, through the native ctorrent.dll) or MonoTorrent (built into the app, and what is used when libtorrent can't load).</summary>
-public static class TorrentEngineChoice
-{
-    public const string LibTorrent = "libtorrent";
-    public const string MonoTorrent = "monotorrent";
-
-    public static bool PrefersLibTorrent(string? setting) => !string.Equals(setting, MonoTorrent, StringComparison.OrdinalIgnoreCase);
 }

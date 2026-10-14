@@ -16,8 +16,3 @@ libs/
 
 # the video engine, downloaded by scripts/get-libmpv.ps1
 src/ArcTV.App/libmpv/
-
-# libtorrent (ctorrent.dll and its libraries), downloaded by scripts/get-libtorrent.ps1; native/ build output
-src/ArcTV.App/libtorrent/
-native/build/
-native/out/

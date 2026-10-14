@@ -27,13 +27,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/get-libmpv.ps1
 
-      # ctorrent.dll and the libraries it needs (the libtorrent torrent engine), built by native.yml and published as a pre-release of this repository. A failure (nothing published yet) shows as a
-      # warning: the app builds either way and torrents then play with MonoTorrent.
-      - name: Get libtorrent
-        shell: pwsh
-        continue-on-error: true
-        run: ./scripts/get-libtorrent.ps1
-
       - name: Build
         run: dotnet build ArcTV.sln -c Release
 

@@ -526,12 +526,34 @@ public partial class ShellView : UserControl
     }
 
     /// <summary>The source list for a movie or an episode, over the page that asked for it; Back returns to that page.</summary>
-    private void OpenSources(PlayTarget target)
+    private async void OpenSources(PlayTarget target)
     {
         ShowBar(true);
         target = _continue.Resume(target); // a title in Continue Watching starts from where it was left
-        if (Page.Content is UIElement current) _history.Push((current, _place));
+        var from = Page.Content as UIElement;
+        var place = _place;
+        target = await WithEpisodesAsync(target); // (Continue Watching and the banner know a show only by its card: the player's Episodes list and next episode need the full details)
+        if (!ReferenceEquals(Page.Content, from)) return; // the user went elsewhere while the details loaded
+        if (from is not null) _history.Push((from, place));
         Page.Content = SourcesPage(target);
+    }
+
+    /// <summary>A show's target with its episodes filled in (from Cinemeta, waiting a few seconds at most); anything else, or a failure, is returned as it was.</summary>
+    private async Task<PlayTarget> WithEpisodesAsync(PlayTarget target)
+    {
+        if (target.Title.Type == "movie" || target.Title.Seasons.Count > 0) return target;
+        try
+        {
+            using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(4));
+            var full = await _addonClient.FetchMetaAsync(AppInfo.CinemetaManifestUrl, target.Title.Type, target.Title.Id, limit.Token);
+            if (full is null || full.Seasons.Count == 0) return target;
+            var title = target.Title;
+            return target with { Title = full with { Poster = full.Poster ?? title.Poster, Background = full.Background ?? title.Background, Logo = full.Logo ?? title.Logo } };
+        }
+        catch (Exception)
+        {
+            return target;
+        }
     }
 
     /// <summary>
@@ -543,7 +565,7 @@ public partial class ShellView : UserControl
         var store = new LastSourceStore(Path.Combine(AppPaths.DataFolder(), "last-sources.json"), _account.Scope!);
         var smart = _plus.Active && _local.SmartPicking;
         var model = new SourcesModel(target, AccountAddonsAsync, _addonClient, items => AutoPick.Choose(target, items, smart));
-        return new SourcesView(model, store, GoBack, OpenPlayer, LogoOfAsync, TorrentEngines.Shared, OpenSetupGuide, () => OpenSettingsPane("Addons"));
+        return new SourcesView(model, store, GoBack, OpenPlayer, LogoOfAsync, TorrentStreamer.Shared, OpenSetupGuide, () => OpenSettingsPane("Addons"));
     }
 
     /// <summary>The player, over the sources page; the top bar is out of the way while it plays, and Back returns to the sources (or, when the source was picked without asking, to the page before).</summary>

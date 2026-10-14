@@ -7,12 +7,11 @@ under its version automatically.
 ## Unreleased
 - Your default subtitle language (and default audio language) in Settings now picks the right track in the player: it was missed for most video files, and when the video had no subtitles in your language, the player stayed on another one. Now it uses your language from the video if there is one, otherwise from your addons.
 - No sources found? A step-by-step guide now walks you through setting them up (a debrid service, then Torrentio, then Arc TV), opened from that page.
-- The player has an Episodes list for shows: pick another season and episode without going back to the title.
+- The player has an Episodes list for shows: pick another season and episode without going back to the title. It now shows for every show, including ones started from Continue Watching.
 - When a newer version of Arc TV is out, a card tells you what is new, with Download, Later and Skip this version.
 - New Plus members get a short welcome card showing what Plus gives them.
 - Subtitles from your addons are here: the player's Subtitles menu now lists the subtitle files your addons offer (OpenSubtitles, for example), your language first. If you have subtitles switched on in Settings and the video has none of its own, one in your language is shown for you.
 - Play always shows the source list now, even for something you have watched before (it no longer jumps straight into the player). The source you used last time is marked "Last watched". The next episode of a show still starts by itself when an episode ends.
-- Torrents now play with libtorrent, the same engine as the Mac app, to find people and start faster. Settings > Player > Torrent engine switches back to the old one (MonoTorrent) if anything misbehaves, and the app uses it by itself if libtorrent can't load.
 - Downloads: every episode has its own Download arrow on its picture.
 - Downloads: each file now says if your debrid service already has it ready ("Cached on Real-Debrid") or still has to fetch it first, and shows HDR / Dolby Vision and a warning when a file is unusually small.
 - A Downloads page (profile menu, or "See all downloads" in the Download panel) lists everything you have saved or are saving, with Play, Show in folder, Cancel and Remove, and where files are saved.

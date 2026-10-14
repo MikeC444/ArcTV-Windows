@@ -43,18 +43,4 @@
       <None Include="libmpv\libmpv-2.dll" Condition="Exists('libmpv\libmpv-2.dll')" Link="libmpv-2.dll" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
-  <!--
-    The torrent engine libtorrent is used through ctorrent.dll (native/ctorrent) and the libraries it needs, all beside ArcTV.exe. Not kept in git: scripts\get-libtorrent.ps1 downloads them (built by
-    the Build libtorrent workflow) into the libtorrent folder, and this target does so on the first build on Windows if they are missing. A failed download never fails the build: torrents then play
-    with MonoTorrent, which is built into the app. Set -p:SkipLibTorrent=true to skip it.
-  -->
-  <ItemGroup>
-    <None Include="libtorrent\*.dll" Condition="Exists('libtorrent\ctorrent.dll')" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  <Target Name="GetLibTorrent" BeforeTargets="BeforeBuild" Condition="'$(OS)' == 'Windows_NT' And '$(SkipLibTorrent)' != 'true' And !Exists('$(MSBuildProjectDirectory)\libtorrent\ctorrent.dll')">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\scripts\get-libtorrent.ps1&quot;" IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true" ContinueOnError="true" />
-    <ItemGroup>
-      <None Include="libtorrent\*.dll" Condition="Exists('libtorrent\ctorrent.dll')" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    </ItemGroup>
-  </Target>
 </Project>
