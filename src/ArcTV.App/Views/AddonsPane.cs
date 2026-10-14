@@ -93,7 +93,8 @@ public sealed class AddonsPane : UserControl
         _list.Columns = 1; // messages take the whole width; the addons go two to a row
         if (!_addons.Loaded)
         {
-            _list.Children.Add(new TextBlock { Text = "Loading your addons…", Foreground = Res("Text2Brush") });
+            _list.Columns = 2; // grey cards where the addons will be, two to a row like the real ones
+            for (var i = 0; i < 4; i++) _list.Children.Add(ArcTV.App.Controls.Skeleton.Bar(120, 14, new Thickness(0, 0, 12, 12)));
             return;
         }
 

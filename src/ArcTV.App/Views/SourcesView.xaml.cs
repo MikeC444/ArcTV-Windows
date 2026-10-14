@@ -121,6 +121,8 @@ public partial class SourcesView : UserControl
         var any = result.Items.Count > 0;
 
         LoadingPanel.Visibility = loading ? Visibility.Visible : Visibility.Collapsed;
+        if (!loading) LoadingRows.Content = null;
+        else LoadingRows.Content ??= Skeleton.SourceRows(); // made only while loading, so its pulse runs only then
         ListPanel.Visibility = !loading && any ? Visibility.Visible : Visibility.Collapsed;
         EmptyPanel.Visibility = !loading && !any ? Visibility.Visible : Visibility.Collapsed;
         EmptyText.Text = _model.EmptyMessage;

@@ -296,6 +296,13 @@ public class ScreenTests
         public Task<AccountSettings> SaveAsync(AccountSettings settings, CancellationToken cancel = default) => Task.FromResult(settings);
     }
 
+    private sealed class SlowSettingsStore(TaskCompletionSource<AccountSettings> gate) : IAccountSettingsStore
+    {
+        public Task<AccountSettings> GetAsync(CancellationToken cancel = default) => gate.Task;
+
+        public Task<AccountSettings> SaveAsync(AccountSettings settings, CancellationToken cancel = default) => Task.FromResult(settings);
+    }
+
     private sealed class FakePlusStore : IPlusStore
     {
         public Task<PlusStatus> StatusAsync(CancellationToken cancel = default) => Task.FromResult(new PlusStatus(true, "yearly", "2027-01-01T00:00:00.000Z", true, false, 7));
@@ -511,6 +518,35 @@ public class ScreenTests
         window = Host(empty);
         await Settle();
         Assert.Contains(Descendants<System.Windows.Controls.TextBlock>(empty), t => t.Text.StartsWith("Nothing downloaded yet"));
+        window.Close();
+    });
+
+    [Fact]
+    public void ASettingsPageShowsGreyPlaceholdersUntilTheAccountSettingsArrive() => OnUiThread(async () =>
+    {
+        var gate = new TaskCompletionSource<AccountSettings>();
+        var addons = new AddonsModel(new OneAddonStore(), (link, _) => Task.FromResult(AddonInstall.Parse(link, "{}")));
+        var settings = new SettingsModel(new SlowSettingsStore(gate));
+        var home = new HomeModel(_ => Task.FromResult<IReadOnlyList<SyncedAddon>>([]), "u1");
+        var folder = Path.Combine(Path.GetTempPath(), "arctv-ui-" + Guid.NewGuid());
+        var view = new SettingsView(settings, addons, home, new AccountUser("u1", "me@x.test", "Me"), new LocalSettings(Path.Combine(folder, "settings.json")), new PlusModel(new FakePlusStore()),
+            new MyListModel(_ => Task.FromResult(new List<WatchlistItem>())), (_, _) => Task.FromResult<string?>(null), () => { }, () => { }, "Blocked Genres");
+        var window = Host(view);
+        await Settle();
+        await Task.Delay(150);
+        await Settle();
+        Assert.NotEmpty(Descendants<ArcTV.App.Controls.Skeleton>(view)); // still waiting: grey shapes, not switches with wrong values
+        Assert.DoesNotContain(Descendants<System.Windows.Controls.TextBlock>(view), t => t.Text == "Nothing is blocked.");
+
+        gate.SetResult(AccountSettings.Default);
+        for (var i = 0; i < 50 && Descendants<ArcTV.App.Controls.Skeleton>(view).Any(); i++)
+        {
+            await Task.Delay(40);
+            await Settle();
+        }
+
+        Assert.Empty(Descendants<ArcTV.App.Controls.Skeleton>(view)); // arrived: the real page
+        Assert.Contains(Descendants<System.Windows.Controls.TextBlock>(view), t => t.Text == "Nothing is blocked.");
         window.Close();
     });
 }

@@ -57,9 +57,10 @@
             <TextBlock x:Name="NoticeText" FontSize="14" TextWrapping="Wrap" />
           </Border>
 
-          <StackPanel x:Name="LoadingPanel" HorizontalAlignment="Left" Margin="0,6,0,0">
+          <StackPanel x:Name="LoadingPanel" HorizontalAlignment="Stretch" Margin="0,6,0,0">
             <TextBlock x:Name="LoadingText" Text="Asking your addons…" FontSize="16" Foreground="{StaticResource Text2Brush}" />
-            <ProgressBar IsIndeterminate="True" Height="3" Width="220" Margin="0,14,0,0" HorizontalAlignment="Left" Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}" BorderThickness="0" />
+            <!-- grey rows for the files to come; filled in code while the addons are asked -->
+            <ContentControl x:Name="LoadingRows" Margin="0,14,0,0" IsHitTestVisible="False" HorizontalContentAlignment="Stretch" />
           </StackPanel>
 
           <StackPanel x:Name="ListPanel" Visibility="Collapsed">

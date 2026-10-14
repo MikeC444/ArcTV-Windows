@@ -12,7 +12,7 @@ under its version automatically.
 - A download stopped by closing Arc TV can be resumed: it carries on from where it stopped instead of starting again.
 - On Movies, TV Shows, Search and My List, the heading now scrolls away with the posters, so they can scroll right up to the top of the window instead of stopping under a block of empty space.
 - A title's page has fewer buttons: Play, Trailer, My List, a Download icon and a menu (the three dots) holding Mark as watched, Like and Not for me.
-- Grey placeholder shapes now show while Home, Continue Watching, Picked for you, Movies, TV Shows, Search, My List and a title's page load, instead of a plain loading bar, so the page keeps its shape as things arrive.
+- Grey placeholder shapes now show while Home, Continue Watching, Picked for you, Movies, TV Shows, Search, My List, a title's page, the source list and the Settings pages (Addons, Home Rows, Blocked Genres, Player, Subtitles, Audio) load, instead of a plain loading bar, so the page keeps its shape as things arrive.
 - The window's title bar is dark now, to match the app.
 - Downloads (Arc TV Plus): choose which folder files are saved in, and the list is bigger. A Download button on a title's page lists the files from your debrid service, best quality at the smallest size first, and saves the one you choose to your Downloads folder, with progress. For a show you can choose the season and episode.
 - Settings > Player has Torrent buffer (Small, Normal, Large: how much of a torrent's start must arrive before it plays) and a Torrent storage limit. Torrents now start once that much has arrived, not after the very start and end of the file.

@@ -111,6 +111,9 @@ internal abstract class ModelPane : UserControl
 
     protected SettingsModel Settings => _settings;
 
+    /// <summary>True for a page whose values come from the account's settings: it shows grey placeholders until they have loaded.</summary>
+    protected virtual bool ShowsPlaceholder => false;
+
     /// <summary>Plus pages do not need the account's settings, only Plus.</summary>
     protected virtual bool NeedsSettings => true;
 
@@ -122,6 +125,14 @@ internal abstract class ModelPane : UserControl
     private void Rebuild()
     {
         var column = new StackPanel();
+        // a page that shows the account's switches waits behind grey cards until they have arrived, so a switch never shows a wrong value for a moment (if they cannot be read, the page is built with its defaults)
+        if (ShowsPlaceholder && NeedsSettings && _settings.Current is null && _settings.Problem is null)
+        {
+            column.Children.Add(ArcTV.App.Controls.Skeleton.SettingsRows());
+            Content = column;
+            return;
+        }
+
         if (_settings.Problem is { } problem) column.Children.Add(new TextBlock { Text = problem, FontSize = 13, Foreground = Ui.Pink, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 12) });
         Build(column);
         Content = column;
@@ -169,7 +180,13 @@ internal sealed class HomeRowsPane : ModelPane
         var choices = SettingsModel.RowChoices(_home.AllRows, Settings.RowPreferences);
         if (choices.Count == 0)
         {
-            column.Children.Add(Ui.Note(_home.State == HomeState.Loading ? "Loading your rows…" : "Home has no rows yet. Install an addon first (Settings > Addons), then come back to arrange them."));
+            if (_home.State == HomeState.Loading)
+            {
+                for (var i = 0; i < 6; i++) column.Children.Add(ArcTV.App.Controls.Skeleton.Bar(64)); // grey rows where the Home rows will be listed
+                return;
+            }
+
+            column.Children.Add(Ui.Note("Home has no rows yet. Install an addon first (Settings > Addons), then come back to arrange them."));
             return;
         }
 
@@ -215,6 +232,8 @@ internal sealed class HomeRowsPane : ModelPane
 
 internal sealed class BlockedGenresPane(SettingsModel settings) : ModelPane(settings)
 {
+    protected override bool ShowsPlaceholder => true;
+
     protected override void Build(StackPanel column)
     {
         column.Children.Add(Ui.Note("Pick the genres you never want to see. Titles in them are hidden on every device."));
@@ -241,6 +260,8 @@ internal sealed class BlockedGenresPane(SettingsModel settings) : ModelPane(sett
 
 internal sealed class PlayerPane(SettingsModel settings, ArcTV.Core.Storage.LocalSettings local) : ModelPane(settings)
 {
+    protected override bool ShowsPlaceholder => true;
+
     private ArcTV.Core.Sources.TorrentBuffer _buffer = ArcTV.Core.Sources.TorrentBuffers.From(local.TorrentBuffer);
     private int _storage = local.TorrentStorageGb;
 
@@ -288,6 +309,8 @@ internal sealed class PlayerPane(SettingsModel settings, ArcTV.Core.Storage.Loca
 
 internal sealed class AudioPane(SettingsModel settings) : ModelPane(settings)
 {
+    protected override bool ShowsPlaceholder => true;
+
     protected override void Build(StackPanel column)
     {
         column.Children.Add(Ui.Heading("Preferred audio language", 0));
@@ -298,6 +321,8 @@ internal sealed class AudioPane(SettingsModel settings) : ModelPane(settings)
 
 internal sealed class SubtitlesPane(SettingsModel settings, ArcTV.Core.Storage.LocalSettings local) : ModelPane(settings)
 {
+    protected override bool ShowsPlaceholder => true;
+
     private SubtitleSize _size = SubtitleStyle.SizeFrom(local.SubtitleSize);
     private SubtitleColor _color = SubtitleStyle.ColorFrom(local.SubtitleColor);
 

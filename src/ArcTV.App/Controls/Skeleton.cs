@@ -146,4 +146,23 @@ public class Skeleton : RoundedBorder
         rows.Children.Add(new ScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, Content = cards, IsHitTestVisible = false });
         return rows;
     }
+
+    /// <summary>A stretched shape (as wide as the space it is in) for lists of rows and cards.</summary>
+    public static Skeleton Bar(double height, double radius = 14, Thickness? margin = null) => Box(double.NaN, height, radius, margin ?? new Thickness(0, 0, 0, 10), HorizontalAlignment.Stretch);
+
+    /// <summary>The rows of a source list while the addons are asked: one tall shape for each file offered.</summary>
+    public static StackPanel SourceRows(int count = 6)
+    {
+        var rows = new StackPanel { IsHitTestVisible = false };
+        for (var i = 0; i < count; i++) rows.Children.Add(Bar(88));
+        return rows;
+    }
+
+    /// <summary>A settings page before its values arrive: a few cards, so the switches do not show the wrong values for a moment.</summary>
+    public static StackPanel SettingsRows(int count = 4)
+    {
+        var rows = new StackPanel { IsHitTestVisible = false };
+        for (var i = 0; i < count; i++) rows.Children.Add(Bar(i == 0 ? 78 : 64));
+        return rows;
+    }
 }
