@@ -257,24 +257,8 @@ public partial class DetailView : UserControl
     {
         var id = _model.Detail.Id;
         var saved = _list.IsSaved(id);
-        var watched = _list.IsWatched(id);
         ListButton.Content = saved ? "✓  In My List" : "+  My List";
         ListButton.Tag = saved ? "selected" : "";
-        WatchedButton.Content = watched ? "✓  Watched" : "Mark as watched";
-        WatchedButton.Tag = watched ? "selected" : "";
-
-        // Like and Not for me belong to Arc TV Plus: they show once the account has it
-        var rating = _plus?.RatingOf(id);
-        var visible = _plus is { Active: true } ? Visibility.Visible : Visibility.Collapsed;
-        LikeButton.Visibility = DislikeButton.Visibility = visible;
-        LikeButton.Content = ThumbIcon("\uE8E1");
-        LikeButton.ToolTip = rating == Rating.Like ? "Liked: click to take it back" : "Like";
-        System.Windows.Automation.AutomationProperties.SetName(LikeButton, "Like");
-        LikeButton.Tag = rating == Rating.Like ? "selected" : "";
-        DislikeButton.Content = ThumbIcon("\uE8E0");
-        DislikeButton.ToolTip = rating == Rating.Dislike ? "Marked not for me: click to take it back" : "Not for me";
-        System.Windows.Automation.AutomationProperties.SetName(DislikeButton, "Not for me");
-        DislikeButton.Tag = rating == Rating.Dislike ? "selected" : "";
     }
 
     private void RefreshSeasons()
@@ -324,14 +308,30 @@ public partial class DetailView : UserControl
 
     private async void OnList(object sender, RoutedEventArgs e) => await _list.ToggleSavedAsync(_model.Detail);
 
-    private async void OnWatched(object sender, RoutedEventArgs e) => await _list.ToggleWatchedAsync(_model.Detail);
+    /// <summary>The dots button opens the less used actions: Mark as watched, and (Arc TV Plus) Like and Not for me. The menu is built as it opens, so it shows the title's state as it is now.</summary>
+    private void OnMore(object sender, RoutedEventArgs e)
+    {
+        var id = _model.Detail.Id;
+        var rating = _plus?.RatingOf(id);
+        MoreMenu.Items.Clear();
+        AddMore(_list.IsWatched(id) ? "\u2713  Watched: mark as not watched" : "Mark as watched", async () => await _list.ToggleWatchedAsync(_model.Detail));
+        if (_plus is { Active: true })
+        {
+            MoreMenu.Items.Add(new Separator { Style = (Style)FindResource("DarkMenuSeparator") });
+            AddMore(rating == Rating.Like ? "\u2713  Liked: take it back" : "Like", async () => await Rate(Rating.Like));
+            AddMore(rating == Rating.Dislike ? "\u2713  Not for me: take it back" : "Not for me", async () => await Rate(Rating.Dislike));
+        }
 
-    /// <summary>A thumbs up or down for the Like and Not for me buttons (the pill turns to the selected look when it is the title's rating).</summary>
-    private static TextBlock ThumbIcon(string glyph) => new() { Text = glyph, FontFamily = new System.Windows.Media.FontFamily("Segoe MDL2 Assets"), FontSize = 26, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        MoreMenu.PlacementTarget = MoreButton;
+        MoreMenu.IsOpen = true;
+    }
 
-    private async void OnLike(object sender, RoutedEventArgs e) => await Rate(Rating.Like);
-
-    private async void OnDislike(object sender, RoutedEventArgs e) => await Rate(Rating.Dislike);
+    private void AddMore(string text, Func<Task> action)
+    {
+        var item = new MenuItem { Header = text, Style = (Style)FindResource("DarkMenuItem") };
+        item.Click += async (_, _) => await action();
+        MoreMenu.Items.Add(item);
+    }
 
     private async Task Rate(Rating rating)
     {

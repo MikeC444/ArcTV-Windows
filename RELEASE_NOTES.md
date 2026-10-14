@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- A title's page has fewer buttons: Play, Trailer, My List, a Download icon and a menu (the three dots) holding Mark as watched, Like and Not for me.
 - Grey placeholder shapes now show while Home, Movies, TV Shows and a title's page load, instead of a plain loading bar, so the page keeps its shape as things arrive.
 - The window's title bar is dark now, to match the app.
 - Downloads (Arc TV Plus): choose which folder files are saved in, and the list is bigger. A Download button on a title's page lists the files from your debrid service, best quality at the smallest size first, and saves the one you choose to your Downloads folder, with progress. For a show you can choose the season and episode.

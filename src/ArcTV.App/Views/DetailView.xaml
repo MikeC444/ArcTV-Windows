@@ -169,10 +169,14 @@
             <Button x:Name="PlayButton" Content="&#x25B6;  Play" Style="{StaticResource PrimaryButton}" Height="60" FontSize="18" Padding="34,0" IsEnabled="False" Margin="0,0,16,0" Click="OnPlay" />
             <Button x:Name="TrailerButton" Content="Trailer" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" IsEnabled="False" ToolTip="Looking for a trailer…" Click="OnTrailer" />
             <Button x:Name="ListButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" Click="OnList" />
-            <Button x:Name="DownloadButton" Content="Download" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" Click="OnDownload" />
-            <Button x:Name="WatchedButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" Margin="0,0,16,0" Click="OnWatched" />
-            <Button x:Name="LikeButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" MinWidth="80" Margin="0,0,16,0" Visibility="Collapsed" Click="OnLike" />
-            <Button x:Name="DislikeButton" Style="{StaticResource ChoicePill}" Height="60" FontSize="18" MinWidth="80" Visibility="Collapsed" Click="OnDislike" />
+            <!-- Download is an icon beside My List; Mark as watched, Like and Not for me are in the menu behind the dots -->
+            <Button x:Name="DownloadButton" Style="{StaticResource ChoicePill}" Height="60" Width="60" Margin="0,0,16,0" ToolTip="Download" AutomationProperties.Name="Download" Click="OnDownload">
+              <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Button>
+            <Button x:Name="MoreButton" Style="{StaticResource ChoicePill}" Height="60" Width="60" ToolTip="More" AutomationProperties.Name="More" Click="OnMore">
+              <TextBlock Text="&#xE712;" FontFamily="Segoe MDL2 Assets" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              <Button.ContextMenu><ContextMenu x:Name="MoreMenu" Style="{StaticResource DarkMenu}" Placement="Bottom" /></Button.ContextMenu>
+            </Button>
           </StackPanel>
           <Border x:Name="RatingBox" HorizontalAlignment="Right" CornerRadius="12" Background="#73000000" Padding="18,8" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal">

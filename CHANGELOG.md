@@ -634,3 +634,6 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 **Issues discovered:** none. **Issues fixed:** none.
 
 **Still open:** skeletons for Search, My List and the Continue Watching / Picked for you rows; the dark title bar colour only applies on Windows 10 20H1 and newer (Windows 11 for the exact colour).
+
+**Follow-up (owner: too many buttons on a title's page).** The row was Play, Trailer, My List, Download, Mark as watched, Like, Not for me. Now Play, Trailer, My List, a Download icon (same action as before) and a "more" button whose dark menu (built as it opens, so it shows the current state) has Mark as watched and, for Arc TV Plus, Like and Not for me (a tick and "take it back" when already set). Built (0 warnings, 0 errors) in the sandbox; not seen on screen.
+
