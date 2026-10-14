@@ -179,13 +179,18 @@ public partial class DetailView : UserControl
         if (_play is not null && MainTarget() is { } target) _play(target);
     }
 
-    /// <summary>A click on an episode's card plays it; a click on the tick on its picture marks it watched or not watched.</summary>
+    /// <summary>A click on an episode's card plays it; a click on the tick on its picture marks it watched or not watched, and the arrow beside it opens Downloads for that episode.</summary>
     private void OnEpisodeClick(object sender, RoutedEventArgs e)
     {
         if (e.OriginalSource is not Button { DataContext: EpisodeEntry entry } button) return;
         if (button.Tag is "tick")
         {
             SetWatched([entry.Info], !entry.Watched);
+            e.Handled = true;
+        }
+        else if (button.Tag is "download")
+        {
+            if (_download is not null) _download(EpisodeTarget(entry.Info) with { StartAt = 0 });
             e.Handled = true;
         }
         else if (_play is not null)

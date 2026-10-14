@@ -73,6 +73,19 @@
                 </Style>
               </ProgressBar.Style>
             </ProgressBar>
+            <!-- Download this episode (Arc TV Plus: without it the panel says so): its click is told apart from a click on the card by its Tag -->
+            <Button Tag="download" Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="8,8,8,14" Cursor="Hand" Focusable="False" ToolTip="Download this episode">
+              <Button.Template>
+                <ControlTemplate TargetType="Button">
+                  <Border x:Name="Disc" CornerRadius="15" Background="#99000000" BorderBrush="#66FFFFFF" BorderThickness="1">
+                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  </Border>
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Disc" Property="BorderBrush" Value="{StaticResource AccentBrush}" /></Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate>
+              </Button.Template>
+            </Button>
             <!-- the tick: click it to mark the episode watched or not watched (its click is told apart from a click on the card by its Tag) -->
             <Button Tag="tick" Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Cursor="Hand" Focusable="False" ToolTip="Mark as watched">
               <Button.Template>

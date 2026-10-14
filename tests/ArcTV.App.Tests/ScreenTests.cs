@@ -454,7 +454,7 @@ public class ScreenTests
         var target = new PlayTarget(new MetaDetail("tt1", "movie", "Film"));
         SourceItem[] items =
         [
-            new("Torrentio", new AddonStream(Url: "https://example.com/a.mkv", Title: "Film 1080p"), 0),
+            new("Torrentio", new AddonStream(Name: "[RD+] Torrentio", Url: "https://example.com/a.mkv", Title: "Film 1080p HDR"), 0),
             new("Torrentio", new AddonStream(InfoHash: "abc", Title: "Film torrent"), 1),
         ];
         var manager = new ArcTV.Core.Downloads.DownloadManager(new HttpClient(), Path.Combine(Path.GetTempPath(), "arctv-dl-screen-" + Guid.NewGuid().ToString("N")));
@@ -468,6 +468,8 @@ public class ScreenTests
 
         Assert.Equal("list", listed.State);
         Assert.Contains(Descendants<System.Windows.Controls.TextBlock>(listed), t => t.Text == "1 source"); // the torrent is not offered
+        Assert.Contains(Descendants<System.Windows.Controls.TextBlock>(listed), t => t.Text.Contains("Cached on Real-Debrid"));
+        Assert.Contains(Descendants<System.Windows.Controls.TextBlock>(listed), t => t.Text == "HDR");
         window.Close();
 
         var asked = false;
@@ -477,6 +479,38 @@ public class ScreenTests
         Assert.Equal("plus", invite.State);
         Descendants<System.Windows.Controls.Button>(invite).Single(b => b.Content is "See Arc TV Plus").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
         Assert.True(asked);
+        window.Close();
+    });
+
+    [Fact]
+    public void DownloadsPageListsStoppedAndSavedFilesWithTheirButtons() => OnUiThread(async () =>
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "arctv-dlpage-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        var saved = Path.Combine(folder, "Done.mkv");
+        await File.WriteAllBytesAsync(saved, [1, 2, 3]);
+        await File.WriteAllBytesAsync(Path.Combine(folder, "Half.mkv.part"), new byte[1000]);
+        var state = Path.Combine(folder, "downloads.json");
+        var records = new[]
+        {
+            new { Id = 1, Name = "Done.mkv", Url = "https://example.com/a.mkv", Destination = saved, State = "Done", Message = (string?)null, Total = (long?)3 },
+            new { Id = 2, Name = "Half.mkv", Url = "https://example.com/b.mkv", Destination = Path.Combine(folder, "Half.mkv"), State = "Running", Message = (string?)null, Total = (long?)2000 },
+        };
+        await File.WriteAllTextAsync(state, System.Text.Json.JsonSerializer.Serialize(records));
+        var manager = new ArcTV.Core.Downloads.DownloadManager(new HttpClient(), folder, state);
+        var page = new DownloadsView(manager, new LocalSettings(Path.Combine(folder, "settings.json")));
+        var window = Host(page);
+        await Settle();
+        var buttons = Descendants<System.Windows.Controls.Button>(page).Select(b => b.Content as string).ToList();
+        Assert.Contains("Play", buttons); // the saved file
+        Assert.Contains("Resume", buttons); // the one that was running when the app closed
+        Assert.Contains(Descendants<System.Windows.Controls.TextBlock>(page), t => t.Text.StartsWith("Stopped when Arc TV closed"));
+        window.Close();
+
+        var empty = new DownloadsView(new ArcTV.Core.Downloads.DownloadManager(new HttpClient(), folder), new LocalSettings(Path.Combine(folder, "settings.json")));
+        window = Host(empty);
+        await Settle();
+        Assert.Contains(Descendants<System.Windows.Controls.TextBlock>(empty), t => t.Text.StartsWith("Nothing downloaded yet"));
         window.Close();
     });
 }

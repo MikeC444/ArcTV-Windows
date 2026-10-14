@@ -643,3 +643,23 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 
 **Follow-up (owner: placeholders for Search, My List, Continue Watching and Picked for you).** Search and My List swap their loading bars for grey poster grids (made only while loading). Continue Watching and Picked for you needed to know the difference between "still loading" and "nothing to show", or the shapes would flash for people with no row: `ContinueModel.Loaded` (true once the list came back or failed) and `PickedModel.Working` (true only while a Plus account waits for its first row). Core tests added for both (228 pass); screens not seen.
 
+## Downloads extras (owner asked for all four)
+
+**Status:** Built, and unit tested in the sandbox (231 Core tests pass). Screen tests added for the new page and the new chips; they run on CI only. Not seen on screen.
+
+**Context:** CLAUDE.md open item 3. The Mac has the cached/HDR/small-file labels and the per-episode Download button; it has no Downloads page and no resume, so those two are new on Windows (and are open for the Mac).
+
+**Changes:**
+- Labels (`DownloadChoices`): `Debrid` (the "[RD+]" / "[RD download]" tag in a stream's name: "Cached on Real-Debrid" or "Not cached: may take a while to start"), `Hdr`, `IsUnusuallySmall` (1080p / 4K under 150 MB), ported from the Mac's `DownloadLabels`; shown as chips in the Download panel (green for cached, amber for the warnings).
+- Episode Download: an arrow on each episode's picture (beside the tick) opens the panel on that episode.
+- `DownloadManager` now keeps its list in `%LOCALAPPDATA%\ArcTV\downloads.json` (link, name, where the file goes, size, state). A download that was running when the app closed is read back as Paused with its `.part` file; Resume asks the link for the rest with a Range request (206: appended; 200: the server sent it all again, so it starts over; 416: starts over). A network failure part way keeps the half file and offers Resume; an expired link (401/403/404/410) says so in words and does not offer it. Cancel and Remove delete the half file; finished files whose file has gone are dropped from the list on the next start. New state `Paused`, `DownloadJob.CanResume`, `Remove`.
+- `DownloadsView` (profile menu > Downloads, and "See all downloads" in the panel): save-to folder, one row per file (Play / Show in folder / Remove when saved, Cancel while saving, Resume / Remove when stopped), empty message.
+
+**Tests performed:** Core: labels, resume from a half file against a Range-aware stub server (asks only for the missing bytes, file equals the original), paused-on-load, finished entries kept only while the file exists, expired link, Remove keeps the file. One older test changed: a 403 used to say "The server answered 403" and now says the link expired (it uses a 500 instead).
+
+**Issues discovered:** the saved list holds the debrid links, which can carry a token, in plain text in the local app folder (they expire; the session file is encrypted but this one is not).
+
+**Issues fixed:** none.
+
+**Still open:** pause (as opposed to cancel) while the app is running; downloads running in the background after the window closes; a download that failed on an expired link cannot be refreshed from the page (it must be started again from the title); the Mac has neither the Downloads page nor resume.
+

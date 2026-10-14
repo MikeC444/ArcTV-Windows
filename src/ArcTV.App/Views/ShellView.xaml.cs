@@ -181,6 +181,9 @@ public partial class ShellView : UserControl
         var signOut = new MenuItem { Header = "Sign out", Style = (Style)FindResource("DarkMenuItem") };
         signOut.Click += async (_, _) => await _account.SignOutAsync();
         AccountMenu.Items.Add(email);
+        var downloads = new MenuItem { Header = "Downloads", Style = (Style)FindResource("DarkMenuItem") };
+        downloads.Click += (_, _) => OpenDownloadsPage();
+        AccountMenu.Items.Add(downloads);
         if (_switchProfile is not null)
         {
             var switchItem = new MenuItem { Header = "Switch profile", Style = (Style)FindResource("DarkMenuItem") };
@@ -402,7 +405,7 @@ public partial class ShellView : UserControl
         Page.Content = new DetailView(new DetailModel(item, _addonClient, _extras), MyListFor(), GoBack, () => _home.AllRows.SelectMany(row => row.Items).ToList(), OpenSources, _plus, _continue, OpenDownloads);
     }
 
-    private static readonly DownloadManager Downloads = new(new HttpClient { Timeout = Timeout.InfiniteTimeSpan }, DownloadManager.DefaultFolder());
+    private static readonly DownloadManager Downloads = new(new HttpClient { Timeout = Timeout.InfiniteTimeSpan }, DownloadManager.DefaultFolder(), Path.Combine(AppPaths.DataFolder(), "downloads.json")); // the list is kept, so a stopped download can be resumed
 
     /// <summary>The Downloads panel for a movie or episode, over the page (Arc TV Plus; without it the panel says so and offers the Plus page).</summary>
     private void OpenDownloads(PlayTarget target)
@@ -412,7 +415,15 @@ public partial class ShellView : UserControl
             {
                 _settingsPane = "Arc TV Plus";
                 Open("Settings");
-            }, CloseCardMenu, _ => { });
+            }, CloseCardMenu, _ => { }, OpenDownloadsPage);
+    }
+
+    /// <summary>The Downloads page, over the one that is open (Back puts that page back).</summary>
+    private void OpenDownloadsPage()
+    {
+        ShowBar(true);
+        if (Page.Content is UIElement current && current is not DownloadsView) _history.Push((current, _place));
+        Page.Content = new DownloadsView(Downloads, _local);
     }
 
     private string _settingsPane = "Account";

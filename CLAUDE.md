@@ -31,9 +31,9 @@ Everything below is on `main` and was green on CI when written (Oct 2026). CI is
 **Downloads** (Arc TV Plus, as on the Mac): `src/ArcTV.Core/Downloads` (choices, file names, `DownloadManager` writing `name.part` then renaming) and `Views/DownloadPanelView.cs` (fixed size, drawn up to 1.3x, "Save to" folder picker kept in `LocalSettings`, files scroll inside; its scrolling is marked handled so the top bar does not react). Only direct web links (a debrid service) can be saved; torrents cannot.
 
 **Open, in the order I would do them:**
-1. Loading placeholders (grey shapes while Home, rows and title pages load).
+1. Loading placeholders: done for Home, Continue Watching, Picked for you, Movies / TV Shows, Search, My List and title pages (`Controls/Skeleton.cs`). Not for Settings, Sources or the profile picker.
 2. Installer, updater and first release: only when the owner explicitly asks for a release.
-3. Downloads extras: a Download button on each episode (the Mac has one), debrid cached / not cached labels, a place to manage downloads outside the panel, resuming after the app closes.
+3. Downloads extras: done (episode button, cached / HDR / small-file labels, Downloads page in the profile menu, resume after the app closes: the list is kept in `downloads.json`). Left: pausing while running, background downloads after the window closes.
 4. Torrent peer finding is slow on the owner's PC: the DHT stays "Initialising / NotReady with 0 nodes" (trackers still give peers). Windows Firewall for `ArcTV` (private and public) and a VPN were not yet ruled out. The MonoTorrent 3.9 alpha (adds uTP) was offered and not tried: it is an alpha with a different settings API and nothing here can compile locally.
 5. The remembered-source hang from Continue Watching was never root-caused: Continue Watching shows the source list instead. `player.log` / `mpv.log` and the watchdog exist to catch it.
 6. Visual Studio stops on a cancelled web request in `ApiHttp` ("User-Unhandled") when a page that was loading is left: it is a debugger setting (untick it), and the app already ignores cancelled and network errors. Which caller starts it was not traced (a call stack would show it).

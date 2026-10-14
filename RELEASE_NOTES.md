@@ -5,6 +5,10 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Downloads: every episode has its own Download arrow on its picture.
+- Downloads: each file now says if your debrid service already has it ready ("Cached on Real-Debrid") or still has to fetch it first, and shows HDR / Dolby Vision and a warning when a file is unusually small.
+- A Downloads page (profile menu, or "See all downloads" in the Download panel) lists everything you have saved or are saving, with Play, Show in folder, Cancel and Remove, and where files are saved.
+- A download stopped by closing Arc TV can be resumed: it carries on from where it stopped instead of starting again.
 - On Movies, TV Shows, Search and My List, the heading now scrolls away with the posters, so they can scroll right up to the top of the window instead of stopping under a block of empty space.
 - A title's page has fewer buttons: Play, Trailer, My List, a Download icon and a menu (the three dots) holding Mark as watched, Like and Not for me.
 - Grey placeholder shapes now show while Home, Continue Watching, Picked for you, Movies, TV Shows, Search, My List and a title's page load, instead of a plain loading bar, so the page keeps its shape as things arrive.

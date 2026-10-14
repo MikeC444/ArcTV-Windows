@@ -31,6 +31,7 @@ public sealed class DownloadPanelView : Grid
     private readonly Action _seePlus;
     private readonly Action _close;
     private readonly Action<PlayTarget> _saved;
+    private readonly Action? _seeAll;
     private readonly RoundedBorder _panel;
     private readonly ScrollViewer _scroll;
     private readonly ContentControl _bannerHost = new();
@@ -44,9 +45,9 @@ public sealed class DownloadPanelView : Grid
     private PlayTarget _target;
     private CancellationTokenSource? _run;
 
-    public DownloadPanelView(PlayTarget target, Func<PlayTarget, CancellationToken, Task<SourceResult>> find, DownloadManager manager, LocalSettings local, bool plus, Action seePlus, Action close, Action<PlayTarget> saved)
+    public DownloadPanelView(PlayTarget target, Func<PlayTarget, CancellationToken, Task<SourceResult>> find, DownloadManager manager, LocalSettings local, bool plus, Action seePlus, Action close, Action<PlayTarget> saved, Action? seeAll = null)
     {
-        (_target, _find, _manager, _local, _plus, _seePlus, _close, _saved) = (target, find, manager, local, plus, seePlus, close, saved);
+        (_target, _find, _manager, _local, _plus, _seePlus, _close, _saved, _seeAll) = (target, find, manager, local, plus, seePlus, close, saved, seeAll);
 
         var dim = new Border { Background = new SolidColorBrush(Color.FromArgb(0xB3, 0, 0, 0)) };
         dim.MouseLeftButtonDown += (_, e) =>
@@ -347,6 +348,9 @@ public sealed class DownloadPanelView : Grid
         var chips = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
         if (item.SizeText is { } size) chips.Children.Add(Chip(size, true));
         if (item.CodecText is { } codec) chips.Children.Add(Chip(codec.Replace("  ·  ", " · "), false));
+        if (DownloadChoices.Hdr(item) is { } hdr) chips.Children.Add(Chip(hdr, false, Ui.Res("AccentBrush"), true));
+        if (DownloadChoices.IsUnusuallySmall(item)) chips.Children.Add(Chip("Unusually small", false, Amber, true));
+        if (DownloadChoices.Debrid(item) is { } debrid) chips.Children.Add(Chip((debrid.Cached ? "\u2713  " : "\u23F3  ") + debrid.Label, false, debrid.Cached ? Green : Amber, false));
         text.Children.Add(chips);
 
         var started = _started.Contains(item.Id);
@@ -378,10 +382,16 @@ public sealed class DownloadPanelView : Grid
         row.BorderBrush = started ? accent : Ui.Line;
     }
 
-    private static Border Chip(string text, bool bold) => new()
+    private static readonly SolidColorBrush Amber = new(Color.FromRgb(0xFF, 0xB0, 0x20));
+    private static readonly SolidColorBrush Green = new(Color.FromRgb(0x4A, 0xDE, 0x80));
+
+    /// <summary>A small label under a file's name: grey and filled, or (<paramref name="outlined"/>) an outline in its own colour. <paramref name="colour"/> colours the words.</summary>
+    private static Border Chip(string text, bool bold, Brush? colour = null, bool outlined = false) => new()
     {
-        Margin = new Thickness(0, 0, 8, 4), Padding = new Thickness(7, 3, 7, 3), CornerRadius = new CornerRadius(6), Background = new SolidColorBrush(Color.FromArgb(0x1A, 255, 255, 255)),
-        Child = new TextBlock { Text = text, FontSize = 11, FontWeight = bold ? FontWeights.Bold : FontWeights.Medium, Foreground = bold ? Ui.Res("TextBrush") : Ui.Res("Text2Brush") },
+        Margin = new Thickness(0, 0, 8, 4), Padding = new Thickness(7, 3, 7, 3), CornerRadius = new CornerRadius(6),
+        Background = outlined ? Brushes.Transparent : new SolidColorBrush(Color.FromArgb(0x1A, 255, 255, 255)),
+        BorderBrush = outlined && colour is not null ? colour : Brushes.Transparent, BorderThickness = new Thickness(1),
+        Child = new TextBlock { Text = text, FontSize = 11, FontWeight = bold ? FontWeights.Bold : FontWeights.Medium, Foreground = colour ?? (bold ? Ui.Res("TextBrush") : Ui.Res("Text2Brush")) },
     };
 
     /// <summary>Starts saving a file; the button turns into a tick at once, so a click always visibly does something.</summary>
@@ -434,6 +444,18 @@ public sealed class DownloadPanelView : Grid
         clear.Click += (_, _) => _manager.ClearFinished();
         DockPanel.SetDock(clear, Dock.Right);
         header.Children.Add(clear);
+        if (_seeAll is not null)
+        {
+            var all = new Button { Content = "See all downloads", Style = Ui.StyleOf("LinkButton"), Margin = new Thickness(0, 0, 16, 0) };
+            all.Click += (_, _) =>
+            {
+                _close();
+                _seeAll();
+            };
+            DockPanel.SetDock(all, Dock.Right);
+            header.Children.Add(all);
+        }
+
         header.Children.Add(Words("Downloads", 15, FontWeights.Bold));
         _jobList.Children.Add(header);
         foreach (var job in _manager.Jobs.Take(3)) _jobList.Children.Add(JobRow(job));
@@ -443,12 +465,17 @@ public sealed class DownloadPanelView : Grid
     {
         var line = new DockPanel();
         var name = new TextBlock { Text = job.Name, FontSize = 12, FontWeight = FontWeights.Medium, Foreground = Ui.Res("TextBrush"), TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
-        if (job.State != DownloadState.Failed)
+        if (job.State == DownloadState.Failed && !job.CanResume)
         {
-            var action = new Button { Content = job.State == DownloadState.Running ? "Cancel" : "Show in folder", Style = Ui.StyleOf("LinkButton") };
+            // nothing to do for it but read why
+        }
+        else
+        {
+            var action = new Button { Content = job.State switch { DownloadState.Running => "Cancel", DownloadState.Done => "Show in folder", _ => "Resume" }, Style = Ui.StyleOf("LinkButton") };
             action.Click += (_, _) =>
             {
                 if (job.State == DownloadState.Running) _manager.Cancel(job);
+                else if (job.CanResume) _manager.Resume(job);
                 else if (job.FilePath is { } path) Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true });
             };
             DockPanel.SetDock(action, Dock.Right);
@@ -469,8 +496,8 @@ public sealed class DownloadPanelView : Grid
             case DownloadState.Done:
                 stack.Children.Add(Words($"Saved to {(job.FilePath is { } saved ? Path.GetDirectoryName(saved) : "your Downloads folder")}", 11, brush: new SolidColorBrush(Color.FromRgb(0x4A, 0xDE, 0x80))));
                 break;
-            default:
-                stack.Children.Add(Words(job.Message ?? "The download failed.", 11, brush: new SolidColorBrush(Color.FromRgb(0xFF, 0xB0, 0x20))));
+            default: // stopped or failed
+                stack.Children.Add(Words(job.Message ?? "The download failed.", 11, brush: Amber));
                 break;
         }
 
