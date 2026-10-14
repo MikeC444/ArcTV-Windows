@@ -373,7 +373,7 @@ public sealed class DownloadManager
                     var message = code is 401 or 403 or 404 or 410
                         ? "That link has expired or is no longer available. Download it again from the title's page."
                         : $"The server answered {code}.";
-                    Post(() => (job.State, job.Message, job.Resumable) = (DownloadState.Failed, message, false));
+                    Post(() => (job.Message, job.Resumable, job.State) = (message, false, DownloadState.Failed)); // the reason first, the state last: whoever reacts to the state finds the reason there
                     return;
                 }
 
@@ -425,7 +425,7 @@ public sealed class DownloadManager
             var resumable = keepHalf && ex is not UnauthorizedAccessException;
             Post(() =>
             {
-                (job.State, job.Message, job.Resumable) = (DownloadState.Failed, message, resumable);
+                (job.Message, job.Resumable, job.State) = (message, resumable, DownloadState.Failed);
                 Save();
             });
         }

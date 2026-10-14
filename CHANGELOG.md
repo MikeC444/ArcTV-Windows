@@ -744,3 +744,5 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 
 **Issues discovered:** none. **Open:** nothing checks for an update again after launch; the update card can only be tried with a real release (none exists yet); the setup guide names Torrentio and two debrid services as the Mac's does (prices and screens on their sites change).
 
+**Test fix (flaky `ACancelledDownloadLeavesNoHalfFileAndAnExpiredLinkSaysSo` on CI).** A failed download set its state to Failed first and its message second, so a reader that reacted to the state (the test, or the Downloads page rebuilding on the state change) could see no message yet. `DownloadManager` now sets the message and whether it can be resumed first and the state last. The only failure in the run after the cache-key change; not caused by that change.
+
