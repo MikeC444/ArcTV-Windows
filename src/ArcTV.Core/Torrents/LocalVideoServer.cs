@@ -65,12 +65,15 @@ public sealed class LocalVideoServer : IDisposable
     private readonly IPieceSource _pieces;
     private readonly TcpListener _listener = new(IPAddress.Loopback, 0);
     private readonly CancellationTokenSource _stop = new();
+    private readonly Action<string>? _log;
 
-    public LocalVideoServer(string path, long size, IPieceSource pieces)
+    /// <param name="log">Told what the player asks for and how long it waits for pieces (the app writes it to player.log), so a video that will not start can be understood afterwards.</param>
+    public LocalVideoServer(string path, long size, IPieceSource pieces, Action<string>? log = null)
     {
         _path = path;
         _size = size;
         _pieces = pieces;
+        _log = log;
     }
 
     /// <summary>Starts listening and returns the address to give the player.</summary>
@@ -147,6 +150,7 @@ public sealed class LocalVideoServer : IDisposable
 
             var start = range?.Start ?? 0;
             var last = range?.End ?? _size - 1;
+            _log?.Invoke($"video server: {method} bytes {start}-{last} of {_size}{(start == 0 && range is null ? " (the whole file)" : "")}");
             var head = new StringBuilder(range is null ? "HTTP/1.1 200 OK\r\n" : "HTTP/1.1 206 Partial Content\r\n");
             head.Append($"Content-Type: {ContentType(_path)}\r\nAccept-Ranges: bytes\r\nContent-Length: {last - start + 1}\r\n");
             if (range is not null) head.Append($"Content-Range: bytes {start}-{last}/{_size}\r\n");
@@ -170,6 +174,7 @@ public sealed class LocalVideoServer : IDisposable
         {
             var position = start;
             var chunks = 0;
+            var firstWait = DateTime.MinValue;
             var buffer = new byte[Chunk];
             while (position <= last && !_stop.IsCancellationRequested)
             {
@@ -178,9 +183,16 @@ public sealed class LocalVideoServer : IDisposable
                 while (!_pieces.Have(position, length))
                 {
                     _stop.Token.ThrowIfCancellationRequested();
+                    if (waited == 0) firstWait = DateTime.UtcNow;
                     await Task.Delay(PollEvery, _stop.Token).ConfigureAwait(false);
-                    if (++waited % 20 == 0) _pieces.Request(position); // every couple of seconds: still waiting here, ask again
+                    if (++waited % 20 == 0)
+                    {
+                        _pieces.Request(position); // every couple of seconds: still waiting here, ask again
+                        if (waited % 100 == 0) _log?.Invoke($"video server: still waiting for the pieces at {position / 1_048_576.0:0.#} MB ({(DateTime.UtcNow - firstWait).TotalSeconds:0} s so far)");
+                    }
                 }
+
+                if (waited >= 20) _log?.Invoke($"video server: the pieces at {position / 1_048_576.0:0.#} MB arrived after {(DateTime.UtcNow - firstWait).TotalSeconds:0} s");
 
                 file ??= OpenWhenThere();
                 if (file is null)

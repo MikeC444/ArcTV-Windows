@@ -114,7 +114,7 @@ public sealed class LibTorrentStreamer : ITorrentStarter
             var buffer = TorrentBuffers.From(local.TorrentBuffer);
             var source = session.Source(pick, buffer.PiecesAhead());
             source.Request(0);
-            var server = _server = new LocalVideoServer(session.FilePath(pick), file.Size, source);
+            var server = _server = new LocalVideoServer(session.FilePath(pick), file.Size, source, PlayerLog.Write);
             var url = server.Start();
 
             var wanted = Math.Min(file.Size, buffer.StartBytes());
