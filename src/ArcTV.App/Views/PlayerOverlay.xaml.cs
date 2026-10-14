@@ -177,6 +177,7 @@ public partial class PlayerOverlay : Window
         _controlsShown = shown;
         ControlLayer.IsHitTestVisible = shown;
         ControlLayer.BeginAnimation(OpacityProperty, new DoubleAnimation(shown ? 1 : 0, TimeSpan.FromMilliseconds(shown ? 120 : 300)));
+        TitleEnd.BeginAnimation(OpacityProperty, new DoubleAnimation(shown ? 1 : 0, TimeSpan.FromMilliseconds(shown ? 120 : 300))); // the logo at the top right goes with the controls
         Root.Cursor = shown ? Cursors.Arrow : Cursors.None;
     }
 

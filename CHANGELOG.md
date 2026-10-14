@@ -762,3 +762,15 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 **Issues discovered:** the Episodes button and "next episode" need the full episode list, which Continue Watching and the banner do not have.
 
 **Issues fixed:** that.
+
+## Player: the top-right logo fades with the controls (owner asked)
+
+**Status:** Built; not seen on screen.
+
+**Context:** The title logo (and episode line) at the top right of the player stayed visible after the controls faded away.
+
+**Changes:** `PlayerOverlay.SetControls` fades `TitleEnd` with the control layer.
+
+**Tests performed:** `dotnet build`.
+
+**Issues discovered:** none. **Issues fixed:** the logo staying on screen.
