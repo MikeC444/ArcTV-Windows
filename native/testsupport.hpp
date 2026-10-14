@@ -9,7 +9,17 @@
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/create_torrent.hpp>
 #include <libtorrent/load_torrent.hpp>
+#include <libtorrent/sha1_hash.hpp>
 #include <libtorrent/version.hpp>
+
+// The info-hash as the 40 letters of a magnet link (libtorrent's own hex helper is internal and not exported from 2.1's library).
+inline std::string hex_of(const lt::sha1_hash &hash) {
+    static const char digits[] = "0123456789abcdef";
+    const std::string bytes = hash.to_string();
+    std::string text;
+    for (unsigned char b : bytes) { text += digits[b >> 4]; text += digits[b & 15]; }
+    return text;
+}
 
 // For the test programs: makes a torrent out of a folder, the same on libtorrent 2.0 (apt) and 2.1 (vcpkg), whose torrent-making calls differ. The folder's own name starts the names inside the torrent
 // ("Movie/film.mkv"), and its parent is where the files are read from when hashing.

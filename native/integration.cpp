@@ -16,7 +16,6 @@
 #include <libtorrent/torrent_handle.hpp>
 #include <libtorrent/torrent_info.hpp>
 #include <libtorrent/torrent_status.hpp>
-#include <libtorrent/hex.hpp>
 #include "testsupport.hpp"
 #include <filesystem>
 
@@ -64,7 +63,7 @@ int main() {
     int port = seeder.listen_port();
     if (port == 0) { std::puts("the seeder has no port"); return 2; }
 
-    std::string magnet = "magnet:?xt=urn:btih:" + lt::aux::to_hex(info->info_hashes().get_best()) + "&dn=Movie&x.pe=127.0.0.1:" + std::to_string(port);
+    std::string magnet = "magnet:?xt=urn:btih:" + hex_of(info->info_hashes().get_best()) + "&dn=Movie&x.pe=127.0.0.1:" + std::to_string(port);
 
     ct_engine *engine = ct_create();
     if (!engine) { std::puts("ct_create failed"); return 3; }

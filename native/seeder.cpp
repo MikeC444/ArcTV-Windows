@@ -9,7 +9,6 @@
 
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/create_torrent.hpp>
-#include <libtorrent/hex.hpp>
 #include <libtorrent/session.hpp>
 #include <libtorrent/settings_pack.hpp>
 #include <libtorrent/torrent_info.hpp>
@@ -47,7 +46,7 @@ int main(int argc, char **argv) {
     session.add_torrent(params);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-    std::printf("MAGNET magnet:?xt=urn:btih:%s&dn=Show&x.pe=127.0.0.1:%d\n", lt::aux::to_hex(info->info_hashes().get_best()).c_str(), session.listen_port());
+    std::printf("MAGNET magnet:?xt=urn:btih:%s&dn=Show&x.pe=127.0.0.1:%d\n", hex_of(info->info_hashes().get_best()).c_str(), session.listen_port());
     std::printf("FILE %s\n", original.string().c_str());
     std::fflush(stdout);
     std::string line;

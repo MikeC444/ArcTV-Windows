@@ -704,3 +704,5 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 
 **Lesson:** code written against the apt libtorrent can fail against vcpkg's; the sandbox now has both versions to build against.
 
+**Result of that check:** libtorrent 2.1.2 built here from source with deprecated functions off (the vcpkg configuration); `ctorrent`, the smoke test, the real-transfer test and the three C# tests (wrapper, local video server, file choice) all pass against it, three runs of the C# tests in a row. One more difference found that way: the test programs used `libtorrent::aux::to_hex`, which is internal and not exported from 2.1's library (a link error); `testsupport.hpp` now has its own `hex_of`.
+
