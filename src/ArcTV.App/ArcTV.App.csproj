@@ -21,7 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="QRCoder" Version="1.6.0" />
-    <PackageReference Include="MonoTorrent" Version="3.0.2" />
+    <PackageReference Include="MonoTorrent" Version="3.9.0-alpha.unstable.rev0000" />
     <Resource Include="Assets\auth-hero.jpg" />
     <Resource Include="Assets\logo.png" />
     <Resource Include="Assets\avatars\*.png" />

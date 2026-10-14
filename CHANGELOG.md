@@ -663,3 +663,13 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 
 **Still open:** pause (as opposed to cancel) while the app is running; downloads running in the background after the window closes; a download that failed on an expired link cannot be refreshed from the page (it must be started again from the title); the Mac has neither the Downloads page nor resume.
 
+## MonoTorrent 3.9 alpha (trial, owner asked)
+
+**Status:** Builds (0 warnings, 0 errors) and the Core tests pass here; torrents were not run (nothing here can run the player). The only 3.9 package on NuGet is `3.9.0-alpha.unstable.rev0000`.
+
+**Changes:** `ArcTV.App.csproj` uses it instead of 3.0.2. No code changed: every name `TorrentStreamer` uses still exists with the same meaning.
+
+**Findings:** CLAUDE.md said this alpha "adds uTP". The package does not: its assemblies contain no uTP code, and its docs describe the listener as TCP only (uTP is on the library's master branch, not in this package). So the expected gain is whatever else changed between 3.0.2 and this build, not uTP, and it may be nothing. It is an alpha: if torrents get worse, put `3.0.2` back (one line).
+
+**What to look at on the PC:** the `player.log` lines while a torrent loads (DHT state and nodes, connections, speed), compared with the earlier logs: 0 connected for 10 to 60 s, then a burst. If the DHT still stays at 0 nodes, the cause is more likely Windows Firewall for `ArcTV` or a VPN than the library.
+
