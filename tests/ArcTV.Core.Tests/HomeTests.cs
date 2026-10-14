@@ -235,6 +235,20 @@ public class HomeModelTests
     private const string Cool = """{"id":"x","name":"Cool","catalogs":[{"type":"movie","id":"all","extra":[{"name":"genre","options":["Noir","Anime"]}]}]}""";
 
     [Fact]
+    public async Task BlockingAGenreAfterTheBannerWasChosenChoosesTheBannerAgain()
+    {
+        static string Meta(string id, string genre) => $"{{\"id\":\"{id}\",\"type\":\"movie\",\"name\":\"{id}\",\"poster\":\"p\",\"background\":\"b{id}\",\"genres\":[\"{genre}\"]}}";
+        var metas = "{\"metas\":[" + string.Join(",", Meta("a", "Animation"), Meta("b", "Animation"), Meta("c", "Drama"), Meta("d", "Drama")) + "]}";
+        var model = new HomeModel(_ => Task.FromResult<IReadOnlyList<SyncedAddon>>([Addon(Cool)]), "u", Client(_ => metas), new Random(1));
+        await model.LoadAsync();
+        for (var i = 0; i < 200 && model.Hero.Count == 0; i++) await Task.Delay(10);
+        Assert.Contains(model.Hero, h => h.Genres!.Contains("Animation"));
+        model.BlockedGenres = ArcTV.Core.Settings.BlockedGenres.Set(["Animation"]);
+        Assert.NotEmpty(model.Hero);
+        Assert.DoesNotContain(model.Hero, h => h.Genres!.Contains("Animation"));
+    }
+
+    [Fact]
     public async Task LoadsRowsAndPicksTheBanner()
     {
         var model = new HomeModel(_ => Task.FromResult<IReadOnlyList<SyncedAddon>>([Addon(Cool)]), "u", Client(url => url.Contains("Noir") ? Metas("a", "b") : Metas("c", "d", "e")), new Random(1));

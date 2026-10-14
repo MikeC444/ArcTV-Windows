@@ -134,6 +134,8 @@ public sealed class HomeModel(Func<CancellationToken, Task<IReadOnlyList<SyncedA
         var shown = HomeSections.Deduped(HomeSections.Ordered(raw.Where(s => !hidden.Contains(s.Id)).ToList(), _preferences));
         Sections = shown;
         if (shown.Count > 0 && State == HomeState.Loading) State = HomeState.Loaded;
+        // a banner title in a genre blocked since it was chosen (the settings arrive after the rows on a start from the saved rows) is chosen again
+        if (_blocked.Count > 0 && Settings.BlockedGenres.Without(Hero, _blocked).Count < Hero.Count) Hero = [];
         if (Hero.Count == 0 || (final && Hero.Count < HeroSize))
         {
             var backup = raw.Where(s => hidden.Contains(s.Id)).SelectMany(s => s.Items);

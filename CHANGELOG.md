@@ -804,3 +804,15 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 **Changes:** `ShellView.xaml`: the top bar's background is transparent (it was a dark fade from the top); the pills keep their own backgrounds.
 
 **Tests performed:** `dotnet build`. **Issues discovered / fixed:** none.
+
+## Blocked genres: the Home banner (owner: a blocked genre still on the hero)
+
+**Status:** Built and unit-tested here; not seen on screen.
+
+**Context:** With Animation blocked, a cartoon was still the Home banner. The rows were filtered, but the banner is chosen once (`Hero.Count == 0`), and on a start from the saved rows it is chosen before the account settings (and so the blocked genres) arrive; a later change of the blocked set never replaced it.
+
+**Changes:** `HomeModel.Rebuild` drops the banner when any of its titles is in a blocked genre, so it is chosen again from the filtered rows.
+
+**Tests performed:** `HomeModelTests.BlockingAGenreAfterTheBannerWasChosenChoosesTheBannerAgain`.
+
+**Issues discovered:** a title only counts as blocked when its catalogue entry lists genres. **Issues fixed:** the banner.
