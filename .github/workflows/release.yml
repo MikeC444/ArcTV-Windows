@@ -12,6 +12,10 @@ on:
       version:
         description: "Version to release (e.g. 0.1.0) -- only used for a manual run; a tag push derives this from the tag itself"
         required: true
+      publish:
+        description: "Publish a GitHub Release? Leave unticked for a trial run: the installer and zip are built and kept as downloads of the run, nothing is published"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -107,7 +111,16 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
           Copy-Item "installer-out/ArcTV-Setup-${{ steps.version.outputs.name }}.exe" out/
 
+      # always kept with the run (14 days), so a trial run can be downloaded and tried on a clean PC
+      - name: Keep the installer and zip with this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArcTV-release-files-${{ steps.version.outputs.name }}
+          path: out/
+          retention-days: 14
+
       - name: Publish GitHub Release
+        if: github.ref_type == 'tag' || github.event.inputs.publish == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
@@ -120,6 +133,7 @@ jobs:
       # The notes that shipped are filed under this version in RELEASE_NOTES.md and a fresh, empty "## Unreleased" is left above, but only if Unreleased
       # on main is still exactly what shipped (so nothing added meanwhile is lost).
       - name: File the shipped notes under this version
+        if: github.ref_type == 'tag' || github.event.inputs.publish == 'true'
         shell: bash
         run: |
           set -e

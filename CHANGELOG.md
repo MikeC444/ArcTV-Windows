@@ -842,3 +842,5 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 **Tests performed:** YAML parse; the notes-extraction awk run on this repo's RELEASE_NOTES.md.
 
 **Issues discovered:** the first real run will be the test of the Inno step and of pushing the notes commit to `main` (needs the `API_BASE_URL` repository secret to exist or the baked-in address is empty). **Issues fixed:** none.
+
+**Follow-up (trial run).** `release.yml` has a `publish` option for a manual run (default off): the installer and zip are built and kept as downloads of the run (14 days), nothing is published and the notes are not filed. A version tag still publishes.
