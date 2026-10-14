@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- Your default subtitle language (and default audio language) in Settings now picks the right track in the player: it was missed for most video files, and when the video had no subtitles in your language, the player stayed on another one. Now it uses your language from the video if there is one, otherwise from your addons.
 - No sources found? A step-by-step guide now walks you through setting them up (a debrid service, then Torrentio, then Arc TV), opened from that page.
 - The player has an Episodes list for shows: pick another season and episode without going back to the title.
 - When a newer version of Arc TV is out, a card tells you what is new, with Download, Later and Skip this version.

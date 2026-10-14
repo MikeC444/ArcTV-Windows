@@ -42,6 +42,21 @@ public class AddonSubtitlesTests
     }
 
     [Fact]
+    public void MpvIsGivenEveryCodeAFileMightUseForALanguage()
+    {
+        // mpv compares codes literally and an MKV writes three letters where Settings keeps two
+        Assert.Equal("fr,fra,fre", SubtitleLanguage.MpvList("fr"));
+        Assert.Equal("en,eng", SubtitleLanguage.MpvList("en"));
+        Assert.Equal("pt,por", SubtitleLanguage.MpvList("pt"));
+        Assert.Equal("de,deu,ger", SubtitleLanguage.MpvList("de"));
+        Assert.Equal("fr,fra,fre", SubtitleLanguage.MpvList("fre")); // whichever way it is written
+        Assert.Equal("xx", SubtitleLanguage.MpvList("XX")); // an unknown code goes as it is
+        Assert.Equal("", SubtitleLanguage.MpvList(null));
+        Assert.Equal("", SubtitleLanguage.MpvList("  "));
+        foreach (var choice in ArcTV.Core.Settings.LanguageChoices.All) Assert.StartsWith(choice.Code + ",", SubtitleLanguage.MpvList(choice.Code) + ","); // every language Settings offers starts with its own code
+    }
+
+    [Fact]
     public void AnAnswerGivesOnlyWebAddressesOncePerAddressAndNeverThrows()
     {
         const string json = """{"subtitles":[{"id":"1","url":"https://s.test/a.srt","lang":"eng"},{"id":"2","url":"https://s.test/a.srt","lang":"eng"},{"id":"3","url":"ftp://s.test/b.srt","lang":"fre"},{"id":"4","lang":"spa"},{"url":" http://s.test/c.srt ","lang":"ger"},7,{"url":"https://s.test/d.srt"}]}""";

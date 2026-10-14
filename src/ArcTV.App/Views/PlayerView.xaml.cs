@@ -144,6 +144,7 @@ public partial class PlayerView : UserControl
         catch (Exception ex)
         {
             PlayerLog.Write($"subtitles: could not ask the addons ({ex.Message})");
+            if (!run.IsCancellationRequested && ReferenceEquals(_model, model)) model.SetAddonSubtitles([]); // no files: the video's own tracks are all there is
         }
     }
 

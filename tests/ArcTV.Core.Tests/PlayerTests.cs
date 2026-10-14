@@ -167,31 +167,62 @@ public class PlayerTests
     }
 
     [Fact]
-    public void ThePreferredLanguageIsShownFromAnAddonOnlyWhenTheVideoHasNoSubtitlesOfItsOwnShowing()
+    public void ThePreferredSubtitleLanguageIsMadeToShowOnceWhateverMpvFellBackTo()
     {
-        // wanted (subtitles on, French) and nothing showing: the French file is loaded, once
+        static int Loaded(FakeCommands commands) => commands.Calls.Count(c => c.StartsWith("subfile", StringComparison.Ordinal));
+
+        // wanted (subtitles on, French) and nothing showing: the addon's French file is loaded, once (the files can arrive before the first picture)
         var commands = new FakeCommands { TrackList = "[]" };
         var model = new PlayerModel(commands) { PreferredSubtitleLanguage = "fr", SubtitlesEnabled = true };
-        model.SetAddonSubtitles([English, French]); // the files can arrive before the first picture
-        Assert.DoesNotContain(commands.Calls, c => c.StartsWith("subfile", StringComparison.Ordinal));
+        model.SetAddonSubtitles([English, French]);
+        Assert.Equal(0, Loaded(commands));
         model.OnPosition(1);
         Assert.Single(commands.Calls, c => c.StartsWith("subfile https://s.test/fr.srt", StringComparison.Ordinal));
         model.OnPosition(2);
         model.SetAddonSubtitles([English, French]);
-        Assert.Single(commands.Calls, c => c.StartsWith("subfile", StringComparison.Ordinal)); // only once
+        Assert.Equal(1, Loaded(commands)); // only once
 
-        // the video's own subtitles are already showing: left alone
-        var own = new FakeCommands { TrackList = """[{"id":1,"type":"sub","title":"English","lang":"en","selected":true}]""" };
-        var second = new PlayerModel(own) { PreferredSubtitleLanguage = "fr", SubtitlesEnabled = true };
+        // mpv fell back to English (no French track, subs-fallback): that is not the language wanted, so the French file replaces it
+        var fallback = new FakeCommands { TrackList = """[{"id":1,"type":"sub","title":"English","lang":"eng","selected":true}]""" };
+        var second = new PlayerModel(fallback) { PreferredSubtitleLanguage = "fr", SubtitlesEnabled = true };
         second.OnPosition(1);
-        second.SetAddonSubtitles([French]);
-        Assert.DoesNotContain(own.Calls, c => c.StartsWith("subfile", StringComparison.Ordinal));
+        Assert.Equal(0, Loaded(fallback)); // still waiting for the addons' answer
+        second.SetAddonSubtitles([English, French]);
+        Assert.Single(fallback.Calls, c => c.StartsWith("subfile https://s.test/fr.srt", StringComparison.Ordinal));
 
-        // subtitles off in Settings, or no preference: left alone
-        var off = new FakeCommands { TrackList = "[]" };
-        var third = new PlayerModel(off) { PreferredSubtitleLanguage = "fr", SubtitlesEnabled = false };
+        // the video has a French track that mpv did not pick: that one is shown, and the addons are not needed
+        var own = new FakeCommands { TrackList = """[{"id":1,"type":"sub","title":"English","lang":"eng","selected":true},{"id":2,"type":"sub","title":"Français","lang":"fre","selected":false}]""" };
+        var third = new PlayerModel(own) { PreferredSubtitleLanguage = "fr", SubtitlesEnabled = true };
         third.OnPosition(1);
+        Assert.Equal("sub 2", own.Calls.Last());
         third.SetAddonSubtitles([French]);
-        Assert.DoesNotContain(off.Calls, c => c.StartsWith("subfile", StringComparison.Ordinal));
+        Assert.Equal(0, Loaded(own));
+
+        // the language is already showing (mpv found it, by its three-letter code): left alone
+        var right = new FakeCommands { TrackList = """[{"id":2,"type":"sub","title":"Français","lang":"fra","selected":true}]""" };
+        var fourth = new PlayerModel(right) { PreferredSubtitleLanguage = "fr", SubtitlesEnabled = true };
+        fourth.OnPosition(1);
+        fourth.SetAddonSubtitles([French]);
+        Assert.Equal(0, Loaded(right));
+        Assert.DoesNotContain(right.Calls, c => c.StartsWith("sub ", StringComparison.Ordinal));
+
+        // no addon file in that language either: nothing is forced
+        var none = new FakeCommands { TrackList = "[]" };
+        var fifth = new PlayerModel(none) { PreferredSubtitleLanguage = "fr", SubtitlesEnabled = true };
+        fifth.OnPosition(1);
+        fifth.SetAddonSubtitles([English]);
+        Assert.Equal(0, Loaded(none));
+
+        // subtitles off in Settings, or no language chosen: left alone
+        var off = new FakeCommands { TrackList = "[]" };
+        var sixth = new PlayerModel(off) { PreferredSubtitleLanguage = "fr", SubtitlesEnabled = false };
+        sixth.OnPosition(1);
+        sixth.SetAddonSubtitles([French]);
+        Assert.Equal(0, Loaded(off));
+        var unset = new FakeCommands { TrackList = "[]" };
+        var seventh = new PlayerModel(unset) { PreferredSubtitleLanguage = null, SubtitlesEnabled = true };
+        seventh.OnPosition(1);
+        seventh.SetAddonSubtitles([French]);
+        Assert.Equal(0, Loaded(unset));
     }
 }

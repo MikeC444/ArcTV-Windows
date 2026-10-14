@@ -116,8 +116,8 @@ public sealed class MpvEngine : IVideoEngine, IDisposable
                 ("sid", _preferences.SubtitlesEnabled ? "auto" : "no"),
                 ("sub-font-size", _preferences.SubtitleSize.MpvFontSize().ToString(CultureInfo.InvariantCulture)), ("sub-color", _preferences.SubtitleColor.Hex()),
             }) Option(name, value);
-            if (!string.IsNullOrEmpty(_preferences.SubtitleLanguage)) Option("slang", _preferences.SubtitleLanguage);
-            if (!string.IsNullOrEmpty(_preferences.AudioLanguage)) Option("alang", _preferences.AudioLanguage);
+            if (!string.IsNullOrEmpty(_preferences.SubtitleLanguage)) Option("slang", Core.Addons.SubtitleLanguage.MpvList(_preferences.SubtitleLanguage)); // every code a file may use ("fr,fra,fre"), not just "fr"
+            if (!string.IsNullOrEmpty(_preferences.AudioLanguage)) Option("alang", Core.Addons.SubtitleLanguage.MpvList(_preferences.AudioLanguage));
             if (startAt > 1) Option("start", ((int)startAt).ToString(CultureInfo.InvariantCulture));
 
             var init = NativeMpv.mpv_initialize(_handle);

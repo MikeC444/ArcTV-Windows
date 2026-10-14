@@ -40,6 +40,18 @@ public static class SubtitleLanguage
         return Names.FirstOrDefault(pair => string.Equals(pair.Value, text, StringComparison.OrdinalIgnoreCase)).Key;
     }
 
+    /// <summary>
+    /// What to give mpv for <c>--slang</c> / <c>--alang</c> ("fr" gives "fr,fra,fre"): every code a file might use for the language. mpv compares the codes literally, and video files differ in what they
+    /// write (Matroska uses the three-letter codes, DVDs the two-letter ones), so "fr" alone never matched a French track in an MKV. A code it cannot place is passed as it is.
+    /// </summary>
+    public static string MpvList(string? raw)
+    {
+        var text = (raw ?? "").Trim().ToLowerInvariant();
+        if (text.Length == 0) return "";
+        var key = Key(text) ?? text;
+        return string.Join(',', new[] { key }.Concat(ThreeToTwo.Where(pair => pair.Value == key).Select(pair => pair.Key).Order(StringComparer.Ordinal)).Distinct());
+    }
+
     /// <summary>"English" for "eng"; the code in capitals when the language isn't known, so the list never shows a blank.</summary>
     public static string DisplayName(string? raw)
     {

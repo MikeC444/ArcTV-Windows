@@ -122,7 +122,8 @@ public sealed class PlayerModel(IPlayerCommands commands) : ObservableObject
     public IReadOnlyList<MediaTrack> SubtitleTracks { get => _subtitleTracks; private set => Set(ref _subtitleTracks, value); }
 
     private IReadOnlyList<AddonSubtitle> _addonSubtitles = [];
-    private bool _addonAutoPicked;
+    private bool _preferredDone;
+    private bool _addonsAnswered;
 
     /// <summary>The subtitle files the person's addons offer for this video (best language first), as found by <see cref="SubtitleFinder"/>.</summary>
     public IReadOnlyList<AddonSubtitle> AddonSubtitles { get => _addonSubtitles; private set => Set(ref _addonSubtitles, value); }
@@ -262,6 +263,7 @@ public sealed class PlayerModel(IPlayerCommands commands) : ObservableObject
     public void SetAddonSubtitles(IReadOnlyList<AddonSubtitle> files)
     {
         AddonSubtitles = files;
+        _addonsAnswered = true;
         if (HasStarted) AutoPickAddonSubtitle();
     }
 
@@ -279,12 +281,30 @@ public sealed class PlayerModel(IPlayerCommands commands) : ObservableObject
         RefreshTracks(); // (the file may take a moment to load: the menu reads the list again when it opens)
     }
 
-    /// <summary>The preferred subtitle language is wanted (Settings: subtitles on) but the video has none of its own showing: use the addons' file in that language, once.</summary>
+    /// <summary>
+    /// Settings asks for subtitles on, in a language: make sure that language is what is showing, once. Already showing (mpv found it): nothing to do. The video has a track in that language that
+    /// mpv did not pick: that one. Otherwise, once the addons have answered, their file in that language. A subtitle in some other language that mpv fell back to does not count as the language
+    /// being wanted: it is replaced.
+    /// </summary>
     private void AutoPickAddonSubtitle()
     {
-        if (_addonAutoPicked || !HasStarted || AddonSubtitles.Count == 0 || !SubtitlesEnabled || SubtitleTracks.Any(track => track.Selected)) return;
-        if (SubtitleLanguage.Key(PreferredSubtitleLanguage) is not { } wanted) return;
-        _addonAutoPicked = true;
+        if (_preferredDone || !HasStarted || !SubtitlesEnabled || SubtitleLanguage.Key(PreferredSubtitleLanguage) is not { } wanted) return;
+        RefreshTracks();
+        if (SubtitleTracks.FirstOrDefault(track => track.Selected) is { } shown && SubtitleLanguage.Key(shown.Language) == wanted)
+        {
+            _preferredDone = true;
+            return;
+        }
+
+        if (OwnSubtitleTracks.FirstOrDefault(track => SubtitleLanguage.Key(track.Language) == wanted) is { } own)
+        {
+            _preferredDone = true;
+            SelectSubtitle(own);
+            return;
+        }
+
+        if (!_addonsAnswered) return; // the addons may still have one: look again when they answer
+        _preferredDone = true;
         if (AddonSubtitles.FirstOrDefault(file => SubtitleLanguage.Key(file.LanguageCode) == wanted) is { } match) SelectAddonSubtitle(match);
     }
 
