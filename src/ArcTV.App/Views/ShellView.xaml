@@ -4,14 +4,9 @@
   <Grid Background="{StaticResource BgBrush}">
     <ContentControl x:Name="Page" />
 
-    <!-- the top bar floats over the page; a soft fade keeps the pills readable over pictures -->
+    <!-- the top bar floats over the page, with no shade behind it -->
     <Grid x:Name="Bar" VerticalAlignment="Top" Height="124">
-      <Grid.Background>
-        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-          <GradientStop Color="#E608080A" Offset="0" />
-          <GradientStop Color="#00080A0A" Offset="1" />
-        </LinearGradientBrush>
-      </Grid.Background>
+      <Grid.Background><SolidColorBrush Color="Transparent" /></Grid.Background>
       <Grid x:Name="BarRow" Margin="28,18,28,0" VerticalAlignment="Top">
         <Grid.LayoutTransform><ScaleTransform x:Name="BarScale" ScaleX="1" ScaleY="1" /></Grid.LayoutTransform>
         <Grid.ColumnDefinitions>

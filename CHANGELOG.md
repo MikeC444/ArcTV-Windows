@@ -796,3 +796,11 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 **Follow-up (CI red: two player screen tests never saw the engine start).** The redirect-following step (`StreamResolver`) tried the tests' made-up address for several seconds before the engine started, past the tests' two-second wait; and the owner's log showed it was not the cause of the stall anyway (the link resolved in 0.5 s and mpv still stayed silent). It is removed, with its tests; the mpv scripts-off change and the one automatic fresh start stay.
 
 **Follow-up (CI red since the Episodes menu: `ThePlayerHasAnEpisodesListForAShowAndPickingOneGivesWayToIt`).** The test looked its overlay up through `Application.Current.Windows`, which belongs to the thread of whichever test made the Application first, so it threw "a different thread owns it" when run after others. It now gets the overlay from the player (`PlayerView.Overlay`). This test had never passed on CI; my earlier "green" for it was wrong.
+
+## Top bar: no shade behind it (owner asked)
+
+**Status:** Built; not seen on screen.
+
+**Changes:** `ShellView.xaml`: the top bar's background is transparent (it was a dark fade from the top); the pills keep their own backgrounds.
+
+**Tests performed:** `dotnet build`. **Issues discovered / fixed:** none.

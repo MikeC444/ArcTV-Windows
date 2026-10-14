@@ -5,6 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
+- The dark shade behind the top bar is gone: the pictures now show right up to the top.
 - A source from the list now starts the first time you pick it: if the picture still has not come after a few seconds it starts the player again by itself instead of sitting on Loading until you pick the source again.
 - In the player, the title logo at the top right now fades away with the controls instead of staying on screen, and it shrinks with the window.
 - Your default subtitle language (and default audio language) in Settings now picks the right track in the player: it was missed for most video files, and when the video had no subtitles in your language, the player stayed on another one. Now it uses your language from the video if there is one, otherwise from your addons.
