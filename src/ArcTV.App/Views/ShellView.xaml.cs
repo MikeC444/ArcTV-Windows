@@ -453,7 +453,7 @@ public partial class ShellView : UserControl
         var store = new LastSourceStore(Path.Combine(AppPaths.DataFolder(), "last-sources.json"), _account.Scope!);
         var smart = _plus.Active && _local.SmartPicking;
         var model = new SourcesModel(target, AccountAddonsAsync, _addonClient, items => AutoPick.Choose(target, items, store.Get(target.Title.Id, target.Season, target.Episode), smart));
-        return new SourcesView(model, store, GoBack, OpenPlayer, LogoOfAsync, TorrentStreamer.Shared);
+        return new SourcesView(model, store, GoBack, OpenPlayer, LogoOfAsync, TorrentEngines.Shared);
     }
 
     /// <summary>The player, over the sources page; the top bar is out of the way while it plays, and Back returns to the sources (or, when the source was picked without asking, to the page before).</summary>

@@ -15,6 +15,24 @@ public class SourcesTests
     private static SourceItem Item(string addon, AddonStream stream, int index = 0) => new(addon, stream, index);
 
     [Fact]
+    public void TheTorrentEngineIsLibTorrentUnlessMonoTorrentIsChosenAndIsKeptOnThisPc()
+    {
+        Assert.True(TorrentEngineChoice.PrefersLibTorrent(null));
+        Assert.True(TorrentEngineChoice.PrefersLibTorrent("libtorrent"));
+        Assert.True(TorrentEngineChoice.PrefersLibTorrent("something odd"));
+        Assert.False(TorrentEngineChoice.PrefersLibTorrent("MonoTorrent"));
+        Assert.Equal(12, TorrentBuffer.Small.PiecesAhead());
+        Assert.Equal(24, TorrentBuffer.Normal.PiecesAhead());
+        Assert.Equal(64, TorrentBuffer.Large.PiecesAhead());
+        var path = Path.Combine(Path.GetTempPath(), "arctv-engine-" + Guid.NewGuid().ToString("N") + ".json");
+        var settings = new ArcTV.Core.Storage.LocalSettings(path);
+        Assert.Null(settings.TorrentEngine);
+        settings.TorrentEngine = TorrentEngineChoice.MonoTorrent;
+        Assert.Equal("monotorrent", new ArcTV.Core.Storage.LocalSettings(path).TorrentEngine);
+        File.Delete(path);
+    }
+
+    [Fact]
     public void TorrentBufferAndStorageFollowTheMacApp()
     {
         Assert.Equal(TorrentBuffer.Normal, TorrentBuffers.From(null));

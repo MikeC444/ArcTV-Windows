@@ -256,6 +256,18 @@ internal sealed class PlayerPane(SettingsModel settings, ArcTV.Core.Storage.Loca
             on => _ = Settings.UpdateAsync(s => s with { AutoplayNextEpisode = on })));
 
         // torrents (kept on this PC, as on the Mac)
+        column.Children.Add(Ui.Heading("Torrent engine"));
+        var problem = ArcTV.App.Player.TorrentEngines.Shared.LibTorrentProblem;
+        column.Children.Add(Ui.Note(problem is null
+            ? "libtorrent is the engine the Mac app uses and is meant to find people and start faster. MonoTorrent is built into the app: switch to it if torrents misbehave. Applies to the next torrent you play."
+            : $"libtorrent could not be loaded on this PC, so MonoTorrent is being used. ({problem})"));
+        column.Children.Add(Ui.Choices([((string?)ArcTV.Core.Sources.TorrentEngineChoice.LibTorrent, "libtorrent (recommended)"), ((string?)ArcTV.Core.Sources.TorrentEngineChoice.MonoTorrent, "MonoTorrent")],
+            ArcTV.Core.Sources.TorrentEngineChoice.PrefersLibTorrent(local.TorrentEngine) ? ArcTV.Core.Sources.TorrentEngineChoice.LibTorrent : ArcTV.Core.Sources.TorrentEngineChoice.MonoTorrent,
+            code =>
+            {
+                local.TorrentEngine = code;
+                Settings.Redraw();
+            }));
         column.Children.Add(Ui.Heading("Torrent buffer"));
         column.Children.Add(Ui.Note("How much of the start of a torrent must arrive before the video starts. " + ArcTV.Core.Sources.TorrentBuffers.Detail(_buffer)));
         column.Children.Add(Ui.Choices([.. Enum.GetValues<ArcTV.Core.Sources.TorrentBuffer>().Select(b => ((string?)b.ToString(), b.ToString()))], _buffer.ToString(), code =>

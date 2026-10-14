@@ -675,3 +675,24 @@ Still open: a Download button on each episode (the Mac has one; here the panel's
 
 **Follow-up (owner: clicking Play on a movie freezes the whole app, right after the MonoTorrent 3.9 alpha went in).** Cause not proven (not reproducible here). Every Play opens the sources view, whose constructor called `TorrentStreamer.Warm()` on the screen's thread; that made the torrent engine and added its first torrent right there (an `async` method runs on the caller's thread until it first has to wait). If the alpha's engine does anything slow or blocking when it starts (port mapping, say) the window hangs for as long as that takes. Now `Warm` runs on a worker thread, `StartAsync` makes the engine on a worker thread before anything else, and engine creation is under a lock (two callers could have made two engines). `player.log` gets "torrent: engine created in N ms", so the next log shows whether the engine is the slow part. If the freeze continues with this, the next suspect is something else in the play path (the freeze would then be reproducible with `MonoTorrent` put back to 3.0.2).
 
+## libtorrent engine, MonoTorrent kept as the fallback (owner asked)
+
+**Status:** Built and tested in the Linux sandbox against real libtorrent 2.0.10 (apt): the C layer compiles; a smoke test and a real transfer between two libtorrent sessions on the loopback address pass; the C# wrapper, `LocalVideoServer` and the app's file choice pass the same transfer through an HTTP range read (six runs in a row). **Not built or run on Windows yet** (vcpkg's libtorrent, `ctorrent.dll`, the DLL download, the app loading it) and no real torrent has been played: that is for `native.yml` on CI and then the owner's PC.
+
+**Context:** MonoTorrent finds fewer peers, more slowly, than the Mac app's libtorrent (the DHT stayed at 0 nodes on the owner's PC, and the 3.9 alpha has no uTP after all). The Mac app already has a C layer over libtorrent; this reuses it.
+
+**Changes:**
+- `native/`: `ctorrent.cpp/.h` (from the Mac's `Sources/CTorrent`, plus `CT_API`, `ct_piece_length`, connections / known peers / DHT nodes in the status, and announcing to every tracker of every tier), a CMake build, `smoke.cpp`, `integration.cpp` (real transfer on the loopback address) and `seeder.cpp` (helper for the C# tests).
+- Core: `Torrents/LibTorrentSession` (P/Invoke wrapper; UTF-8 strings; looks for the library in the app's folder, or `ARCTV_CTORRENT_PATH`), `Torrents/LocalVideoServer` (a loopback web server with Range support that waits for pieces and asks the engine for them, as the Mac's `TorrentStreamServer`), `ByteRange`, `TorrentEngineChoice`, `TorrentBuffer.PiecesAhead` (12 / 24 / 64, the Mac's), `LocalSettings.TorrentEngine`.
+- App: `Player/LibTorrentStreamer` (same promises and the same `player.log` lines as the MonoTorrent streamer, plus DHT nodes), `Player/TorrentEngines` (picks the engine: the setting, and MonoTorrent for the rest of the run the first time libtorrent cannot load), Settings > Player > Torrent engine (libtorrent / MonoTorrent; says why when libtorrent could not load), `ShellView` passes `TorrentEngines.Shared`.
+- MonoTorrent is back at 3.0.2 (known good): the 3.9 alpha had no uTP and a freeze was reported just after it went in. `TorrentStreamer` is unchanged apart from the earlier off-the-screen-thread engine start.
+- Delivery: `.github/workflows/native.yml` (vcpkg `libtorrent:x64-windows`, CMake, the three tests, then on `main` publishes `libtorrent-win-x64.zip` as the `native-libtorrent` pre-release; `/releases/latest`, which the update check uses, ignores pre-releases), `scripts/get-libtorrent.ps1`, an MSBuild target in `ArcTV.App.csproj` that runs it on the first build (a failure never fails the build), a "Get libtorrent" step in `build.yml`, `.gitignore`, `THIRD_PARTY_NOTICES.md`, `native/README.md`.
+
+**Tests performed:** C++: smoke and integration (Linux). C#: 15 server and range tests, 2 libtorrent tests (skipped unless the library is given), a settings test; 249 Core tests pass. Windows: nothing run yet.
+
+**Issues discovered:** libtorrent adds `.pad` files to a torrent's file list (the file choice ignores them: no video extension). Two seeds drop each other once a file is whole, so a test must not expect a live connection at the end.
+
+**Issues fixed:** none.
+
+**Open / to look at on the PC:** the first `native.yml` run on CI is the real test of the Windows build (vcpkg can take 20 minutes or more the first time); the DLL download happens on the next build after it has published; a PC without the Visual C++ runtime relies on the copy the zip carries; whether libtorrent's peer finding really beats MonoTorrent's is for `player.log` to say (it now logs DHT nodes, connections and speed every 5 s for both engines).
+

@@ -5,7 +5,7 @@ version heading becomes that release's description. Add each change as a bullet 
 under its version automatically.
 
 ## Unreleased
-- Torrent playback now uses a newer test version of the torrent engine (MonoTorrent 3.9 alpha), to see if it finds people and starts faster. Tell us if torrents play worse than before.
+- Torrents now play with libtorrent, the same engine as the Mac app, to find people and start faster. Settings > Player > Torrent engine switches back to the old one (MonoTorrent) if anything misbehaves, and the app uses it by itself if libtorrent can't load.
 - Downloads: every episode has its own Download arrow on its picture.
 - Downloads: each file now says if your debrid service already has it ready ("Cached on Real-Debrid") or still has to fetch it first, and shows HDR / Dolby Vision and a warning when a file is unusually small.
 - A Downloads page (profile menu, or "See all downloads" in the Download panel) lists everything you have saved or are saving, with Play, Show in folder, Cancel and Remove, and where files are saved.

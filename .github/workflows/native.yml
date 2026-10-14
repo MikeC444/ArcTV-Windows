@@ -1,0 +1,110 @@
+name: Build libtorrent for Arc TV (ctorrent.dll)
+
+# Builds native/ctorrent (a small C face on libtorrent, the engine the Mac app uses for torrents) on a Windows machine, tries it (a smoke test, then a real transfer between two libtorrent
+# sessions on this machine, then the C# wrapper and local video server against it), and on main publishes ctorrent.dll with the DLLs it needs as the "native-libtorrent" pre-release.
+# scripts/get-libtorrent.ps1 downloads that zip into the app's folder, the way get-libmpv.ps1 does for the player. Runs only when native/ or this file changes (or by hand).
+on:
+  push:
+    paths:
+      - "native/**"
+      - ".github/workflows/native.yml"
+      - "scripts/get-libtorrent.ps1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  native:
+    runs-on: windows-latest
+    env:
+      # libtorrent and what it needs (Boost, OpenSSL) take a long time to build: vcpkg keeps the built packages here and the cache step below keeps them between runs
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\vcpkg-cache
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Keep built packages between runs
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\vcpkg-cache
+          key: vcpkg-libtorrent-x64-windows-v1
+          restore-keys: vcpkg-libtorrent-x64-windows-
+
+      - name: Install libtorrent (vcpkg)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install libtorrent:x64-windows --clean-after-build
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg could not install libtorrent" }
+
+      - name: Build ctorrent
+        shell: pwsh
+        run: |
+          cmake -S native -B native/build -A x64 -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows
+          if ($LASTEXITCODE -ne 0) { throw "cmake could not configure" }
+          cmake --build native/build --config Release
+          if ($LASTEXITCODE -ne 0) { throw "ctorrent did not build" }
+
+      - name: Gather the DLLs
+        shell: pwsh
+        run: |
+          $out = "native/out"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          Copy-Item native/build/Release/ctorrent.dll $out
+          Copy-Item "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin/*.dll" $out
+          # the C++ runtime ctorrent and libtorrent were built with, beside them, so a PC without the Visual C++ redistributable still loads them
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products * -property installationPath
+          $crt = Get-ChildItem -Path "$vs\VC\Redist\MSVC" -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending | ForEach-Object { Get-ChildItem -Path "$($_.FullName)\x64\Microsoft.VC*.CRT" -Directory -ErrorAction SilentlyContinue } | Select-Object -First 1
+          if ($crt) { Copy-Item "$($crt.FullName)\*.dll" $out; Write-Host "C++ runtime from $($crt.FullName)" } else { Write-Host "No C++ runtime folder found; the DLLs rely on the one on the PC" }
+          Get-ChildItem $out | Format-Table Name, Length
+
+      - name: Try ctorrent (smoke test, and a real transfer on this machine)
+        shell: pwsh
+        run: |
+          $env:PATH = "$((Resolve-Path native/out).Path);$env:PATH"
+          Copy-Item native/build/Release/ctorrent_smoke.exe, native/build/Release/ctorrent_integration.exe, native/build/Release/ctorrent_seeder.exe native/out
+          & native/out/ctorrent_smoke.exe
+          if ($LASTEXITCODE -ne 0) { throw "the smoke test failed ($LASTEXITCODE)" }
+          & native/out/ctorrent_integration.exe
+          if ($LASTEXITCODE -ne 0) { throw "the transfer test failed ($LASTEXITCODE)" }
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # the C# wrapper, the local video server and the app's file choice against the real library, with the test helper seeding a video on the loopback address
+      - name: Try the C# wrapper against it
+        shell: pwsh
+        run: |
+          $env:PATH = "$((Resolve-Path native/out).Path);$env:PATH"
+          $env:ARCTV_CTORRENT_PATH = (Resolve-Path native/out/ctorrent.dll).Path
+          $env:ARCTV_CT_SEEDER = (Resolve-Path native/out/ctorrent_seeder.exe).Path
+          dotnet test tests/ArcTV.Core.Tests -c Release --filter "FullyQualifiedName~LibTorrentTests"
+          if ($LASTEXITCODE -ne 0) { throw "the wrapper tests failed" }
+
+      - name: Zip it
+        shell: pwsh
+        run: |
+          # only the library and what it loads: the test programs stay out of the app
+          Remove-Item native/out/ctorrent_smoke.exe, native/out/ctorrent_integration.exe, native/out/ctorrent_seeder.exe
+          Compress-Archive -Path native/out/* -DestinationPath libtorrent-win-x64.zip -Force
+
+      - name: Keep the zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: libtorrent-win-x64
+          path: libtorrent-win-x64.zip
+          retention-days: 14
+
+      # main only: the app's build and scripts/get-libtorrent.ps1 download this one
+      - name: Publish as the native-libtorrent pre-release
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view native-libtorrent >/dev/null 2>&1 || gh release create native-libtorrent --prerelease --target "$GITHUB_SHA" \
+            --title "libtorrent for Arc TV (Windows)" \
+            --notes "ctorrent.dll and the libraries it needs, built by the Build libtorrent workflow. Not an app release: scripts/get-libtorrent.ps1 downloads libtorrent-win-x64.zip from here."
+          gh release upload native-libtorrent libtorrent-win-x64.zip --clobber

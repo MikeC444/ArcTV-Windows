@@ -5,7 +5,7 @@ namespace ArcTV.Core.Storage;
 /// <summary>Small per-PC choices kept in settings.json (not secret).</summary>
 public sealed class LocalSettings(string path)
 {
-    private sealed record Data(string? ServerUrl, string? SubtitleSize = null, string? SubtitleColor = null, bool SmartPicking = false, string? TorrentBuffer = null, int TorrentStorageGb = 50, string? DownloadFolder = null);
+    private sealed record Data(string? ServerUrl, string? SubtitleSize = null, string? SubtitleColor = null, bool SmartPicking = false, string? TorrentBuffer = null, int TorrentStorageGb = 50, string? DownloadFolder = null, string? TorrentEngine = null);
 
     public string? ServerUrl
     {
@@ -38,6 +38,13 @@ public sealed class LocalSettings(string path)
     {
         get => Read().TorrentBuffer;
         set => Write(Read() with { TorrentBuffer = value });
+    }
+
+    /// <summary>"libtorrent" (the default) or "monotorrent": which engine plays torrents. Null until chosen.</summary>
+    public string? TorrentEngine
+    {
+        get => Read().TorrentEngine;
+        set => Write(Read() with { TorrentEngine = value });
     }
 
     /// <summary>The most disk space (in gigabytes) a torrent may use while it plays; 0 is no limit.</summary>
