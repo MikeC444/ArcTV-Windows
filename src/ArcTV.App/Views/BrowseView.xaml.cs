@@ -26,6 +26,8 @@ public partial class BrowseView : UserControl
     public BrowseView(string title, BrowseModel model)
     {
         InitializeComponent();
+        Root.Children.Remove(HeaderPanel);
+        Posters.Header = HeaderPanel; // the heading scrolls with the posters
         _title = title;
         _model = model;
         TitleText.Text = title;

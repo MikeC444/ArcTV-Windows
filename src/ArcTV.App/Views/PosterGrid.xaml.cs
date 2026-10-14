@@ -9,6 +9,9 @@ namespace ArcTV.App.Views;
 /// <summary>One line of the poster grid.</summary>
 internal sealed record PosterRow(IReadOnlyList<MetaPreview> Items);
 
+/// <summary>The page's own heading, shown as the first line of the list.</summary>
+internal sealed record HeaderEntry(UIElement Element);
+
 /// <summary>A title over the lines that follow it.</summary>
 internal sealed record SectionHeader(string Title, string? Detail);
 
@@ -31,6 +34,19 @@ public partial class PosterGrid : UserControl
     /// <summary>Space added between posters so a line fills the width: the window is rarely an exact number of posters wide.</summary>
     public double Extra { get => (double)GetValue(ExtraProperty); private set => SetValue(ExtraProperty, value); }
 
+    /// <summary>What sits above the posters (the page's heading, pills or search box). It is the first line of the list, so the posters scroll up to the very top of the window and the heading goes with them.</summary>
+    public UIElement? Header
+    {
+        get => _header;
+        set
+        {
+            _header = value;
+            Rebuild();
+        }
+    }
+
+    private UIElement? _header;
+
     /// <summary>Raised when the end of the list is near on screen, so the page can fetch more.</summary>
     public event EventHandler? NearEnd;
 
@@ -44,6 +60,7 @@ public partial class PosterGrid : UserControl
     {
         InitializeComponent();
         Rows.ItemsSource = _entries;
+        Rows.ItemContainerStyleSelector = new HeaderKeeper();
         Rows.PreviewMouseWheel += (_, e) =>
         {
             if (Scroll() is { } scroll) (_smooth ??= new SmoothScroller(scroll)).Wheel(e);
@@ -119,9 +136,25 @@ public partial class PosterGrid : UserControl
         if (Math.Abs(extra - Extra) >= 0.5) Extra = extra;
     }
 
-    private static List<object> Build(IReadOnlyList<PosterSection> sections, int perRow)
+    /// <summary>The heading holds live controls (a search box with what was typed), so its line is never thrown away when it scrolls out of view.</summary>
+    private sealed class HeaderKeeper : StyleSelector
+    {
+        private static readonly Style Keep = MakeKeep();
+
+        private static Style MakeKeep()
+        {
+            var style = new Style(typeof(ContentPresenter));
+            style.Setters.Add(new Setter(VirtualizingPanel.IsContainerVirtualizableProperty, false));
+            return style;
+        }
+
+        public override Style? SelectStyle(object item, DependencyObject container) => item is HeaderEntry ? Keep : null;
+    }
+
+    private List<object> Build(IReadOnlyList<PosterSection> sections, int perRow)
     {
         var entries = new List<object>();
+        if (_header is not null) entries.Add(new HeaderEntry(_header));
         foreach (var section in sections)
         {
             if (section.Title is not null) entries.Add(new SectionHeader(section.Title, section.Detail));
@@ -140,6 +173,7 @@ public partial class PosterGrid : UserControl
     {
         PosterRow first when b is PosterRow second => first.Items.Count == second.Items.Count && first.Items.Zip(second.Items).All(pair => ReferenceEquals(pair.First, pair.Second)),
         SectionHeader first when b is SectionHeader second => first == second,
+        HeaderEntry first when b is HeaderEntry second => ReferenceEquals(first.Element, second.Element),
         _ => false,
     };
 

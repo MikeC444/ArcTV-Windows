@@ -18,6 +18,8 @@ public partial class MyListView : UserControl
     public MyListView(MyListModel model)
     {
         InitializeComponent();
+        Root.Children.Remove(HeaderPanel);
+        Posters.Header = HeaderPanel; // the heading scrolls with the posters
         _model = model;
         Loaded += async (_, _) =>
         {
@@ -58,7 +60,6 @@ public partial class MyListView : UserControl
         var shown = all is null ? new List<WatchlistItem>() : _sort.Apply(_watchedOnly ? all.Where(i => i.Watched == true) : all);
         var sections = new List<PosterSection>();
         if (shown.Count > 0) sections.Add(new PosterSection(null, null, shown.Select(i => i.AsPreview()).ToList()));
-        Posters.Visibility = shown.Count > 0 ? Visibility.Visible : Visibility.Hidden;
         Posters.Show(sections);
 
         string? message = null;

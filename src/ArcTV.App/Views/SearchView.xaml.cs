@@ -28,6 +28,8 @@ public partial class SearchView : UserControl
     public SearchView(SearchModel model)
     {
         InitializeComponent();
+        Root.Children.Remove(HeaderPanel);
+        Posters.Header = HeaderPanel; // the heading scrolls with the posters
         _model = model;
         _pause.Tick += (_, _) =>
         {
@@ -73,7 +75,6 @@ public partial class SearchView : UserControl
         NonePanel.Visibility = state == SearchState.None ? Visibility.Visible : Visibility.Collapsed;
         ErrorText.Visibility = state == SearchState.Error ? Visibility.Visible : Visibility.Collapsed;
         CheckingPanel.Visibility = state == SearchState.Results && _model.StillChecking ? Visibility.Visible : Visibility.Collapsed;
-        Posters.Visibility = state == SearchState.Results ? Visibility.Visible : Visibility.Hidden; // hidden, not collapsed, so it keeps its width and does not re-lay-out each time
 
         NoneText.Text = $"Nothing found for “{_model.Query}”. Try a different search.";
         ErrorText.Text = SearchModel.ErrorText;

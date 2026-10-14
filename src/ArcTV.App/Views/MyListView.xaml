@@ -3,15 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:v="clr-namespace:ArcTV.App.Views"
              xmlns:c="clr-namespace:ArcTV.App.Controls">
-  <Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="*" />
-    </Grid.RowDefinitions>
-
-    <StackPanel Grid.Row="0">
-      <Border Height="{Binding Inset, Source={x:Static c:PageChrome.Instance}}" />
-      <TextBlock Text="My List" FontSize="34" FontWeight="ExtraBold" Margin="24,0,24,12" />
+  <Grid x:Name="Root">
+    <!-- the heading is given to the poster list in code, as its first line, so the posters scroll all the way to the top of the window -->
+    <v:PosterGrid x:Name="Posters" />
+    <StackPanel x:Name="HeaderPanel">
+      <TextBlock Text="My List" FontSize="34" FontWeight="ExtraBold" Margin="24,124,24,12" />
 
       <!-- All / Watched on the left, the sort on the right -->
       <Grid x:Name="ListControls" Margin="24,0,24,18" Visibility="Collapsed">
@@ -34,8 +30,7 @@
       </StackPanel>
 
       <TextBlock x:Name="Message" Margin="24,12,24,0" FontSize="15" TextWrapping="Wrap" Foreground="{StaticResource Text2Brush}" Visibility="Collapsed" />
-    </StackPanel>
+  </StackPanel>
 
-    <v:PosterGrid x:Name="Posters" Grid.Row="1" Visibility="Hidden" />
   </Grid>
 </UserControl>

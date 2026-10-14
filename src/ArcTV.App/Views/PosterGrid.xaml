@@ -18,6 +18,11 @@
         </ItemsControl>
       </DataTemplate>
 
+      <!-- the page's own heading (title, pills, search box), the first line of the list, so it scrolls away with the posters -->
+      <DataTemplate DataType="{x:Type v:HeaderEntry}">
+        <ContentPresenter Content="{Binding Element}" />
+      </DataTemplate>
+
       <!-- a title over a group of lines, with a quieter note beside it ("12 results") -->
       <DataTemplate DataType="{x:Type v:SectionHeader}">
         <StackPanel Orientation="Horizontal" Margin="24,20,24,8">
